@@ -6,3 +6,5 @@
 
 * The semantics of the join system call should change so that it only
   returns the exit code once.
+
+* mmap/munmap should use segment IDs like Nachos.  Too hard otherwise.
