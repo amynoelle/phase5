@@ -9,9 +9,6 @@
 
   - How about `diff' and `cmp' programs?
 
-* Make it clear that the students own their code, because there was some
-  confusion on that point.
-
 * Threads:
 
   - join-invalid doesn't compile if tid_t is not scalar type.
