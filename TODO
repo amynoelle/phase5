@@ -2,6 +2,8 @@
 
 * The tests in tests/ don't apply the grading patches.
 
+* We need better example programs.
+
 * Threads:
 
   - join-invalid doesn't compile if tid_t is not scalar type.
@@ -32,6 +34,17 @@
     the separation?  This project was rated as the easiest after all.
     Alternately we could just remove the synchronization on pid
     selection and check that students fix it.
+
+* Filesys project:
+
+  - Increase maximum disk size from 8 MB to something that actually
+    requires doubly indirect nodes.  There is a negative pressure here
+    from the bitmap object--perhaps we need a specialized bitmap that
+    doesn't have to be all in-memory at once.
+
+    Alternatively, shrink the inode size.
+
+  - Add mkdir and ls example user programs.
 
 * Documentation:
 
