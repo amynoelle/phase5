@@ -9,9 +9,6 @@
 
 * mmap/munmap should use segment IDs like Nachos.  Too hard otherwise.
 
-* Some confusion--do we really get overlapping ro/rw segment in normal
-  link?  Student example seemed to show that we don't.
-
 * Finish writing the tour.
 
 * Come up with a way for us to release some of the tests.
@@ -23,12 +20,5 @@
   them?
 
 * Speed up disk routines: filling an 8 MB disk takes a long time.
-
-* Not sure that raw arc4 should really be used so much in the tests.
-  Any reason not to use random_bytes()?
-
-* Grading script patches needed anymore?
-
-* Add a "real-time" option to `pintos' script so that 30 second
-  intervals can be accurately timed for HW#1 timer, HW#4 write-behind
-  cache.
+  (They're only slow because timer_sleep always waits for at least one
+  timer tick.)
