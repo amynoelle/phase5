@@ -6,9 +6,6 @@ General:
     only in the last few hours.  Emphasize that this is a bad choice.
     Encourage them to use CVS/sourceforge/etc.
 
-  - Encourage students to turn off -O3, or perhaps entirely turn off
-    optimization in provided makefiles?
-
   - Suggest where to start in each assignment?
 
   - Provide more tests!
@@ -17,6 +14,8 @@ Threads project:
 
   - Many students thought this was by far the hardest.  What can we do
     to make it a little easier?
+    
+    Move `join' part to project 2?
 
   - Students don't understand that they'll need to read lots of code
     before they can start writing.
@@ -58,7 +57,9 @@ Threads project:
 Userprog project:
 
   - Students thought project 2 was especially easy.  Reduce amount of
-    time to allow more time for another project?
+    time to allow more time for another project?  Add something to do
+    with the page table?  Move `join' functionality here from project
+    1?
 
 VM project:
 
