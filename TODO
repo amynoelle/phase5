@@ -117,8 +117,6 @@
 
 * Code:
 
-  - Rewrite quick_sort() to use heap sort, for O(1) stack usage.
-
   - Make printf() test actually check its results.
 
   - Make threads test use a program and arguments like the other
