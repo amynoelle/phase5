@@ -119,6 +119,10 @@
 
   - Rewrite quick_sort() to use heap sort, for O(1) stack usage.
 
-  - Rewrite list_sort() to use merge sort, for O(1) heap usage.
-
   - Make printf() test actually check its results.
+
+  - Make threads test use a program and arguments like the other
+    projects.
+
+  - Revise command-line arguments for sensibility instead of for
+    Nachos compatibility.
