@@ -2,10 +2,13 @@
 
 * The tests in tests/ don't apply the grading patches.
 
-* We need better example programs.
+* We need better and more example programs.
 
   - Need an mmap example program as a replacement for the crappy mmap FAQ
     question.
+
+* Make it clear that the students own their code, because there was some
+  confusion on that point.
 
 * Threads:
 
