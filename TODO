@@ -8,3 +8,6 @@
   returns the exit code once.
 
 * mmap/munmap should use segment IDs like Nachos.  Too hard otherwise.
+
+* Some confusion--do we really get overlapping ro/rw segment in normal
+  link?  Student example seemed to show that we don't.
