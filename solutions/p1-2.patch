@@ -76,12 +76,12 @@ diff -X pat -urpN pintos.orig/src/threads/thread.c pintos/src/threads/thread.c
  
    /* Stack frame for kernel_thread(). */
    kf = alloc_frame (t, sizeof *kf);
-@@ -224,16 +226,33 @@ thread_tid (void) 
+@@ -224,16 +226,34 @@ thread_tid (void) 
  void
  thread_exit (void) 
  {
 +  struct thread *t = thread_current ();
-+  list_elem *e;
++  list_elem *e, *next;
 +
    ASSERT (!intr_context ());
  
@@ -93,10 +93,11 @@ diff -X pat -urpN pintos.orig/src/threads/thread.c pintos/src/threads/thread.c
 +  latch_release (&t->ready_to_die);
 +
 +  /* Notify our children that they can die. */
-+  for (e = list_begin (&t->children); e != list_end (&t->children);
-+       e = list_next (e)) 
++  for (e = list_begin (&t->children); e != list_end (&t->children); e = next)
 +    {
 +      struct thread *child = list_entry (e, struct thread, children_elem);
++      next = list_next (e);
++      list_remove (e);
 +      sema_up (&child->can_die); 
 +    }
 +
