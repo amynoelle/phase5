@@ -13,3 +13,5 @@
   link?  Student example seemed to show that we don't.
 
 * Add qsort(), bsearch() implementations to kernel.
+
+* Finish writing the tour.
