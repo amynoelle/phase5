@@ -7,6 +7,8 @@
   - Need an mmap example program as a replacement for the crappy mmap FAQ
     question.
 
+  - How about `diff' and `cmp' programs?
+
 * Make it clear that the students own their code, because there was some
   confusion on that point.
 
