@@ -50,8 +50,6 @@
 
     Alternatively, shrink the inode size.
 
-  - Add mkdir and ls example user programs.
-
   - Add option to disable buffer cache.
 
   - Get rid of "dump" commands--they're not really useful.
