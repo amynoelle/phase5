@@ -11,3 +11,5 @@
 
 * Some confusion--do we really get overlapping ro/rw segment in normal
   link?  Student example seemed to show that we don't.
+
+* Add qsort(), bsearch() implementations to kernel.
