@@ -23,3 +23,8 @@
   them?
 
 * Speed up disk routines: filling an 8 MB disk takes a long time.
+
+* Not sure that raw arc4 should really be used so much in the tests.
+  Any reason not to use random_bytes()?
+
+* Grading script patches needed anymore?
