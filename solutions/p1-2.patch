@@ -112,13 +112,12 @@ diff -X pat -urpN src/threads/thread.c~ src/threads/thread.c
    schedule ();
    NOT_REACHED ();
  }
-@@ -270,6 +290,22 @@ thread_block (void) 
-   thread_current ()->status = THREAD_BLOCKED;
-   schedule ();
- }
-+
-+/* Waits for thread with tid CHILD_TID to die. */
-+void
+@@ -283,8 +290,18 @@ thread_block (void) 
+    This function will be implemented in problem 1-2.  For now, it
+    does nothing. */
+ void
+-thread_join (tid_t child_tid UNUSED) 
+-{
 +thread_join (tid_t child_tid) 
 +{
 +  struct thread *cur = thread_current ();
@@ -131,10 +130,9 @@ diff -X pat -urpN src/threads/thread.c~ src/threads/thread.c
 +      if (child->tid == child_tid) 
 +        latch_acquire (&child->ready_to_die);
 +    }
-+}
- 
- /* Idle thread.  Executes when no other thread is ready to run. */
- static void
+ }
+ 
+ /* Sets the current thread's priority to NEW_PRIORITY. */
 @@ -335,6 +371,9 @@ init_thread (struct thread *t, const cha
    strlcpy (t->name, name, sizeof t->name);
    t->stack = (uint8_t *) t + PGSIZE;

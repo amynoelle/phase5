@@ -13,15 +13,6 @@ diff -urpN pintos.orig/src/Makefile.build pintos/src/Makefile.build
  
  # Filesystem code.
  filesys_SRC  = filesys/filesys.c	# Filesystem core.
-diff -urpN pintos.orig/src/constants.h pintos/src/constants.h
---- pintos.orig/src/constants.h	2004-09-21 17:26:39.000000000 -0700
-+++ pintos/src/constants.h	2004-09-27 13:29:43.000000000 -0700
-@@ -8,4 +8,4 @@
- /*#define MACRONAME 1 */
- 
- /* Uncomment if if you've implemented thread_join(). */
--/*#define THREAD_JOIN_IMPLEMENTED 1*/
-+#define THREAD_JOIN_IMPLEMENTED 1
 diff -urpN pintos.orig/src/threads/init.c pintos/src/threads/init.c
 --- pintos.orig/src/threads/init.c	2004-09-26 14:15:17.000000000 -0700
 +++ pintos/src/threads/init.c	2004-09-27 16:08:03.000000000 -0700
@@ -183,12 +174,12 @@ diff -urpN pintos.orig/src/threads/thread.c pintos/src/threads/thread.c
    schedule ();
    NOT_REACHED ();
  }
-@@ -270,6 +293,26 @@ thread_block (void) 
-   thread_current ()->status = THREAD_BLOCKED;
-   schedule ();
- }
-+
-+/* Waits for thread with tid CHILD_TID to die. */
+@@ -283,8 +290,22 @@ thread_block (void) 
+    This function will be implemented in problem 1-2.  For now, it
+    does nothing. */
+-void
+-thread_join (tid_t child_tid UNUSED) 
+-{
 +int
 +thread_join (tid_t child_tid) 
 +{
@@ -202,14 +193,13 @@ diff -urpN pintos.orig/src/threads/thread.c pintos/src/threads/thread.c
 +      if (child->tid == child_tid) 
 +        {
 +          latch_acquire (&child->ready_to_die);
-+          return child->ret_code; 
++          return child->ret_code;
 +        }
 +    }
 +  return -1;
-+}
- 
- /* Idle thread.  Executes when no other thread is ready to run. */
- static void
+ }
+ 
+ /* Sets the current thread's priority to NEW_PRIORITY. */
 @@ -335,6 +378,12 @@ init_thread (struct thread *t, const cha
    strlcpy (t->name, name, sizeof t->name);
    t->stack = (uint8_t *) t + PGSIZE;
@@ -262,15 +252,15 @@ diff -urpN pintos.orig/src/threads/thread.h pintos/src/threads/thread.h
  #endif
  
      /* Owned by thread.c */
-@@ -119,7 +133,7 @@ void thread_yield (void);
- void thread_block (void);
+@@ -120,7 +132,7 @@ void thread_exit (void) NO_RETURN;
+ void thread_exit (void) NO_RETURN;
+ void thread_yield (void);
  
- /* This function will be implemented in problem 1-2. */
 -void thread_join (tid_t);
 +int thread_join (tid_t);
  
- /* These functions will be implemented in problem 1-3. */
  void thread_set_priority (int);
+ int thread_get_priority (void);
 diff -urpN pintos.orig/src/userprog/exception.c pintos/src/userprog/exception.c
 --- pintos.orig/src/userprog/exception.c	2004-09-26 14:15:17.000000000 -0700
 +++ pintos/src/userprog/exception.c	2004-09-27 13:29:44.000000000 -0700

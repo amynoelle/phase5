@@ -162,7 +162,7 @@ diff -u -p -u -r1.48 thread.c
    t->status = THREAD_READY;
    intr_set_level (old_level);
  }
-@@ -266,11 +280,79 @@ thread_yield (void) 
+@@ -266,8 +280,8 @@ thread_yield (void) 
    ASSERT (!intr_context ());
  
    old_level = intr_disable ();
@@ -172,6 +172,23 @@ diff -u -p -u -r1.48 thread.c
    schedule ();
    intr_set_level (old_level);
  }
+@@ -274,19 +288,74 @@
+ {
+ }
+ 
+-/* Sets the current thread's priority to NEW_PRIORITY. */
+-void
+-thread_set_priority (int new_priority) 
+-{
+-  thread_current ()->priority = new_priority;
+-}
+-
+-/* Returns the current thread's priority. */
+-int
+-thread_get_priority (void) 
+-{
+-  return thread_current ()->priority;
+-}
 +
 +/* Sets the current thread's priority to PRIORITY. */
 +void
