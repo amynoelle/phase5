@@ -87,6 +87,8 @@
 
     . Other good ideas.
 
+    . opendir/readdir/closedir
+
   - Add src/testcases/vm, src/testcases/filesys and make it clear to use
     them?
 
