@@ -4,6 +4,9 @@
 
 * We need better example programs.
 
+  - Need an mmap example program as a replacement for the crappy mmap FAQ
+    question.
+
 * Threads:
 
   - join-invalid doesn't compile if tid_t is not scalar type.
@@ -35,6 +38,13 @@
     Alternately we could just remove the synchronization on pid
     selection and check that students fix it.
 
+* VM project:
+
+  - Discuss the perils of mixing dirty bits between kernel and user virtual
+    memory.
+
+  - Sample solution.
+
 * Filesys project:
 
   - Increase maximum disk size from 8 MB to something that actually
@@ -49,6 +59,8 @@
   - Add option to disable buffer cache.
 
   - Get rid of "dump" commands--they're not really useful.
+
+  - Sample solution.
 
 * Documentation:
 
@@ -66,10 +78,9 @@
 
     . Low-level x86 stuff, like paged page tables.
 
-    . Other good ideas.
+    . Specifics on how to implement sbrk, malloc.
 
-  - mmap/munmap should use segment IDs like Nachos.  Too hard
-    otherwise.
+    . Other good ideas.
 
   - Add src/testcases/vm, src/testcases/filesys and make it clear to use
     them?
