@@ -1,20 +1,23 @@
 -*- text -*-
 
-* Code:
+* Grader:
 
-  - Speed up disk routines: filling an 8 MB disk takes a long time.
-    (They're only slow because timer_sleep always waits for at least
-    one timer tick.)
+  - Fix bug where failures are being treated as warnings.
 
-  - userprog project should mark read-only pages as actually read-only
-    in the page table.  Or, since this was consistently rated as the
-    easiest project by the students, require them to do it.
+* Userprog project:
 
-  - For userprog project, don't provide per-process pagedir
-    implementation but only single-process implementation and require
-    students to implement the separation?  This project was rated as
-    the easiest after all.  Alternately we could just remove the
-    synchronization on pid selection and check that students fix it.
+  - Move `join' implementation here, from `threads' project, to help
+    normalize the project difficulties.
+
+  - Mark read-only pages as actually read-only in the page table.  Or,
+    since this was consistently rated as the easiest project by the
+    students, require them to do it.
+
+  - Don't provide per-process pagedir implementation but only
+    single-process implementation and require students to implement
+    the separation?  This project was rated as the easiest after all.
+    Alternately we could just remove the synchronization on pid
+    selection and check that students fix it.
 
 * Documentation:
 
