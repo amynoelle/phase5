@@ -21,3 +21,5 @@
 
 * Add src/testcases/vm, src/testcases/filesys and make it clear to use
   them?
+
+* Speed up disk routines: filling an 8 MB disk takes a long time.
