@@ -6,6 +6,9 @@
 
   - join-invalid doesn't compile if tid_t is not scalar type.
 
+  - mlfqs tests suck.  They aren't even correct, e.g. the amarv
+    submission from win0405 is graded incorrectly.
+
 * Userprog project:
 
   - Move `join' implementation here, from `threads' project, to help
