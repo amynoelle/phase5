@@ -1,5 +1,7 @@
 -*- text -*-
 
+* The tests in tests/ don't apply the grading patches.
+
 * Threads:
 
   - join-invalid doesn't compile if tid_t is not scalar type.
