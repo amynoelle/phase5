@@ -18,3 +18,6 @@
 
 * userprog project should mark read-only pages as actually read-only
   in the page table
+
+* Add src/testcases/vm, src/testcases/filesys and make it clear to use
+  them?
