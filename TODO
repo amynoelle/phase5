@@ -15,3 +15,8 @@
 * Add qsort(), bsearch() implementations to kernel.
 
 * Finish writing the tour.
+
+* Come up with a way for us to release some of the tests.
+
+* userprog project should mark read-only pages as actually read-only
+  in the page table
