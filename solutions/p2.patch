@@ -293,7 +293,7 @@ diff -u -p -r1.6 process.c
  
  /* Starts a new thread running a user program loaded from
     FILENAME.  The new thread may be scheduled before
-@@ -26,31 +36,31 @@ static bool load (const char *cmdline, v
+@@ -26,31 +36,32 @@ static bool load (const char *cmdline, v
  tid_t
  process_execute (const char *filename) 
  {
@@ -334,7 +334,7 @@ diff -u -p -r1.6 process.c
 -  char *filename = filename_;
 +  struct exec_info *exec = exec_;
    struct intr_frame if_;
--  bool success;
+   bool success;
  
    /* Initialize interrupt frame and load executable. */
    memset (&if_, 0, sizeof if_);
@@ -346,10 +346,9 @@ diff -u -p -r1.6 process.c
 -
 -  /* If load failed, quit. */
 -  palloc_free_page (filename);
--  if (!success) 
-+  exec->success = load (exec->filename, &if_.eip, &if_.esp);
++  success = exec->success = load (exec->filename, &if_.eip, &if_.esp);
 +  sema_up (&exec->load_done);
-+  if (!exec->success)
+   if (!success) 
      thread_exit ();
  
    /* Switch page tables. */
