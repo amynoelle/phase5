@@ -9,6 +9,9 @@
   - Move `join' implementation here, from `threads' project, to help
     normalize the project difficulties.
 
+  - The semantics of the join system call should change so that it
+    only returns the exit code once.
+
   - Mark read-only pages as actually read-only in the page table.  Or,
     since this was consistently rated as the easiest project by the
     students, require them to do it.
@@ -36,9 +39,6 @@
     . Low-level x86 stuff, like paged page tables.
 
     . Other good ideas.
-
-  - The semantics of the join system call should change so that it
-    only returns the exit code once.
 
   - mmap/munmap should use segment IDs like Nachos.  Too hard
     otherwise.
