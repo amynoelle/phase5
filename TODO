@@ -28,3 +28,7 @@
   Any reason not to use random_bytes()?
 
 * Grading script patches needed anymore?
+
+* Add a "real-time" option to `pintos' script so that 30 second
+  intervals can be accurately timed for HW#1 timer, HW#4 write-behind
+  cache.
