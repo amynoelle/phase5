@@ -1,11 +1,5 @@
 -*- text -*-
 
-* Miscellaneous:
-
-  - Currently the `pintos' utility has a broken return code policy: it
-    returns 1 to indicate success.  It inherited this mistake from
-    Bochs, which does something similar.  This needs to be fixed.
-
 * Userprog project:
 
   - Move `join' implementation here, from `threads' project, to help
