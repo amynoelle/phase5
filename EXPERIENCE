@@ -16,10 +16,6 @@ Threads project:
   - Students don't understand that they'll need to read lots of code
     before they can start writing.
 
-  - Students don't read the debugging documentation.  Point out in
-    multiple places, and especially point to the backtrace
-    description.
-
   - Students think data structures are more important than they really
     are.  Say that clever data structures won't get you too much extra
     credit compared to simpler ones.  Really bad or "stupid" data
