@@ -6,10 +6,6 @@
     figure out the asm from the Intel manuals.  Compare object files
     before and after to make sure nothing changed.
 
-* Grader:
-
-  - Fix bug where failures are being treated as warnings.
-
 * Userprog project:
 
   - Move `join' implementation here, from `threads' project, to help
