@@ -121,5 +121,4 @@
 
   - Rewrite list_sort() to use merge sort, for O(1) heap usage.
 
-  - Make list_elem and hash_elem a struct, by encapsulating a struct
-    list_elem inside a struct hash_elem as a member.
+  - Make printf() test actually check its results.
