@@ -1,0 +1,8 @@
+-*- text -*-
+
+* The p1-4.c testcase needs significant tuning.  Currently it takes
+  too long (especially when SHOW_PROGRESS is turned on) and doesn't
+  show significant improvement.
+
+* The semantics of the join system call should change so that it only
+  returns the exit code once.
