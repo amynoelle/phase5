@@ -1,0 +1,850 @@
+diff -urp pintos.orig/src/constants.h pintos/src/constants.h
+--- pintos.orig/src/constants.h	2004-09-21 17:26:39.000000000 -0700
++++ pintos/src/constants.h	2004-09-22 00:34:01.000000000 -0700
+@@ -8,4 +8,4 @@
+ /*#define MACRONAME 1 */
+ 
+ /* Uncomment if if you've implemented thread_join(). */
+-/*#define THREAD_JOIN_IMPLEMENTED 1*/
++#define THREAD_JOIN_IMPLEMENTED 1
+Only in pintos/src: constants.h~
+diff -urp pintos.orig/src/threads/synch.c pintos/src/threads/synch.c
+--- pintos.orig/src/threads/synch.c	2004-09-19 21:29:53.000000000 -0700
++++ pintos/src/threads/synch.c	2004-09-22 00:30:05.000000000 -0700
+@@ -330,3 +330,35 @@ cond_name (const struct condition *cond)
+ 
+   return cond->name;
+ }
++
++void
++latch_init (struct latch *latch, const char *name) 
++{
++  latch->released = false;
++  lock_init (&latch->monitor_lock, name);
++  cond_init (&latch->rel_cond, name);
++}
++
++void
++latch_acquire (struct latch *latch) 
++{
++  lock_acquire (&latch->monitor_lock);
++  if (!latch->released) 
++    {
++      cond_wait (&latch->rel_cond, &latch->monitor_lock);
++      ASSERT (latch->released); 
++    }
++  lock_release (&latch->monitor_lock);
++}
++
++void
++latch_release (struct latch *latch) 
++{
++  lock_acquire (&latch->monitor_lock);
++  if (!latch->released)
++    {
++      latch->released = true;
++      cond_signal (&latch->rel_cond, &latch->monitor_lock);
++    }
++  lock_release (&latch->monitor_lock);
++}
+diff -urp pintos.orig/src/threads/synch.h pintos/src/threads/synch.h
+--- pintos.orig/src/threads/synch.h	2004-09-19 21:29:53.000000000 -0700
++++ pintos/src/threads/synch.h	2004-09-22 00:30:05.000000000 -0700
+@@ -44,4 +44,16 @@ void cond_signal (struct condition *, st
+ void cond_broadcast (struct condition *, struct lock *);
+ const char *cond_name (const struct condition *);
+ 
++/* Latch. */
++struct latch 
++  {
++    bool released;              /* Released yet? */
++    struct lock monitor_lock;   /* Monitor lock. */
++    struct condition rel_cond;  /* Signaled when released. */
++  };
++
++void latch_init (struct latch *, const char *);
++void latch_acquire (struct latch *);
++void latch_release (struct latch *);
++
+ #endif /* threads/synch.h */
+diff -urp pintos.orig/src/threads/thread.c pintos/src/threads/thread.c
+--- pintos.orig/src/threads/thread.c	2004-09-21 22:42:17.000000000 -0700
++++ pintos/src/threads/thread.c	2004-09-22 00:32:39.000000000 -0700
+@@ -13,6 +13,7 @@
+ #include "threads/synch.h"
+ #ifdef USERPROG
+ #include "userprog/process.h"
++#include "userprog/syscall.h"
+ #endif
+ 
+ /* Random value for struct thread's `magic' member.
+@@ -75,6 +76,7 @@ thread_init (void) 
+   init_thread (initial_thread, "main", PRI_DEFAULT);
+   initial_thread->status = THREAD_RUNNING;
+   initial_thread->tid = allocate_tid ();
++  sema_up (&initial_thread->can_die);
+ }
+ 
+ /* Starts preemptive thread scheduling by enabling interrupts.
+@@ -119,6 +121,7 @@ thread_create (const char *name, int pri
+   /* Initialize thread. */
+   init_thread (t, name, priority);
+   tid = t->tid = allocate_tid ();
++  list_push_back (&thread_current ()->children, &t->children_elem);
+ 
+   /* Stack frame for kernel_thread(). */
+   kf = alloc_frame (t, sizeof *kf);
+@@ -195,16 +198,36 @@ thread_tid (void) 
+ void
+ thread_exit (void) 
+ {
++  struct thread *t = thread_current ();
++  list_elem *e, *next;
++
+   ASSERT (!intr_context ());
+ 
+ #ifdef USERPROG
+   process_exit ();
+ #endif
++  syscall_exit ();
++  
++  /* Notify our parent that we're dying. */
++  latch_release (&t->ready_to_die);
++
++  /* Notify our children that they can die. */
++  for (e = list_begin (&t->children); e != list_end (&t->children);
++       e = next) 
++    {
++      struct thread *child = list_entry (e, struct thread, children_elem);
++      next = list_next (e);
++      list_remove (e);
++      sema_up (&child->can_die); 
++    }
++
++  /* Wait until our parent is ready for us to die. */
++  sema_down (&t->can_die);
+ 
+   /* Just set our status to dying and schedule another process.
+      We will be destroyed during the call to schedule_tail(). */
+   intr_disable ();
+-  thread_current ()->status = THREAD_DYING;
++  t->status = THREAD_DYING;
+   schedule ();
+   NOT_REACHED ();
+ }
+@@ -241,6 +264,26 @@ thread_block (void) 
+   thread_current ()->status = THREAD_BLOCKED;
+   schedule ();
+ }
++
++/* Waits for thread with tid CHILD_TID to die. */
++int
++thread_join (tid_t child_tid) 
++{
++  struct thread *cur = thread_current ();
++  list_elem *e;
++
++  for (e = list_begin (&cur->children); e != list_end (&cur->children); ) 
++    {
++      struct thread *child = list_entry (e, struct thread, children_elem);
++      e = list_next (e);
++      if (child->tid == child_tid) 
++        {
++          latch_acquire (&child->ready_to_die);
++          return child->ret_code; 
++        }
++    }
++  return -1;
++}
+ 
+ /* Idle thread.  Executes when no other thread is ready to run. */
+ static void
+@@ -306,6 +349,12 @@ init_thread (struct thread *t, const cha
+   strlcpy (t->name, name, sizeof t->name);
+   t->stack = (uint8_t *) t + PGSIZE;
+   t->priority = priority;
++  latch_init (&t->ready_to_die, "ready-to-die");
++  sema_init (&t->can_die, 0, "can-die");
++  list_init (&t->children);
++  t->ret_code = -1;
++  list_init (&t->fds);
++  t->next_handle = 2;
+   t->magic = THREAD_MAGIC;
+ }
+ 
+Only in pintos/src/threads: thread.c.orig
+Only in pintos/src/threads: thread.c.rej
+Only in pintos/src/threads: thread.c~
+diff -urp pintos.orig/src/threads/thread.h pintos/src/threads/thread.h
+--- pintos.orig/src/threads/thread.h	2004-09-20 15:29:18.000000000 -0700
++++ pintos/src/threads/thread.h	2004-09-22 00:30:05.000000000 -0700
+@@ -4,6 +4,7 @@
+ #include <debug.h>
+ #include <list.h>
+ #include <stdint.h>
++#include "threads/synch.h"
+ 
+ /* States in a thread's life cycle. */
+ enum thread_status
+@@ -89,12 +90,23 @@ struct thread
+     uint8_t *stack;                     /* Saved stack pointer. */
+     int priority;                       /* Priority. */
+ 
++    /* Members for implementing thread_join(). */
++    struct latch ready_to_die;          /* Release when thread about to die. */
++    struct semaphore can_die;           /* Up when thread allowed to die. */
++    struct list children;               /* List of child threads. */
++    list_elem children_elem;            /* Element of `children' list. */
++    int ret_code;                       /* Return status. */
++
+     /* Shared between thread.c and synch.c. */
+     list_elem elem;                     /* List element. */
+ 
+ #ifdef USERPROG
+     /* Owned by userprog/process.c. */
+     uint32_t *pagedir;                  /* Page directory. */
++
++    /* Owned by syscall.c. */
++    struct list fds;                    /* List of file descriptors. */
++    int next_handle;                    /* Next handle value. */
+ #endif
+ 
+     /* Owned by thread.c */
+@@ -117,7 +129,7 @@ void thread_yield (void);
+ void thread_block (void);
+ 
+ /* This function will be implemented in problem 1-2. */
+-void thread_join (tid_t);
++int thread_join (tid_t);
+ 
+ /* These functions will be implemented in problem 1-3. */
+ void thread_set_priority (int);
+Only in pintos/src/userprog: build
+diff -urp pintos.orig/src/userprog/exception.c pintos/src/userprog/exception.c
+--- pintos.orig/src/userprog/exception.c	2004-09-20 12:06:58.000000000 -0700
++++ pintos/src/userprog/exception.c	2004-09-22 00:30:05.000000000 -0700
+@@ -134,6 +134,13 @@ page_fault (struct intr_frame *f) 
+   write = (f->error_code & PF_W) != 0;
+   user = (f->error_code & PF_U) != 0;
+ 
++  if (!user) 
++    {
++      f->eip = (void (*) (void)) f->eax;
++      f->eax = 0;
++      return;
++    }
++
+   /* To implement virtual memory, delete the rest of the function
+      body, and replace it with code that brings in the page to
+      which fault_addr refers. */
+diff -urp pintos.orig/src/userprog/pagedir.c pintos/src/userprog/pagedir.c
+--- pintos.orig/src/userprog/pagedir.c	2004-09-21 22:42:17.000000000 -0700
++++ pintos/src/userprog/pagedir.c	2004-09-22 00:32:23.000000000 -0700
+@@ -99,7 +99,7 @@ pagedir_set_page (uint32_t *pd, void *up
+   ASSERT (pg_ofs (upage) == 0);
+   ASSERT (pg_ofs (kpage) == 0);
+   ASSERT (upage < PHYS_BASE);
+-  ASSERT (lookup_page (pd, upage, false) == NULL);
++  ASSERT (pagedir_get_page (pd, upage) == NULL);
+ 
+   pte = lookup_page (pd, upage, true);
+   if (pte != NULL) 
+Only in pintos/src/userprog: pagedir.c.orig
+Only in pintos/src/userprog: pagedir.c.rej
+Only in pintos/src/userprog: pagedir.c.rej~
+Only in pintos/src/userprog: pagedir.c~
+diff -urp pintos.orig/src/userprog/process.c pintos/src/userprog/process.c
+--- pintos.orig/src/userprog/process.c	2004-09-21 22:42:17.000000000 -0700
++++ pintos/src/userprog/process.c	2004-09-22 00:30:05.000000000 -0700
+@@ -182,7 +182,7 @@ struct Elf32_Phdr
+ #define PF_R 4          /* Readable. */
+ 
+ static bool load_segment (struct file *, const struct Elf32_Phdr *);
+-static bool setup_stack (void **esp);
++static bool setup_stack (const char *cmdline, void **esp);
+ 
+ /* Aborts loading an executable, with an error message. */
+ #define LOAD_ERROR(MSG)                                         \
+@@ -198,13 +198,15 @@ static bool setup_stack (void **esp);
+    and its initial stack pointer into *ESP.
+    Returns true if successful, false otherwise. */
+ bool
+-load (const char *filename, void (**eip) (void), void **esp) 
++load (const char *cmdline, void (**eip) (void), void **esp) 
+ {
+   struct thread *t = thread_current ();
++  char filename[NAME_MAX + 2];
+   struct Elf32_Ehdr ehdr;
+   struct file *file = NULL;
+   off_t file_ofs;
+   bool success = false;
++  char *cp;
+   int i;
+ 
+   /* Allocate page directory. */
+@@ -212,6 +214,14 @@ load (const char *filename, void (**eip)
+   if (t->pagedir == NULL)
+     LOAD_ERROR (("page directory allocation failed"));
+ 
++  /* Extract filename from command line. */
++  while (*cmdline == ' ')
++    cmdline++;
++  strlcpy (filename, cmdline, sizeof filename);
++  cp = strchr (filename, ' ');
++  if (cp != NULL)
++    *cp = '\0';
++
+   /* Open executable file. */
+   file = filesys_open (filename);
+   if (file == NULL)
+@@ -269,7 +279,7 @@ load (const char *filename, void (**eip)
+     }
+ 
+   /* Set up stack. */
+-  if (!setup_stack (esp))
++  if (!setup_stack (cmdline, esp))
+     goto done;
+ 
+   /* Start address. */
+@@ -371,10 +381,80 @@ load_segment (struct file *file, const s
+   return true;
+ }
+ 
+-/* Create a minimal stack by mapping a zeroed page at the top of
+-   user virtual memory. */
++static void
++reverse (int argc, char **argv) 
++{
++  for (; argc > 1; argc -= 2, argv++) 
++    {
++      char *tmp = argv[0];
++      argv[0] = argv[argc - 1];
++      argv[argc - 1] = tmp;
++    }
++}
++
++static void *
++push (uint8_t *kpage, size_t *ofs, const void *buf, size_t size) 
++{
++  size_t padsize = ROUND_UP (size, sizeof (uint32_t));
++  if (*ofs < padsize)
++    return NULL;
++
++  *ofs -= padsize;
++  memcpy (kpage + *ofs + (padsize - size), buf, size);
++  return kpage + *ofs + (padsize - size);
++}
++
++static bool
++init_cmdline (uint8_t *kpage, uint8_t *upage, const char *cmdline,
++              void **esp) 
++{
++  size_t ofs = PGSIZE;
++  char *const null = NULL;
++  char *cmdline_copy;
++  char *karg, *saveptr;
++  int argc;
++  char **argv;
++
++  /* Push command line string. */
++  cmdline_copy = push (kpage, &ofs, cmdline, strlen (cmdline) + 1);
++  if (cmdline_copy == NULL)
++    return false;
++
++  if (push (kpage, &ofs, &null, sizeof null) == NULL)
++    return false;
++
++  /* Parse command line into arguments
++     and push them in reverse order. */
++  argc = 0;
++  for (karg = strtok_r (cmdline_copy, " ", &saveptr); karg != NULL;
++       karg = strtok_r (NULL, " ", &saveptr))
++    {
++      char *uarg = upage + (karg - (char *) kpage);
++      if (push (kpage, &ofs, &uarg, sizeof uarg) == NULL)
++        return false;
++      argc++;
++    }
++
++  /* Reverse the order of the command line arguments. */
++  argv = (char **) (upage + ofs);
++  reverse (argc, (char **) (kpage + ofs));
++
++  /* Push argv, argc, "return address". */
++  if (push (kpage, &ofs, &argv, sizeof argv) == NULL
++      || push (kpage, &ofs, &argc, sizeof argc) == NULL
++      || push (kpage, &ofs, &null, sizeof null) == NULL)
++    return false;
++
++  /* Set initial stack pointer. */
++  *esp = upage + ofs;
++  return true;
++}
++
++/* Create a minimal stack for T by mapping a page at the
++   top of user virtual memory.  Fills in the page using CMDLINE
++   and sets *ESP to the stack pointer. */
+ static bool
+-setup_stack (void **esp) 
++setup_stack (const char *cmdline, void **esp) 
+ {
+   uint8_t *kpage;
+   bool success = false;
+@@ -382,9 +462,9 @@ setup_stack (void **esp) 
+   kpage = palloc_get (PAL_USER | PAL_ZERO);
+   if (kpage != NULL) 
+     {
+-      success = install_page (((uint8_t *) PHYS_BASE) - PGSIZE, kpage);
+-      if (success)
+-        *esp = PHYS_BASE;
++      uint8_t *upage = ((uint8_t *) PHYS_BASE) - PGSIZE;
++      if (install_page (upage, kpage))
++        success = init_cmdline (kpage, upage, cmdline, esp);
+       else
+         palloc_free (kpage);
+     }
+Only in pintos/src/userprog: process.c.orig
+diff -urp pintos.orig/src/userprog/syscall.c pintos/src/userprog/syscall.c
+--- pintos.orig/src/userprog/syscall.c	2004-09-05 22:19:19.000000000 -0700
++++ pintos/src/userprog/syscall.c	2004-09-22 00:30:05.000000000 -0700
+@@ -1,20 +1,429 @@
+ #include "userprog/syscall.h"
+ #include <stdio.h>
++#include <string.h>
+ #include <syscall-nr.h>
++#include "userprog/process.h"
++#include "userprog/pagedir.h"
++#include "devices/kbd.h"
++#include "filesys/filesys.h"
++#include "filesys/file.h"
++#include "threads/init.h"
+ #include "threads/interrupt.h"
++#include "threads/malloc.h"
++#include "threads/mmu.h"
++#include "threads/palloc.h"
+ #include "threads/thread.h"
+ 
++typedef int syscall_function (int, int, int);
++
++static int sys_halt (void);
++static int sys_exit (int status);
++static int sys_exec (const char *ufile);
++static int sys_join (tid_t);
++static int sys_create (const char *ufile, unsigned initial_size);
++static int sys_remove (const char *ufile);
++static int sys_open (const char *ufile);
++static int sys_filesize (int handle);
++static int sys_read (int handle, void *udst_, unsigned size);
++static int sys_write (int handle, void *usrc_, unsigned size);
++static int sys_seek (int handle, unsigned position);
++static int sys_tell (int handle);
++static int sys_close (int handle);
++
++struct syscall 
++  {
++    size_t arg_cnt;
++    syscall_function *func;
++  };
++
++struct syscall syscall_table[] = 
++  {
++    {0, (syscall_function *) sys_halt},
++    {1, (syscall_function *) sys_exit},
++    {1, (syscall_function *) sys_exec},
++    {1, (syscall_function *) sys_join},
++    {2, (syscall_function *) sys_create},
++    {1, (syscall_function *) sys_remove},
++    {1, (syscall_function *) sys_open},
++    {1, (syscall_function *) sys_filesize},
++    {3, (syscall_function *) sys_read},
++    {3, (syscall_function *) sys_write},
++    {2, (syscall_function *) sys_seek},
++    {1, (syscall_function *) sys_tell},
++    {1, (syscall_function *) sys_close},
++  };
++static const int syscall_cnt = sizeof syscall_table / sizeof *syscall_table;
++
+ static void syscall_handler (struct intr_frame *);
++static void copy_in (void *, const void *, size_t);
++
++static struct lock fs_lock;
+ 
+ void
+ syscall_init (void) 
+ {
+   intr_register (0x30, 3, INTR_ON, syscall_handler, "syscall");
++  lock_init (&fs_lock, "fs");
+ }
+ 
+ static void
+ syscall_handler (struct intr_frame *f) 
+ {
+-  printf ("system call!\n");
++  struct syscall *s;
++  int call_nr;
++  int args[3];
++
++  copy_in (&call_nr, f->esp, sizeof call_nr);
++  if (call_nr < 0 || call_nr >= syscall_cnt)
++    {
++      printf ("bad syscall number %d\n", call_nr);
++      thread_exit ();
++    }
++
++  s = syscall_table + call_nr;
++  ASSERT (s->arg_cnt <= sizeof args / sizeof *args);
++  memset (args, 0, sizeof args);
++  copy_in (args, (uint32_t *) f->esp + 1, sizeof *args * s->arg_cnt);
++  f->eax = s->func (args[0], args[1], args[2]);
++}
++
++static bool
++verify_user (const void *uaddr) 
++{
++  return pagedir_get_page (thread_current ()->pagedir, uaddr) != NULL;
++}
++
++static inline bool get_user (uint8_t *dst, const uint8_t *usrc) {
++  int eax;
++  asm ("movl $1f, %%eax; movb %2, %%al; movb %%al, %0; 1:"
++       : "=m" (*dst), "=&a" (eax) : "m" (*usrc));
++  return eax != 0;
++}
++
++static inline bool put_user (uint8_t *udst, uint8_t byte) {
++  int eax;
++  asm ("movl $1f, %%eax; movb %b2, %0; 1:"
++       : "=m" (*udst), "=&a" (eax) : "r" (byte));
++  return eax != 0;
++}
++
++static void
++copy_in (void *dst_, const void *usrc_, size_t size) 
++{
++  uint8_t *dst = dst_;
++  const uint8_t *usrc = usrc_;
++
++  for (; size > 0; size--, dst++, usrc++) 
++    if (usrc >= (uint8_t *) PHYS_BASE || !get_user (dst, usrc)) 
++      thread_exit ();
++}
++
++static char *
++copy_in_string (const char *us) 
++{
++  char *ks;
++  size_t length;
++
++  ks = palloc_get (0);
++  if (ks == NULL) 
++    {
++      printf ("copy_in_string: out of memory\n");
++      thread_exit ();
++    }
++
++  for (length = 0; length < PGSIZE; length++)
++    {
++      if (us >= (char *) PHYS_BASE || !get_user (ks + length, us++)) 
++        {
++          printf ("bad user reference (%p)\n", us + length);
++          thread_exit (); 
++        }
++      
++      if (ks[length] == '\0')
++        return ks;
++    }
++
++  printf ("copy_in_string: string too long\n");
++  palloc_free (ks);
++  thread_exit ();
++}
++
++static int
++sys_halt (void)
++{
++  power_off ();
++}
++
++static int
++sys_exit (int ret_code) 
++{
++  thread_current ()->ret_code = ret_code;
++  thread_exit ();
++  NOT_REACHED ();
++}
++
++static int
++sys_exec (const char *ufile) 
++{
++  tid_t tid;
++  char *kfile = copy_in_string (ufile);
++
++  lock_acquire (&fs_lock);
++  tid = process_execute (kfile);
++  lock_release (&fs_lock);
++
++  palloc_free (kfile);
++
++  return tid;
++}
++
++static int
++sys_join (tid_t child) 
++{
++  return thread_join (child);
++}
++
++static int
++sys_create (const char *ufile, unsigned initial_size) 
++{
++  char *kfile = copy_in_string (ufile);
++  bool ok;
++  
++  lock_acquire (&fs_lock);
++  ok = filesys_create (kfile, initial_size);
++  lock_release (&fs_lock);
++
++  palloc_free (kfile);
++
++  return ok;
++}
++
++static int
++sys_remove (const char *ufile) 
++{
++  char *kfile = copy_in_string (ufile);
++  bool ok;
++  
++  lock_acquire (&fs_lock);
++  ok = filesys_remove (kfile);
++  lock_release (&fs_lock);
++
++  palloc_free (kfile);
++
++  return ok;
++}
++
++struct fildes
++  {
++    list_elem elem;
++    struct file *file;
++    int handle;
++  };
++
++static int
++sys_open (const char *ufile) 
++{
++  char *kfile = copy_in_string (ufile);
++  struct fildes *fd;
++  int handle = -1;
++
++  fd = malloc (sizeof *fd);
++  if (fd == NULL)
++    goto exit;
++
++  lock_acquire (&fs_lock);
++  fd->file = filesys_open (kfile);
++  if (fd->file != NULL)
++    {
++      struct thread *cur = thread_current ();
++      handle = fd->handle = cur->next_handle++;
++      list_push_front (&cur->fds, &fd->elem);
++    }
++  else 
++    free (fd);
++  lock_release (&fs_lock);
++
++ exit:
++  palloc_free (kfile);
++  return handle;
++}
++
++static struct fildes *
++lookup_fd (int handle) 
++{
++  struct thread *cur = thread_current ();
++  list_elem *e;
++  
++  for (e = list_begin (&cur->fds); e != list_end (&cur->fds);
++       e = list_next (e))
++    {
++      struct fildes *fd = list_entry (e, struct fildes, elem);
++      if (fd->handle == handle)
++        return fd;
++    }
++
++  printf ("no handle %d\n", handle);
+   thread_exit ();
+ }
++
++static int
++sys_filesize (int handle) 
++{
++  struct fildes *fd = lookup_fd (handle);
++  int size;
++
++  lock_acquire (&fs_lock);
++  size = file_length (fd->file);
++  lock_release (&fs_lock);
++
++  return size;
++}
++
++static int
++sys_read (int handle, void *udst_, unsigned size) 
++{
++  uint8_t *udst = udst_;
++  struct fildes *fd;
++  int bytes_read = 0;
++
++  if (handle == STDIN_FILENO) 
++    {
++      for (bytes_read = 0; (size_t) bytes_read < size; bytes_read++)
++        if (udst >= (uint8_t *) PHYS_BASE || !put_user (udst++, kbd_getc ()))
++          thread_exit ();
++      return bytes_read;
++    }
++
++  lock_acquire (&fs_lock);
++  fd = lookup_fd (handle);
++  while (size > 0) 
++    {
++      size_t page_left = PGSIZE - pg_ofs (udst);
++      size_t read_amt = size < page_left ? size : page_left;
++      off_t retval;
++
++      if (!verify_user (udst)) 
++        {
++          lock_release (&fs_lock);
++          thread_exit ();
++        }
++      
++      retval = file_read (fd->file, udst, read_amt);
++      if (retval < 0)
++        {
++          if (bytes_read == 0)
++            bytes_read = -1; 
++          break;
++        }
++
++      bytes_read += retval;
++      if (retval != (off_t) read_amt)
++        break;
++
++      udst += retval;
++      size -= retval;
++    }
++  lock_release (&fs_lock);
++  
++  return bytes_read;
++}
++
++static int
++sys_write (int handle, void *usrc_, unsigned size) 
++{
++  uint8_t *usrc = usrc_;
++  struct fildes *fd = NULL;
++  int bytes_written = 0;
++
++  lock_acquire (&fs_lock);
++  if (handle != STDOUT_FILENO)
++    fd = lookup_fd (handle);
++  while (size > 0) 
++    {
++      size_t page_left = PGSIZE - pg_ofs (usrc);
++      size_t write_amt = size < page_left ? size : page_left;
++      off_t retval;
++
++      if (!verify_user (usrc)) 
++        {
++          lock_release (&fs_lock);
++          thread_exit ();
++        }
++
++      if (handle == STDOUT_FILENO)
++        {
++          putbuf (usrc, write_amt);
++          retval = write_amt;
++        }
++      else
++        retval = file_write (fd->file, usrc, write_amt);
++      if (retval < 0) 
++        {
++          if (bytes_written == 0)
++            bytes_written = -1;
++          break;
++        }
++
++      bytes_written += retval;
++      if (retval != (off_t) write_amt)
++        break;
++
++      usrc += retval;
++      size -= retval;
++    }
++  lock_release (&fs_lock);
++
++  return bytes_written;
++}
++
++static int
++sys_seek (int handle, unsigned position) 
++{
++  struct fildes *fd = lookup_fd (handle);
++  
++  lock_acquire (&fs_lock);
++  file_seek (fd->file, position);
++  lock_release (&fs_lock);
++
++  return 0;
++}
++
++static int
++sys_tell (int handle) 
++{
++  struct fildes *fd = lookup_fd (handle);
++  unsigned position;
++  
++  lock_acquire (&fs_lock);
++  position = file_tell (fd->file);
++  lock_release (&fs_lock);
++
++  return position;
++}
++
++static int
++sys_close (int handle) 
++{
++  struct fildes *fd = lookup_fd (handle);
++  lock_acquire (&fs_lock);
++  file_close (fd->file);
++  lock_release (&fs_lock);
++  list_remove (&fd->elem);
++  free (fd);
++  return 0;
++}
++
++void
++syscall_exit (void) 
++{
++  struct thread *cur = thread_current ();
++  list_elem *e, *next;
++  
++  for (e = list_begin (&cur->fds); e != list_end (&cur->fds); e = next)
++    {
++      struct fildes *fd = list_entry (e, struct fildes, elem);
++      next = list_next (e);
++      file_close (fd->file);
++      free (fd);
++    }
++}
+diff -urp pintos.orig/src/userprog/syscall.h pintos/src/userprog/syscall.h
+--- pintos.orig/src/userprog/syscall.h	2004-09-05 22:38:45.000000000 -0700
++++ pintos/src/userprog/syscall.h	2004-09-22 00:30:05.000000000 -0700
+@@ -2,5 +2,6 @@
+ #define USERPROG_SYSCALL_H
+ 
+ void syscall_init (void);
++void syscall_exit (void);
+ 
+ #endif /* userprog/syscall.h */
