@@ -1,11 +1,5 @@
 -*- text -*-
 
-* Clean up:
-
-  - Replace AT&T assembly code by Intel assembly so that students can
-    figure out the asm from the Intel manuals.  Compare object files
-    before and after to make sure nothing changed.
-
 * Userprog project:
 
   - Move `join' implementation here, from `threads' project, to help
