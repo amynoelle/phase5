@@ -1,0 +1,106 @@
+-*- text -*-
+
+General:
+
+  - Lots of groups only tried combining the 3 group members' parts
+    only in the last few hours.  Emphasize that this is a bad choice.
+    Encourage them to use CVS/sourceforge/etc.
+
+  - Upgrade gdb, 6.2.1 is better.
+
+  - Encourage students to turn off -O3.
+
+  - Suggest where to start in each assignment?
+
+  - Provide more tests!
+
+  - Turn off optimization in provided makefiles?
+
+Threads project:				
+
+  - Many students thought this was by far the hardest.  What can we do
+    to make it a little easier?
+
+  - Students don't understand that they'll need to read lots of code.
+
+  - Students don't read the debugging page.  Point out in multiple
+    places, and especially point to the backtrace description.
+
+  - Students think data structures are more important than they really
+    are.  Say that clever data structures won't get you too much extra
+    credit compared to simpler ones.  Bad data structures might cost
+    points though.
+
+  - Some students would appreciate more discussion of nitty-gritty
+    details:
+
+      Finally, by doing pintos, an x86 OS, I was hoping to gain some
+      knowledge about how an X86 OS really works. Instead we ended up
+      banging on a black box with magical ASM that would pop up in gdb
+      when we had memory corruption. While one could make the argument
+      that this is too much application over theory, I feel like the
+      theory of OS/140 is application oriented enough that going over
+      what an x86 OS really does would not be harmful or
+      unacademic. What's in those first few bytes to bootstrap the OS?
+      How does it find a kernel that is scattered across a filesystem
+      that the bootloader/computer knows nothing about. How does I/O
+      initiailization works? What is that magic about transforming a
+      thread into a process? I have absolutely no idea.
+
+      This feeling of not having a better grasp of OS/low-level
+      programming is something I can't shake, but that I'm not sure how
+      one would be rectified. How on earth did pintos get written in ~2
+      months? I'm again at a loss.
+
+  - printf()s can fail in weird circumstances.  Should we try adding
+    code for using the special output port, which doesn't need any
+    synchronization etc.?
+
+Userprog project:
+
+  - Students thought project 2 was especially easy.  Reduce amount of
+    time to allow more time for another project?
+
+VM project:
+
+  - One student suggestion:
+
+      Second point of confusion: the difference between kernel address
+      space and actual physical addresses (kernel address minus
+      PHYS_BASE).  It seemed weird that the functions to access
+      pagedir entries used kernel virtual addresses instead of
+      physical addresses.  We eventually realized that when the
+      assignment refers to the virtual-to-physical translations that
+      we're supposed to do, 'physical' actually means 'kernel virtual'
+      (or a location on disk).  A sentence or two clearing up this
+      ambiguity would have been helpful.
+
+
+Filesys project:
+
+  - A fair number of students thought this was the hardest project.
+    Perhaps we could add some notes about where to start?
+
+
+Another student note:
+
+      3) This is probably an "unsupported" configuration, however I'll point
+      it out anyway.  Running user programs under Pintos compiled on my
+      desktop I get the following warning:
+
+      unknown ELF segment type 65041580
+
+      If you look at /usr/include/elf.h you will find:
+
+      #define PT_LOOS 0x60000000 /* Start of OS-specific */
+
+      It would appear that elf segments starting with this program header
+      are "OS-specific" My Occam's Razor explanation here is that the
+      segment holds the bits to configure the stack protection features in
+      newer GCCs.
+
+      gcc version is: gcc version 3.3.4 20040623 (Gentoo Linux 3.3.4-r1,
+      ssp-3.3.2-2, pie-8.7.6)
+
+This probably means that we should provide a linker script that leaves
+out weird stuff.
