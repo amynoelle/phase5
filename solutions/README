@@ -1,9 +1,6 @@
 Sample solutions.
 
-* The solutions for p1-1, p1-2, and p2 are okay.
-
-* The solution for p1-3 needs some work.  It doesn't pass all of the
-  tests.
+* The solutions for p1-1, p1-2, p1-3, and p2 are okay.
 
 * The solution for p3 is terrible.  For example, there's no locking at
   all.  I just wrote it to make sure that the project was possible
