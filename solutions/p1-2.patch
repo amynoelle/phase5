@@ -1,0 +1,121 @@
+--- cs140/pintos/src/threads/thread.c	2004-09-17 23:16:15.000000000 -0700
++++ cs140/ref/pintos/src/threads/thread.c	2004-09-17 23:19:03.000000000 -0700
+@@ -75,6 +75,7 @@
+   init_thread (initial_thread, "main", PRI_DEFAULT);
+   initial_thread->status = THREAD_RUNNING;
+   initial_thread->tid = allocate_tid ();
++  sema_up (&initial_thread->can_die);
+ 
+   /* Initialize run queue. */
+   list_init (&ready_list);
+@@ -244,12 +245,29 @@
+ void
+ thread_exit (void) 
+ {
++  struct thread *t = thread_current ();
++  list_elem *e;
++
+   ASSERT (!intr_context ());
+ 
++  /* Notify our parent that we're dying. */
++  sema_up (&t->ready_to_die);
++
++  /* Notify our children that they can die. */
++  for (e = list_begin (&t->children); e != list_end (&t->children);
++       e = list_next (e)) 
++    {
++      struct thread *child = list_entry (e, struct thread, children_elem);
++      sema_up (&child->can_die); 
++    }
++
++  /* Wait until our parent is ready for us to die. */
++  sema_down (&t->can_die);
++
+   /* Just set our status to dying and schedule another process.
+      We will be destroyed during the call to schedule_tail(). */
+   intr_disable ();
+-  thread_current ()->status = THREAD_DYING;
++  t->status = THREAD_DYING;
+   schedule ();
+   NOT_REACHED ();
+ }
+@@ -286,6 +304,31 @@
+   thread_current ()->status = THREAD_BLOCKED;
+   schedule ();
+ }
++
++/* Waits for thread with tid CHILD_TID to die. */
++void
++thread_join (tid_t child_tid) 
++{
++  struct thread *cur = thread_current ();
++  list_elem *e;
++
++  for (e = list_begin (&cur->children); e != list_end (&cur->children); ) 
++    {
++      struct thread *child = list_entry (e, struct thread, children_elem);
++      e = list_next (e);
++      if (child->tid == child_tid) 
++        {
++          /* Wait until child is ready to die. */
++          sema_down (&child->ready_to_die);
++
++          /* Remove from list of children. */
++          list_remove (&child->children_elem);
++
++          /* Notify child that it can finish dying. */
++          sema_up (&child->can_die); 
++        }
++    }
++}
+ 
+ /* Idle thread.  Executes when no other thread is ready to run. */
+ static void
+@@ -348,12 +391,13 @@
+     {
+       init_thread (t, name, priority);
+       t->tid = allocate_tid ();
++      list_push_back (&thread_current ()->children, &t->children_elem);
+     }
+ 
+   return t;
+ }
+ 
+-/* Does basic initialization of T as a blocked thread named
++/* Does basic initialization of T as a new, blocked thread named
+    NAME. */
+ static void
+ init_thread (struct thread *t, const char *name, int priority)
+@@ -367,6 +411,9 @@
+   strlcpy (t->name, name, sizeof t->name);
+   t->stack = (uint8_t *) t + PGSIZE;
+   t->priority = priority;
++  sema_init (&t->ready_to_die, 0, "ready-to-die");
++  sema_init (&t->can_die, 0, "can-die");
++  list_init (&t->children);
+   t->magic = THREAD_MAGIC;
+ }
+ 
+--- cs140/pintos/src/threads/thread.h	2004-09-16 21:42:35.000000000 -0700
++++ cs140/ref/pintos/src/threads/thread.h	2004-09-17 23:21:14.000000000 -0700
+@@ -4,6 +4,7 @@
+ #include <debug.h>
+ #include <list.h>
+ #include <stdint.h>
++#include "threads/synch.h"
+ 
+ #ifdef USERPROG
+ #include "userprog/addrspace.h"
+@@ -93,6 +94,12 @@
+     uint8_t *stack;                     /* Saved stack pointer. */
+     int priority;                       /* Priority. */
+ 
++    /* Members for implementing thread_join(). */
++    struct semaphore ready_to_die;      /* Up when thread about to die. */
++    struct semaphore can_die;           /* Up when thread allowed to die. */
++    struct list children;               /* List of child threads. */
++    list_elem children_elem;            /* Element of `children' list. */
++
+     /* Shared between thread.c and synch.c. */
+     list_elem elem;                     /* List element. */
+ 
