@@ -11,8 +11,6 @@
 
 * Threads:
 
-  - join-invalid doesn't compile if tid_t is not scalar type.
-
   - mlfqs tests suck.  They aren't even correct, e.g. the amarv
     submission from win0405 is graded incorrectly.
 
@@ -23,12 +21,6 @@
     copying is a common solution and that it will be necessary in
     project 3 and in real OSes.  Also revise the grading criteria to
     match.
-
-  - Move `join' implementation here, from `threads' project, to help
-    normalize the project difficulties.
-
-  - The semantics of the join system call should change so that it
-    only returns the exit code once.
 
   - Mark read-only pages as actually read-only in the page table.  Or,
     since this was consistently rated as the easiest project by the
@@ -124,3 +116,8 @@
 
   - Get rid of all compile-time flags, e.g. MLFQS should be a runtime
     command-line option.
+
+  - Need an optimization barrier and an explanation of it in the
+    documentation.
+
+  - Need to check the wait system call more thoroughly.

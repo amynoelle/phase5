@@ -1,87 +1,6 @@
-Index: src/threads/synch.c
-===================================================================
-RCS file: /afs/ir.stanford.edu/users/b/l/blp/private/cvs/pintos/src/threads/synch.c,v
-retrieving revision 1.15
-diff -u -p -r1.15 synch.c
---- src/threads/synch.c	31 Dec 2004 21:13:38 -0000	1.15
-+++ src/threads/synch.c	1 Jan 2005 02:13:41 -0000
-@@ -330,3 +330,45 @@ cond_name (const struct condition *cond)
- 
-   return cond->name;
- }
-+
-+/* Initializes LATCH and names it NAME (for debugging purposes).
-+   A latch is a boolean condition.  Until it is released for the
-+   first time, all threads block attempting to acquire.  After it
-+   is released once, all ongoing and subsequent acquisitions
-+   "fall through" immediately.  Releases after the first have no
-+   additional effect. */
-+void
-+latch_init (struct latch *latch, const char *name) 
-+{
-+  latch->released = false;
-+  lock_init (&latch->monitor_lock, name);
-+  cond_init (&latch->rel_cond, name);
-+}
-+
-+/* Acquires LATCH, blocking until it is released for the first
-+   time. */
-+void
-+latch_acquire (struct latch *latch) 
-+{
-+  lock_acquire (&latch->monitor_lock);
-+  if (!latch->released) 
-+    {
-+      cond_wait (&latch->rel_cond, &latch->monitor_lock);
-+      ASSERT (latch->released); 
-+    }
-+  lock_release (&latch->monitor_lock);
-+}
-+
-+/* Releases LATCH, causing all ongoing and subsequent
-+   acquisitions to pass through immediately. */
-+void
-+latch_release (struct latch *latch) 
-+{
-+  lock_acquire (&latch->monitor_lock);
-+  if (!latch->released)
-+    {
-+      latch->released = true;
-+      cond_signal (&latch->rel_cond, &latch->monitor_lock);
-+    }
-+  lock_release (&latch->monitor_lock);
-+}
-Index: src/threads/synch.h
-===================================================================
-RCS file: /afs/ir.stanford.edu/users/b/l/blp/private/cvs/pintos/src/threads/synch.h,v
-retrieving revision 1.7
-diff -u -p -r1.7 synch.h
---- src/threads/synch.h	29 Sep 2004 01:04:09 -0000	1.7
-+++ src/threads/synch.h	1 Jan 2005 02:13:41 -0000
-@@ -44,4 +44,16 @@ void cond_signal (struct condition *, st
- void cond_broadcast (struct condition *, struct lock *);
- const char *cond_name (const struct condition *);
- 
-+/* Latch. */
-+struct latch 
-+  {
-+    bool released;              /* Released yet? */
-+    struct lock monitor_lock;   /* Monitor lock. */
-+    struct condition rel_cond;  /* Signaled when released. */
-+  };
-+
-+void latch_init (struct latch *, const char *);
-+void latch_acquire (struct latch *);
-+void latch_release (struct latch *);
-+
- #endif /* threads/synch.h */
-Index: src/threads/thread.c
-===================================================================
-RCS file: /afs/ir.stanford.edu/users/b/l/blp/private/cvs/pintos/src/threads/thread.c,v
-retrieving revision 1.48
-diff -u -p -r1.48 thread.c
---- src/threads/thread.c	9 Oct 2004 18:01:37 -0000	1.48
-+++ src/threads/thread.c	1 Jan 2005 02:13:42 -0000
+diff -urp -X pat src/threads/thread.c~ src/threads/thread.c
+--- src/threads/thread.c~	2005-03-30 10:26:13.000000000 -0800
++++ src/threads/thread.c	2005-03-30 16:19:26.000000000 -0800
 @@ -13,6 +13,7 @@
  #include "threads/synch.h"
  #ifdef USERPROG
@@ -90,52 +9,20 @@ diff -u -p -r1.48 thread.c
  #endif
  
  /* Random value for struct thread's `magic' member.
-@@ -81,6 +82,7 @@ thread_init (void) 
-   init_thread (initial_thread, "main", PRI_DEFAULT);
-   initial_thread->status = THREAD_RUNNING;
-   initial_thread->tid = allocate_tid ();
-+  sema_up (&initial_thread->can_die);
- }
- 
- /* Starts preemptive thread scheduling by enabling interrupts.
-@@ -149,6 +151,7 @@ thread_create (const char *name, int pri
-   /* Initialize thread. */
-   init_thread (t, name, priority);
-   tid = t->tid = allocate_tid ();
-+  list_push_back (&thread_current ()->children, &t->children_elem);
- 
-   /* Stack frame for kernel_thread(). */
-   kf = alloc_frame (t, sizeof *kf);
-@@ -241,16 +244,36 @@ thread_tid (void) 
+@@ -243,16 +244,19 @@ thread_tid (void) 
  void
  thread_exit (void) 
  {
 +  struct thread *t = thread_current ();
-+  struct list_elem *e, *next;
 +
    ASSERT (!intr_context ());
  
  #ifdef USERPROG
    process_exit ();
  #endif
+-
 +  syscall_exit ();
 +  
-+  /* Notify our parent that we're dying. */
-+  latch_release (&t->ready_to_die);
-+
-+  /* Notify our children that they can die. */
-+  for (e = list_begin (&t->children); e != list_end (&t->children);
-+       e = next) 
-+    {
-+      struct thread *child = list_entry (e, struct thread, children_elem);
-+      next = list_next (e);
-+      list_remove (e);
-+      sema_up (&child->can_die); 
-+    }
-+
-+  /* Wait until our parent is ready for us to die. */
-+  sema_down (&t->can_die);
- 
    /* Just set our status to dying and schedule another process.
       We will be destroyed during the call to schedule_tail(). */
    intr_disable ();
@@ -144,52 +31,21 @@ diff -u -p -r1.48 thread.c
    schedule ();
    NOT_REACHED ();
  }
-@@ -283,8 +290,22 @@ thread_block (void) 
-    This function will be implemented in problem 1-2.  For now, it
-    does nothing. */
--void
--thread_join (tid_t child_tid UNUSED) 
--{
-+int
-+thread_join (tid_t child_tid) 
-+{
-+  struct thread *cur = thread_current ();
-+  struct list_elem *e;
-+
-+  for (e = list_begin (&cur->children); e != list_end (&cur->children); ) 
-+    {
-+      struct thread *child = list_entry (e, struct thread, children_elem);
-+      e = list_next (e);
-+      if (child->tid == child_tid) 
-+        {
-+          latch_acquire (&child->ready_to_die);
-+          return child->exit_code;
-+        }
-+    }
-+  return -1;
- }
- 
- /* Sets the current thread's priority to NEW_PRIORITY. */
-@@ -336,6 +379,12 @@ init_thread (struct thread *t, const cha
+@@ -353,6 +357,11 @@ init_thread (struct thread *t, const cha
    strlcpy (t->name, name, sizeof t->name);
    t->stack = (uint8_t *) t + PGSIZE;
    t->priority = priority;
-+  latch_init (&t->ready_to_die, "ready-to-die");
-+  sema_init (&t->can_die, 0, "can-die");
 +  list_init (&t->children);
 +  t->exit_code = -1;
++  t->wait_status = NULL;
 +  list_init (&t->fds);
 +  t->next_handle = 2;
    t->magic = THREAD_MAGIC;
  }
  
-Index: src/threads/thread.h
-===================================================================
-RCS file: /afs/ir.stanford.edu/users/b/l/blp/private/cvs/pintos/src/threads/thread.h,v
-retrieving revision 1.28
-diff -u -p -r1.28 thread.h
---- src/threads/thread.h	29 Sep 2004 01:04:20 -0000	1.28
-+++ src/threads/thread.h	1 Jan 2005 02:13:42 -0000
+diff -urp -X pat src/threads/thread.h~ src/threads/thread.h
+--- src/threads/thread.h~	2005-03-30 10:26:13.000000000 -0800
++++ src/threads/thread.h	2005-03-30 16:17:45.000000000 -0800
 @@ -4,6 +4,7 @@
  #include <debug.h>
  #include <list.h>
@@ -198,47 +54,52 @@ diff -u -p -r1.28 thread.h
  
  /* States in a thread's life cycle. */
  enum thread_status
-@@ -89,12 +90,23 @@ struct thread
+@@ -89,6 +90,11 @@ struct thread
      uint8_t *stack;                     /* Saved stack pointer. */
      int priority;                       /* Priority. */
  
-+    /* Members for implementing thread_join(). */
-+    struct latch ready_to_die;          /* Release when thread about to die. */
-+    struct semaphore can_die;           /* Up when thread allowed to die. */
-+    struct list children;               /* List of child threads. */
-+    struct list_elem children_elem;     /* Element of `children' list. */
-+    int exit_code;                      /* Return status. */
++    /* Owned by process.c. */
++    int exit_code;                      /* Exit code. */
++    struct wait_status *wait_status;    /* This process's completion status. */
++    struct list children;               /* Completion status of children. */
 +
      /* Shared between thread.c and synch.c. */
      struct list_elem elem;              /* List element. */
  
- #ifdef USERPROG
-     /* Owned by userprog/process.c. */
+@@ -97,10 +103,29 @@ struct thread
      uint32_t *pagedir;                  /* Page directory. */
-+
+ #endif
+ 
 +    /* Owned by syscall.c. */
 +    struct list fds;                    /* List of file descriptors. */
 +    int next_handle;                    /* Next handle value. */
- #endif
- 
++
      /* Owned by thread.c. */
-@@ -120,7 +132,7 @@ void thread_exit (void) NO_RETURN;
- void thread_exit (void) NO_RETURN;
- void thread_yield (void);
+     unsigned magic;                     /* Detects stack overflow. */
+   };
  
--void thread_join (tid_t);
-+int thread_join (tid_t);
- 
- void thread_set_priority (int);
- int thread_get_priority (void);
-Index: src/userprog/exception.c
-===================================================================
-RCS file: /afs/ir.stanford.edu/users/b/l/blp/private/cvs/pintos/src/userprog/exception.c,v
-retrieving revision 1.10
-diff -u -p -r1.10 exception.c
---- src/userprog/exception.c	26 Sep 2004 21:15:17 -0000	1.10
-+++ src/userprog/exception.c	1 Jan 2005 02:13:42 -0000
-@@ -147,6 +147,14 @@ page_fault (struct intr_frame *f) 
++/* Tracks the completion of a process.
++   Reference held by both the parent, in its `children' list,
++   and by the child, in its `wait_status' pointer. */
++struct wait_status
++  {
++    struct list_elem elem;              /* `children' list element. */
++    struct lock lock;                   /* Protects ref_cnt. */
++    int ref_cnt;                        /* 2=child and parent both alive,
++                                           1=either child or parent alive,
++                                           0=child and parent both dead. */
++    tid_t tid;                          /* Child thread id. */
++    int exit_code;                      /* Child exit code, if dead. */
++    struct semaphore dead;              /* 1=child alive, 0=child dead. */
++  };
++
+ void thread_init (void);
+ void thread_start (void);
+ void thread_tick (void);
+diff -urp -X pat src/userprog/exception.c~ src/userprog/exception.c
+--- src/userprog/exception.c~	2005-01-01 18:09:59.000000000 -0800
++++ src/userprog/exception.c	2005-03-30 13:26:14.000000000 -0800
+@@ -150,6 +150,14 @@ page_fault (struct intr_frame *f) 
    write = (f->error_code & PF_W) != 0;
    user = (f->error_code & PF_U) != 0;
  
@@ -253,14 +114,15 @@ diff -u -p -r1.10 exception.c
    /* To implement virtual memory, delete the rest of the function
       body, and replace it with code that brings in the page to
       which fault_addr refers. */
-Index: src/userprog/process.c
-===================================================================
-RCS file: /afs/ir.stanford.edu/users/b/l/blp/private/cvs/pintos/src/userprog/process.c,v
-retrieving revision 1.6
-diff -u -p -r1.6 process.c
---- src/userprog/process.c	15 Dec 2004 02:32:02 -0000	1.6
-+++ src/userprog/process.c	1 Jan 2005 02:13:43 -0000
-@@ -18,7 +18,17 @@
+diff -urp -X pat src/userprog/process.c~ src/userprog/process.c
+--- src/userprog/process.c~	2005-03-30 10:40:10.000000000 -0800
++++ src/userprog/process.c	2005-03-30 16:19:32.000000000 -0800
+@@ -14,11 +14,23 @@
+ #include "threads/init.h"
+ #include "threads/interrupt.h"
+ #include "threads/mmu.h"
++#include "threads/malloc.h"
+ #include "threads/palloc.h"
  #include "threads/thread.h"
  
  static thread_func execute_thread NO_RETURN;
@@ -272,14 +134,15 @@ diff -u -p -r1.6 process.c
 +   thread. */
 +struct exec_info 
 +  {
-+    const char *filename;        /* Program to load. */
-+    struct semaphore load_done;  /* "Up"ed when loading complete. */
-+    bool success;                /* True if program successfully loaded. */
++    const char *filename;               /* Program to load. */
++    struct semaphore load_done;         /* "Up"ed when loading complete. */
++    struct wait_status *wait_status;    /* Child process. */
++    bool success;                       /* Program successfully loaded? */
 +  };
  
  /* Starts a new thread running a user program loaded from
     FILENAME.  The new thread may be scheduled before
-@@ -26,31 +36,32 @@ static bool load (const char *cmdline, v
+@@ -26,29 +38,33 @@ static bool load (const char *cmdline, v
  tid_t
  process_execute (const char *filename) 
  {
@@ -305,9 +168,12 @@ diff -u -p -r1.6 process.c
 +  if (tid != TID_ERROR)
 +    {
 +      sema_down (&exec.load_done);
-+      if (!exec.success)
++      if (exec.success)
++        list_push_back (&thread_current ()->children, &exec.wait_status->elem);
++      else
 +        tid = TID_ERROR;
 +    }
++
    return tid;
  }
  
@@ -322,32 +188,123 @@ diff -u -p -r1.6 process.c
    struct intr_frame if_;
    bool success;
  
-   /* Initialize interrupt frame and load executable. */
-   memset (&if_, 0, sizeof if_);
-@@ -59,11 +69,9 @@ execute_thread (void *filename_)
+@@ -57,10 +73,28 @@ execute_thread (void *filename_)
+   if_.gs = if_.fs = if_.es = if_.ds = if_.ss = SEL_UDSEG;
    if_.cs = SEL_UCSEG;
    if_.eflags = FLAG_IF | FLAG_MBS;
-   if_.ss = SEL_UDSEG;
 -  success = load (filename, &if_.eip, &if_.esp);
--
++  success = load (exec->filename, &if_.eip, &if_.esp);
++
++  /* Allocate wait_status. */
++  if (success)
++    {
++      exec->wait_status = thread_current ()->wait_status
++        = malloc (sizeof *exec->wait_status);
++      success = exec->wait_status != NULL; 
++    }
+ 
 -  /* If load failed, quit. */
 -  palloc_free_page (filename);
-+  success = exec->success = load (exec->filename, &if_.eip, &if_.esp);
++  /* Initialize wait_status. */
++  if (success) 
++    {
++      lock_init (&exec->wait_status->lock, "child process");
++      exec->wait_status->ref_cnt = 2;
++      exec->wait_status->tid = thread_current ()->tid;
++      sema_init (&exec->wait_status->dead, 0, "dead child");
++    }
++  
++  /* Notify parent thread and clean up. */
++  exec->success = success;
 +  sema_up (&exec->load_done);
    if (!success) 
      thread_exit ();
  
-   /* Switch page tables. */
-@@ -89,6 +97,8 @@ process_exit (void)
+@@ -74,19 +108,48 @@ execute_thread (void *filename_)
+   NOT_REACHED ();
+ }
+ 
++/* Releases one reference to CS and, if it is now unreferenced,
++   frees it. */
++static void
++release_child (struct wait_status *cs) 
++{
++  int new_ref_cnt;
++  
++  lock_acquire (&cs->lock);
++  new_ref_cnt = --cs->ref_cnt;
++  lock_release (&cs->lock);
++
++  if (new_ref_cnt == 0)
++    free (cs);
++}
++
+ /* Waits for thread TID to die and returns its exit status.  If
+    it was terminated by the kernel (i.e. killed due to an
+    exception), returns -1.  If TID is invalid or if it was not a
+    child of the calling process, or if process_wait() has already
+    been successfully called for the given TID, returns -1
+-   immediately, without waiting.
+-
+-   This function will be implemented in problem 2-2.  For now, it
+-   does nothing. */
++   immediately, without waiting. */
+ int
+-process_wait (tid_t child_tid UNUSED) 
++process_wait (tid_t child_tid) 
+ {
++  struct thread *cur = thread_current ();
++  struct list_elem *e;
++
++  for (e = list_begin (&cur->children); e != list_end (&cur->children);
++       e = list_next (e)) 
++    {
++      struct wait_status *cs = list_entry (e, struct wait_status, elem);
++      if (cs->tid == child_tid) 
++        {
++          int exit_code;
++          list_remove (e);
++          sema_down (&cs->dead);
++          exit_code = cs->exit_code;
++          release_child (cs);
++          return exit_code;
++        }
++    }
+   return -1;
+ }
+ 
+ /* Free the current process's resources. */
+@@ -93,8 +157,29 @@ void
+ process_exit (void)
+ {
    struct thread *cur = thread_current ();
++  struct list_elem *e, *next;
    uint32_t *pd;
  
 +  printf ("%s: exit(%d)\n", cur->name, cur->exit_code);
 +
++  /* Notify parent that we're dead. */
++  if (cur->wait_status != NULL) 
++    {
++      struct wait_status *cs = cur->wait_status;
++      cs->exit_code = cur->exit_code;
++      sema_up (&cs->dead);
++      release_child (cs);
++    }
++
++  /* Free entries of children list. */
++  for (e = list_begin (&cur->children); e != list_end (&cur->children);
++       e = next) 
++    {
++      struct wait_status *cs = list_entry (e, struct wait_status, elem);
++      next = list_remove (e);
++      release_child (cs);
++    }
++  
    /* Destroy the current process's page directory and switch back
-      to the kernel-only page directory.  We have to set
-      cur->pagedir to NULL before switching page directories, or a
-@@ -182,7 +192,7 @@ struct Elf32_Phdr
+      to the kernel-only page directory. */
+   pd = cur->pagedir;
+@@ -192,7 +277,7 @@ struct Elf32_Phdr
  #define PF_R 4          /* Readable. */
  
  static bool load_segment (struct file *, const struct Elf32_Phdr *);
@@ -355,8 +312,8 @@ diff -u -p -r1.6 process.c
 +static bool setup_stack (const char *cmd_line, void **esp);
  
  /* Aborts loading an executable, with an error message. */
- #define LOAD_ERROR(MSG)                                         \
-@@ -198,13 +208,15 @@ static bool setup_stack (void **esp);
+ #define LOAD_ERROR(MSG)                                 \
+@@ -208,13 +293,15 @@ static bool setup_stack (void **esp);
     and its initial stack pointer into *ESP.
     Returns true if successful, false otherwise. */
  bool
@@ -372,10 +329,10 @@ diff -u -p -r1.6 process.c
 +  char *cp;
    int i;
  
-   /* Allocate page directory. */
-@@ -212,6 +224,14 @@ load (const char *filename, void (**eip)
-   if (t->pagedir == NULL)
+   /* Allocate and activate page directory. */
+@@ -223,6 +310,14 @@ load (const char *filename, void (**eip)
      LOAD_ERROR (("page directory allocation failed"));
+   process_activate ();
  
 +  /* Extract filename from command line. */
 +  while (*cmd_line == ' ')
@@ -388,7 +345,7 @@ diff -u -p -r1.6 process.c
    /* Open executable file. */
    file = filesys_open (filename);
    if (file == NULL)
-@@ -272,7 +292,7 @@ load (const char *filename, void (**eip)
+@@ -283,7 +378,7 @@ load (const char *filename, void (**eip)
      }
  
    /* Set up stack. */
@@ -397,7 +354,7 @@ diff -u -p -r1.6 process.c
      goto done;
  
    /* Start address. */
-@@ -381,10 +401,92 @@ load_segment (struct file *file, const s
+@@ -392,10 +487,92 @@ load_segment (struct file *file, const s
    return true;
  }
  
@@ -493,7 +450,7 @@ diff -u -p -r1.6 process.c
  {
    uint8_t *kpage;
    bool success = false;
-@@ -392,9 +494,9 @@ setup_stack (void **esp) 
+@@ -403,9 +580,9 @@ setup_stack (void **esp) 
    kpage = palloc_get_page (PAL_USER | PAL_ZERO);
    if (kpage != NULL) 
      {
@@ -506,13 +463,9 @@ diff -u -p -r1.6 process.c
        else
          palloc_free_page (kpage);
      }
-Index: src/userprog/syscall.c
-===================================================================
-RCS file: /afs/ir.stanford.edu/users/b/l/blp/private/cvs/pintos/src/userprog/syscall.c,v
-retrieving revision 1.4
-diff -u -p -r1.4 syscall.c
---- src/userprog/syscall.c	26 Sep 2004 21:15:17 -0000	1.4
-+++ src/userprog/syscall.c	1 Jan 2005 02:13:43 -0000
+diff -urp -X pat src/userprog/syscall.c~ src/userprog/syscall.c
+--- src/userprog/syscall.c~	2004-09-26 14:15:17.000000000 -0700
++++ src/userprog/syscall.c	2005-03-30 15:11:37.000000000 -0800
 @@ -1,20 +1,478 @@
  #include "userprog/syscall.h"
  #include <stdio.h>
@@ -535,7 +488,7 @@ diff -u -p -r1.4 syscall.c
 +static int sys_halt (void);
 +static int sys_exit (int status);
 +static int sys_exec (const char *ufile);
-+static int sys_join (tid_t);
++static int sys_wait (tid_t);
 +static int sys_create (const char *ufile, unsigned initial_size);
 +static int sys_remove (const char *ufile);
 +static int sys_open (const char *ufile);
@@ -573,12 +526,12 @@ diff -u -p -r1.4 syscall.c
 +    };
 +
 +  /* Table of system calls. */
-+  static const struct syscall syscall_table[] = 
++  static const struct syscall syscall_table[] =
 +    {
 +      {0, (syscall_function *) sys_halt},
 +      {1, (syscall_function *) sys_exit},
 +      {1, (syscall_function *) sys_exec},
-+      {1, (syscall_function *) sys_join},
++      {1, (syscall_function *) sys_wait},
 +      {2, (syscall_function *) sys_create},
 +      {1, (syscall_function *) sys_remove},
 +      {1, (syscall_function *) sys_open},
@@ -590,13 +543,13 @@ diff -u -p -r1.4 syscall.c
 +      {1, (syscall_function *) sys_close},
 +    };
 +
-+  struct syscall *sc;
-+  int call_nr;
++  const struct syscall *sc;
++  unsigned call_nr;
 +  int args[3];
 +
 +  /* Get the system call. */
 +  copy_in (&call_nr, f->esp, sizeof call_nr);
-+  if (call_nr < 0 || call_nr >= sizeof syscall_table / sizeof *syscall_table)
++  if (call_nr >= sizeof syscall_table / sizeof *syscall_table)
 +    thread_exit ();
 +  sc = syscall_table + call_nr;
  
@@ -716,11 +669,11 @@ diff -u -p -r1.4 syscall.c
 +  return tid;
 +}
 + 
-+/* Join system call. */
++/* Wait system call. */
 +static int
-+sys_join (tid_t child) 
++sys_wait (tid_t child) 
 +{
-+  return thread_join (child);
++  return process_wait (child);
 +}
 + 
 +/* Create system call. */
@@ -811,7 +764,7 @@ diff -u -p -r1.4 syscall.c
 +    }
 + 
    thread_exit ();
-+}
+ }
 + 
 +/* Filesize system call. */
 +static int
@@ -995,14 +948,10 @@ diff -u -p -r1.4 syscall.c
 +      file_close (fd->file);
 +      free (fd);
 +    }
- }
-Index: src/userprog/syscall.h
-===================================================================
-RCS file: /afs/ir.stanford.edu/users/b/l/blp/private/cvs/pintos/src/userprog/syscall.h,v
-retrieving revision 1.2
-diff -u -p -r1.2 syscall.h
---- src/userprog/syscall.h	6 Sep 2004 05:38:45 -0000	1.2
-+++ src/userprog/syscall.h	1 Jan 2005 02:13:43 -0000
++}
+diff -urp -X pat src/userprog/syscall.h~ src/userprog/syscall.h
+--- src/userprog/syscall.h~	2004-09-05 22:38:45.000000000 -0700
++++ src/userprog/syscall.h	2005-03-30 13:26:14.000000000 -0800
 @@ -2,5 +2,6 @@
  #define USERPROG_SYSCALL_H
  
