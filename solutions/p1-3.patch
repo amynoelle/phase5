@@ -1,36 +1,3 @@
-? threads.1
-Index: Make.config
-===================================================================
-RCS file: /u/blp/cvs/pintos/src/Make.config,v
-retrieving revision 1.2
-diff -u -p -u -r1.2 Make.config
---- Make.config	20 Sep 2004 04:27:28 -0000	1.2
-+++ Make.config	11 Oct 2004 07:29:34 -0000
-@@ -23,7 +23,7 @@ CAT = cat
- 
- # Compiler and assembler invocation.
- WARNINGS = -Wall -W -Wstrict-prototypes -Wmissing-prototypes -Wsystem-headers
--CFLAGS = -g -O3 -MMD -msoft-float 
-+CFLAGS = -g -MMD -msoft-float 
- ASFLAGS = -Wa,--gstabs -MMD
- 
- %.o: %.c
-Index: devices/timer.c
-===================================================================
-RCS file: /u/blp/cvs/pintos/src/devices/timer.c,v
-retrieving revision 1.15
-diff -u -p -u -r1.15 timer.c
---- devices/timer.c	6 Oct 2004 18:27:00 -0000	1.15
-+++ devices/timer.c	11 Oct 2004 07:29:34 -0000
-@@ -109,6 +109,8 @@ timer_interrupt (struct intr_frame *args
- {
-   ticks++;
-   thread_tick ();
-+#if 0
-   if (ticks % TIME_SLICE == 0)
-     intr_yield_on_return ();
-+#endif
- }
 Index: threads/synch.c
 ===================================================================
 RCS file: /u/blp/cvs/pintos/src/threads/synch.c,v
@@ -147,13 +114,9 @@ diff -u -p -u -r1.14 synch.c
    intr_set_level (old_level);
  }
  
-Index: threads/thread.c
-===================================================================
-RCS file: /u/blp/cvs/pintos/src/threads/thread.c,v
-retrieving revision 1.48
-diff -u -p -u -r1.48 thread.c
+diff -u -p -u -p -r1.48 thread.c
 --- threads/thread.c	9 Oct 2004 18:01:37 -0000	1.48
-+++ threads/thread.c	11 Oct 2004 07:29:35 -0000
++++ threads/thread.c	14 Oct 2004 05:21:08 -0000
 @@ -166,6 +166,8 @@ thread_create (const char *name, int pri
  
    /* Add to run queue. */
@@ -189,7 +152,7 @@ diff -u -p -u -r1.48 thread.c
    t->status = THREAD_READY;
    intr_set_level (old_level);
  }
-@@ -266,11 +278,33 @@ thread_yield (void) 
+@@ -266,11 +278,44 @@ thread_yield (void) 
    ASSERT (!intr_context ());
  
    old_level = intr_disable ();
@@ -204,11 +167,22 @@ diff -u -p -u -r1.48 thread.c
 +thread_set_priority (int priority) 
 +{
 +  struct thread *t = thread_current ();
-+  int old_priority = t->priority;
-+  t->normal_priority = priority;
-+  if (t->normal_priority > t->priority)
-+    t->priority = t->normal_priority;
-+  if (priority < old_priority)
++  int old_priority, new_priority;
++  list_elem *e;
++
++  old_priority = t->priority;
++  new_priority = t->normal_priority = priority;
++  for (e = list_begin (&t->donors); e != list_end (&t->donors);
++       e = list_next (e)) 
++    {
++      struct thread *donor = list_entry (e, struct thread, donor_elem);
++      if (donor->priority > t->priority)
++        new_priority = donor->priority;
++    }
++
++  t->priority = new_priority;
++  
++  if (new_priority < old_priority)
 +    {
 +      /* FIXME: if this is still (one of) the highest priority
 +         threads then don't yield. */
@@ -224,7 +198,7 @@ diff -u -p -u -r1.48 thread.c
  
  /* Idle thread.  Executes when no other thread is ready to run. */
  static void
-@@ -335,8 +369,9 @@ init_thread (struct thread *t, const cha
+@@ -335,8 +380,9 @@ init_thread (struct thread *t, const cha
    t->status = THREAD_BLOCKED;
    strlcpy (t->name, name, sizeof t->name);
    t->stack = (uint8_t *) t + PGSIZE;
