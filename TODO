@@ -1,15 +1,5 @@
 -*- text -*-
 
-* FS and GS:
-
-  - struct intr_frame: Add members.
-  
-  - intr_entry(): Save, reset.
-
-  - intr_exit(): Restore.
-
-  - execute_thread(): Initialize.
-
 * Userprog project:
 
   - Move `join' implementation here, from `threads' project, to help
