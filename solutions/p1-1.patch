@@ -25,13 +25,14 @@ diff -u -p -u -r1.16 timer.c
  }
  
  /* Calibrates loops_per_tick, used to implement brief delays. */
-@@ -91,15 +96,35 @@ timer_elapsed (int64_t then) 
+@@ -91,15 +96,36 @@ timer_elapsed (int64_t then) 
    return timer_ticks () - then;
  }
  
 +/* Compares two threads based on their wake-up times. */
 +static bool
-+compare_threads_by_wakeup_time (const list_elem *a_, const list_elem *b_,
++compare_threads_by_wakeup_time (const struct list_elem *a_,
++                                const struct list_elem *b_,
 +                                void *aux UNUSED) 
 +{
 +  const struct thread *a = list_entry (a_, struct thread, timer_elem);
@@ -114,11 +115,11 @@ diff -u -p -u -r1.28 thread.h
 @@ -91,6 +92,11 @@ struct thread
  
      /* Shared between thread.c and synch.c. */
-     list_elem elem;                     /* List element. */
+     struct list_elem elem;              /* List element. */
 +
 +    /* Problem 1-1. */
 +    int64_t wakeup_time;                /* Time to wake this thread up. */
-+    list_elem timer_elem;               /* Element in timer_wait_list. */
++    struct list_elem timer_elem;        /* Element in timer_wait_list. */
 +    struct semaphore timer_sema;        /* Semaphore. */
  
  #ifdef USERPROG
