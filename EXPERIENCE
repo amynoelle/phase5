@@ -6,30 +6,29 @@ General:
     only in the last few hours.  Emphasize that this is a bad choice.
     Encourage them to use CVS/sourceforge/etc.
 
-  - Upgrade gdb, 6.2.1 is better.
-
-  - Encourage students to turn off -O3.
+  - Encourage students to turn off -O3, or perhaps entirely turn off
+    optimization in provided makefiles?
 
   - Suggest where to start in each assignment?
 
   - Provide more tests!
-
-  - Turn off optimization in provided makefiles?
 
 Threads project:				
 
   - Many students thought this was by far the hardest.  What can we do
     to make it a little easier?
 
-  - Students don't understand that they'll need to read lots of code.
+  - Students don't understand that they'll need to read lots of code
+    before they can start writing.
 
-  - Students don't read the debugging page.  Point out in multiple
-    places, and especially point to the backtrace description.
+  - Students don't read the debugging documentation.  Point out in
+    multiple places, and especially point to the backtrace
+    description.
 
   - Students think data structures are more important than they really
     are.  Say that clever data structures won't get you too much extra
-    credit compared to simpler ones.  Bad data structures might cost
-    points though.
+    credit compared to simpler ones.  Really bad or "stupid" data
+    structures might cost points though.
 
   - Some students would appreciate more discussion of nitty-gritty
     details:
@@ -74,7 +73,6 @@ VM project:
       we're supposed to do, 'physical' actually means 'kernel virtual'
       (or a location on disk).  A sentence or two clearing up this
       ambiguity would have been helpful.
-
 
 Filesys project:
 
