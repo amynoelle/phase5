@@ -1,23 +1,23 @@
-Index: constants.h
+Index: src/constants.h
 ===================================================================
 RCS file: /afs/ir.stanford.edu/users/b/l/blp/private/cvs/pintos/src/constants.h,v
 retrieving revision 1.4
 diff -u -p -r1.4 constants.h
---- constants.h	19 Oct 2004 17:37:30 -0000	1.4
-+++ constants.h	1 Jan 2005 02:13:41 -0000
+--- src/constants.h	19 Oct 2004 17:37:30 -0000	1.4
++++ src/constants.h	1 Jan 2005 02:13:41 -0000
 @@ -8,4 +8,4 @@
  /*#define MACRONAME 1 */
  
  /* Uncomment if if you've implemented thread_join(). */
 -/*#define THREAD_JOIN_IMPLEMENTED 1*/
 +#define THREAD_JOIN_IMPLEMENTED 1
-Index: threads/synch.c
+Index: src/threads/synch.c
 ===================================================================
 RCS file: /afs/ir.stanford.edu/users/b/l/blp/private/cvs/pintos/src/threads/synch.c,v
 retrieving revision 1.15
 diff -u -p -r1.15 synch.c
---- threads/synch.c	31 Dec 2004 21:13:38 -0000	1.15
-+++ threads/synch.c	1 Jan 2005 02:13:41 -0000
+--- src/threads/synch.c	31 Dec 2004 21:13:38 -0000	1.15
++++ src/threads/synch.c	1 Jan 2005 02:13:41 -0000
 @@ -330,3 +330,45 @@ cond_name (const struct condition *cond)
  
    return cond->name;
@@ -64,13 +64,13 @@ diff -u -p -r1.15 synch.c
 +    }
 +  lock_release (&latch->monitor_lock);
 +}
-Index: threads/synch.h
+Index: src/threads/synch.h
 ===================================================================
 RCS file: /afs/ir.stanford.edu/users/b/l/blp/private/cvs/pintos/src/threads/synch.h,v
 retrieving revision 1.7
 diff -u -p -r1.7 synch.h
---- threads/synch.h	29 Sep 2004 01:04:09 -0000	1.7
-+++ threads/synch.h	1 Jan 2005 02:13:41 -0000
+--- src/threads/synch.h	29 Sep 2004 01:04:09 -0000	1.7
++++ src/threads/synch.h	1 Jan 2005 02:13:41 -0000
 @@ -44,4 +44,16 @@ void cond_signal (struct condition *, st
  void cond_broadcast (struct condition *, struct lock *);
  const char *cond_name (const struct condition *);
@@ -88,13 +88,13 @@ diff -u -p -r1.7 synch.h
 +void latch_release (struct latch *);
 +
  #endif /* threads/synch.h */
-Index: threads/thread.c
+Index: src/threads/thread.c
 ===================================================================
 RCS file: /afs/ir.stanford.edu/users/b/l/blp/private/cvs/pintos/src/threads/thread.c,v
 retrieving revision 1.48
 diff -u -p -r1.48 thread.c
---- threads/thread.c	9 Oct 2004 18:01:37 -0000	1.48
-+++ threads/thread.c	1 Jan 2005 02:13:42 -0000
+--- src/threads/thread.c	9 Oct 2004 18:01:37 -0000	1.48
++++ src/threads/thread.c	1 Jan 2005 02:13:42 -0000
 @@ -13,6 +13,7 @@
  #include "threads/synch.h"
  #ifdef USERPROG
@@ -197,13 +197,13 @@ diff -u -p -r1.48 thread.c
    t->magic = THREAD_MAGIC;
  }
  
-Index: threads/thread.h
+Index: src/threads/thread.h
 ===================================================================
 RCS file: /afs/ir.stanford.edu/users/b/l/blp/private/cvs/pintos/src/threads/thread.h,v
 retrieving revision 1.28
 diff -u -p -r1.28 thread.h
---- threads/thread.h	29 Sep 2004 01:04:20 -0000	1.28
-+++ threads/thread.h	1 Jan 2005 02:13:42 -0000
+--- src/threads/thread.h	29 Sep 2004 01:04:20 -0000	1.28
++++ src/threads/thread.h	1 Jan 2005 02:13:42 -0000
 @@ -4,6 +4,7 @@
  #include <debug.h>
  #include <list.h>
@@ -245,13 +245,13 @@ diff -u -p -r1.28 thread.h
  
  /* These functions will be implemented in problem 1-3. */
  void thread_set_priority (int);
-Index: userprog/exception.c
+Index: src/userprog/exception.c
 ===================================================================
 RCS file: /afs/ir.stanford.edu/users/b/l/blp/private/cvs/pintos/src/userprog/exception.c,v
 retrieving revision 1.10
 diff -u -p -r1.10 exception.c
---- userprog/exception.c	26 Sep 2004 21:15:17 -0000	1.10
-+++ userprog/exception.c	1 Jan 2005 02:13:42 -0000
+--- src/userprog/exception.c	26 Sep 2004 21:15:17 -0000	1.10
++++ src/userprog/exception.c	1 Jan 2005 02:13:42 -0000
 @@ -147,6 +147,14 @@ page_fault (struct intr_frame *f) 
    write = (f->error_code & PF_W) != 0;
    user = (f->error_code & PF_U) != 0;
@@ -267,13 +267,13 @@ diff -u -p -r1.10 exception.c
    /* To implement virtual memory, delete the rest of the function
       body, and replace it with code that brings in the page to
       which fault_addr refers. */
-Index: userprog/process.c
+Index: src/userprog/process.c
 ===================================================================
 RCS file: /afs/ir.stanford.edu/users/b/l/blp/private/cvs/pintos/src/userprog/process.c,v
 retrieving revision 1.6
 diff -u -p -r1.6 process.c
---- userprog/process.c	15 Dec 2004 02:32:02 -0000	1.6
-+++ userprog/process.c	1 Jan 2005 02:13:43 -0000
+--- src/userprog/process.c	15 Dec 2004 02:32:02 -0000	1.6
++++ src/userprog/process.c	1 Jan 2005 02:13:43 -0000
 @@ -18,7 +18,17 @@
  #include "threads/thread.h"
  
@@ -521,13 +521,13 @@ diff -u -p -r1.6 process.c
        else
          palloc_free_page (kpage);
      }
-Index: userprog/syscall.c
+Index: src/userprog/syscall.c
 ===================================================================
 RCS file: /afs/ir.stanford.edu/users/b/l/blp/private/cvs/pintos/src/userprog/syscall.c,v
 retrieving revision 1.4
 diff -u -p -r1.4 syscall.c
---- userprog/syscall.c	26 Sep 2004 21:15:17 -0000	1.4
-+++ userprog/syscall.c	1 Jan 2005 02:13:43 -0000
+--- src/userprog/syscall.c	26 Sep 2004 21:15:17 -0000	1.4
++++ src/userprog/syscall.c	1 Jan 2005 02:13:43 -0000
 @@ -1,20 +1,478 @@
  #include "userprog/syscall.h"
  #include <stdio.h>
@@ -1011,13 +1011,13 @@ diff -u -p -r1.4 syscall.c
 +      free (fd);
 +    }
  }
-Index: userprog/syscall.h
+Index: src/userprog/syscall.h
 ===================================================================
 RCS file: /afs/ir.stanford.edu/users/b/l/blp/private/cvs/pintos/src/userprog/syscall.h,v
 retrieving revision 1.2
 diff -u -p -r1.2 syscall.h
---- userprog/syscall.h	6 Sep 2004 05:38:45 -0000	1.2
-+++ userprog/syscall.h	1 Jan 2005 02:13:43 -0000
+--- src/userprog/syscall.h	6 Sep 2004 05:38:45 -0000	1.2
++++ src/userprog/syscall.h	1 Jan 2005 02:13:43 -0000
 @@ -2,5 +2,6 @@
  #define USERPROG_SYSCALL_H
  

@@ -1,6 +1,6 @@
-diff -X pat -urpN pintos.orig/src/threads/synch.c pintos/src/threads/synch.c
---- pintos.orig/src/threads/synch.c	2004-09-19 21:29:53.000000000 -0700
-+++ pintos/src/threads/synch.c	2004-09-27 16:50:14.000000000 -0700
+diff -X pat -urpN threads/synch.c! src/threads/synch.c
+--- src/threads/synch.c~	2004-09-19 21:29:53.000000000 -0700
++++ src/threads/synch.c	2004-09-27 16:50:14.000000000 -0700
 @@ -330,3 +330,35 @@ cond_name (const struct condition *cond)
  
    return cond->name;
@@ -37,9 +37,9 @@ diff -X pat -urpN pintos.orig/src/threads/synch.c pintos/src/threads/synch.c
 +    }
 +  lock_release (&latch->monitor_lock);
 +}
-diff -X pat -urpN pintos.orig/src/threads/synch.h pintos/src/threads/synch.h
---- pintos.orig/src/threads/synch.h	2004-09-19 21:29:53.000000000 -0700
-+++ pintos/src/threads/synch.h	2004-09-27 16:50:14.000000000 -0700
+diff -X pat -urpN src/threads/synch.h~ src/threads/synch.h
+--- src/threads/synch.h~	2004-09-19 21:29:53.000000000 -0700
++++ src/threads/synch.h	2004-09-27 16:50:14.000000000 -0700
 @@ -44,4 +44,16 @@ void cond_signal (struct condition *, st
  void cond_broadcast (struct condition *, struct lock *);
  const char *cond_name (const struct condition *);
@@ -57,9 +57,9 @@ diff -X pat -urpN pintos.orig/src/threads/synch.h pintos/src/threads/synch.h
 +void latch_release (struct latch *);
 +
  #endif /* threads/synch.h */
-diff -X pat -urpN pintos.orig/src/threads/thread.c pintos/src/threads/thread.c
---- pintos.orig/src/threads/thread.c	2004-09-26 14:15:17.000000000 -0700
-+++ pintos/src/threads/thread.c	2004-09-27 16:51:03.000000000 -0700
+diff -X pat -urpN src/threads/thread.c~ src/threads/thread.c
+--- src/threads/thread.c~	2004-09-26 14:15:17.000000000 -0700
++++ src/threads/thread.c	2004-09-27 16:51:03.000000000 -0700
 @@ -80,6 +80,7 @@ thread_init (void) 
    init_thread (initial_thread, "main", PRI_DEFAULT);
    initial_thread->status = THREAD_RUNNING;
@@ -145,9 +145,9 @@ diff -X pat -urpN pintos.orig/src/threads/thread.c pintos/src/threads/thread.c
    t->magic = THREAD_MAGIC;
  }
  
-diff -X pat -urpN pintos.orig/src/threads/thread.h pintos/src/threads/thread.h
---- pintos.orig/src/threads/thread.h	2004-09-26 14:15:17.000000000 -0700
-+++ pintos/src/threads/thread.h	2004-09-27 16:50:14.000000000 -0700
+diff -X pat -urpN src/threads/thread.h~ src/threads/thread.h
+--- src/threads/thread.h~	2004-09-26 14:15:17.000000000 -0700
++++ src/threads/thread.h	2004-09-27 16:50:14.000000000 -0700
 @@ -4,6 +4,7 @@
  #include <debug.h>
  #include <list.h>
