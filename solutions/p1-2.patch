@@ -1,14 +1,87 @@
---- cs140/pintos/src/threads/thread.c	2004-09-17 23:16:15.000000000 -0700
-+++ cs140/ref/pintos/src/threads/thread.c	2004-09-17 23:19:03.000000000 -0700
-@@ -75,6 +75,7 @@
+Only in pintos/src/threads: .#init.c
+Only in pintos/src/threads: build
+Only in pintos/src/threads: init.c~
+diff -urp pintos.orig/src/threads/synch.c pintos/src/threads/synch.c
+--- pintos.orig/src/threads/synch.c	2004-09-19 21:29:53.000000000 -0700
++++ pintos/src/threads/synch.c	2004-09-20 22:38:56.000000000 -0700
+@@ -330,3 +330,35 @@ cond_name (const struct condition *cond)
+ 
+   return cond->name;
+ }
++
++void
++latch_init (struct latch *latch, const char *name) 
++{
++  latch->released = false;
++  lock_init (&latch->monitor_lock, name);
++  cond_init (&latch->rel_cond, name);
++}
++
++void
++latch_acquire (struct latch *latch) 
++{
++  lock_acquire (&latch->monitor_lock);
++  if (!latch->released) 
++    {
++      cond_wait (&latch->rel_cond, &latch->monitor_lock);
++      ASSERT (latch->released); 
++    }
++  lock_release (&latch->monitor_lock);
++}
++
++void
++latch_release (struct latch *latch) 
++{
++  lock_acquire (&latch->monitor_lock);
++  if (!latch->released)
++    {
++      latch->released = true;
++      cond_signal (&latch->rel_cond, &latch->monitor_lock);
++    }
++  lock_release (&latch->monitor_lock);
++}
+Only in pintos/src/threads: synch.c.orig
+diff -urp pintos.orig/src/threads/synch.h pintos/src/threads/synch.h
+--- pintos.orig/src/threads/synch.h	2004-09-19 21:29:53.000000000 -0700
++++ pintos/src/threads/synch.h	2004-09-20 22:38:56.000000000 -0700
+@@ -44,4 +44,16 @@ void cond_signal (struct condition *, st
+ void cond_broadcast (struct condition *, struct lock *);
+ const char *cond_name (const struct condition *);
+ 
++/* Latch. */
++struct latch 
++  {
++    bool released;              /* Released yet? */
++    struct lock monitor_lock;   /* Monitor lock. */
++    struct condition rel_cond;  /* Signaled when released. */
++  };
++
++void latch_init (struct latch *, const char *);
++void latch_acquire (struct latch *);
++void latch_release (struct latch *);
++
+ #endif /* threads/synch.h */
+Only in pintos/src/threads: synch.h.orig
+diff -urp pintos.orig/src/threads/thread.c pintos/src/threads/thread.c
+--- pintos.orig/src/threads/thread.c	2004-09-20 19:32:31.000000000 -0700
++++ pintos/src/threads/thread.c	2004-09-20 22:52:43.000000000 -0700
+@@ -76,6 +76,7 @@ thread_init (void) 
    init_thread (initial_thread, "main", PRI_DEFAULT);
    initial_thread->status = THREAD_RUNNING;
    initial_thread->tid = allocate_tid ();
 +  sema_up (&initial_thread->can_die);
+ }
  
-   /* Initialize run queue. */
-   list_init (&ready_list);
-@@ -244,12 +245,29 @@
+ /* Starts preemptive thread scheduling by enabling interrupts.
+@@ -120,6 +121,7 @@ thread_create (const char *name, int pri
+   /* Initialize thread. */
+   init_thread (t, name, priority);
+   tid = t->tid = allocate_tid ();
++  list_push_back (&thread_current ()->children, &t->children_elem);
+ 
+   /* Stack frame for kernel_thread(). */
+   kf = alloc_frame (t, sizeof *kf);
+@@ -196,12 +198,30 @@ thread_tid (void) 
  void
  thread_exit (void) 
  {
@@ -18,13 +91,14 @@
    ASSERT (!intr_context ());
  
 +  /* Notify our parent that we're dying. */
-+  sema_up (&t->ready_to_die);
++  latch_release (&t->ready_to_die);
 +
 +  /* Notify our children that they can die. */
 +  for (e = list_begin (&t->children); e != list_end (&t->children);
 +       e = list_next (e)) 
 +    {
 +      struct thread *child = list_entry (e, struct thread, children_elem);
++      list_remove (e);
 +      sema_up (&child->can_die); 
 +    }
 +
@@ -39,7 +113,7 @@
    schedule ();
    NOT_REACHED ();
  }
-@@ -286,6 +304,31 @@
+@@ -238,6 +258,22 @@ thread_block (void) 
    thread_current ()->status = THREAD_BLOCKED;
    schedule ();
  }
@@ -56,62 +130,43 @@
 +      struct thread *child = list_entry (e, struct thread, children_elem);
 +      e = list_next (e);
 +      if (child->tid == child_tid) 
-+        {
-+          /* Wait until child is ready to die. */
-+          sema_down (&child->ready_to_die);
-+
-+          /* Remove from list of children. */
-+          list_remove (&child->children_elem);
-+
-+          /* Notify child that it can finish dying. */
-+          sema_up (&child->can_die); 
-+        }
++        latch_acquire (&child->ready_to_die);
 +    }
 +}
  
  /* Idle thread.  Executes when no other thread is ready to run. */
  static void
-@@ -348,12 +391,13 @@
-     {
-       init_thread (t, name, priority);
-       t->tid = allocate_tid ();
-+      list_push_back (&thread_current ()->children, &t->children_elem);
-     }
- 
-   return t;
- }
- 
--/* Does basic initialization of T as a blocked thread named
-+/* Does basic initialization of T as a new, blocked thread named
-    NAME. */
- static void
- init_thread (struct thread *t, const char *name, int priority)
-@@ -367,6 +411,9 @@
+@@ -303,6 +339,9 @@ init_thread (struct thread *t, const cha
    strlcpy (t->name, name, sizeof t->name);
    t->stack = (uint8_t *) t + PGSIZE;
    t->priority = priority;
-+  sema_init (&t->ready_to_die, 0, "ready-to-die");
++  latch_init (&t->ready_to_die, "ready-to-die");
 +  sema_init (&t->can_die, 0, "can-die");
 +  list_init (&t->children);
    t->magic = THREAD_MAGIC;
  }
  
---- cs140/pintos/src/threads/thread.h	2004-09-16 21:42:35.000000000 -0700
-+++ cs140/ref/pintos/src/threads/thread.h	2004-09-17 23:21:14.000000000 -0700
+Only in pintos/src/threads: thread.c.orig
+Only in pintos/src/threads: thread.c.rej
+Only in pintos/src/threads: thread.c.rej~
+Only in pintos/src/threads: thread.c~
+diff -urp pintos.orig/src/threads/thread.h pintos/src/threads/thread.h
+--- pintos.orig/src/threads/thread.h	2004-09-20 15:29:18.000000000 -0700
++++ pintos/src/threads/thread.h	2004-09-20 22:36:55.000000000 -0700
 @@ -4,6 +4,7 @@
  #include <debug.h>
  #include <list.h>
  #include <stdint.h>
 +#include "threads/synch.h"
  
- #ifdef USERPROG
- #include "userprog/addrspace.h"
-@@ -93,6 +94,12 @@
+ /* States in a thread's life cycle. */
+ enum thread_status
+@@ -89,6 +90,12 @@ struct thread
      uint8_t *stack;                     /* Saved stack pointer. */
      int priority;                       /* Priority. */
  
 +    /* Members for implementing thread_join(). */
-+    struct semaphore ready_to_die;      /* Up when thread about to die. */
++    struct latch ready_to_die;          /* Release when thread about to die. */
 +    struct semaphore can_die;           /* Up when thread allowed to die. */
 +    struct list children;               /* List of child threads. */
 +    list_elem children_elem;            /* Element of `children' list. */
@@ -119,3 +174,5 @@
      /* Shared between thread.c and synch.c. */
      list_elem elem;                     /* List element. */
  
+Only in pintos/src/threads: thread.h.orig
+Only in pintos/src/threads: thread.h~
