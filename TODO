@@ -121,3 +121,6 @@
 
   - Revise command-line arguments for sensibility instead of for
     Nachos compatibility.
+
+  - Get rid of all compile-time flags, e.g. MLFQS should be a runtime
+    command-line option.
