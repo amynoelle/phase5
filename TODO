@@ -45,6 +45,8 @@
 
   - Sample solution.
 
+  - Update grading/vm to reflect new mmap, munmap forms.
+
 * Filesys project:
 
   - Increase maximum disk size from 8 MB to something that actually
