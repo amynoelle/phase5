@@ -69,6 +69,13 @@
 
   - Sample solution.
 
+  - Need a better way to measure performance improvement of buffer
+    cache.  Some students reported that their system was slower with
+    cache--likely, Bochs doesn't simulate a disk with a realistic
+    speed.
+
+  - Clarify effect of remove(cwd).
+
 * Documentation:
 
   - Finish writing tour.
@@ -91,6 +98,8 @@
 
     . opendir/readdir/closedir
 
+    . everything needed for getcwd()
+
   - Add src/testcases/vm, src/testcases/filesys and make it clear to use
     them?
 
@@ -106,3 +115,8 @@
     too long (especially when SHOW_PROGRESS is turned on) and doesn't
     show significant improvement.
 
+* Code:
+
+  - Rewrite quick_sort() to use heap sort, for O(1) stack usage.
+
+  - Rewrite list_sort() to use merge sort, for O(1) heap usage.
