@@ -1,15 +1,67 @@
+diff -urpN pintos.orig/src/Makefile.build pintos/src/Makefile.build
+--- pintos.orig/src/Makefile.build	2004-09-20 20:26:41.000000000 -0700
++++ pintos/src/Makefile.build	2004-09-27 13:29:43.000000000 -0700
+@@ -51,8 +51,9 @@ userprog_SRC += userprog/syscall.c	# Sys
+ userprog_SRC += userprog/gdt.c		# GDT initialization.
+ userprog_SRC += userprog/tss.c		# TSS management.
+ 
+-# No virtual memory code yet.
+-#vm_SRC = vm/filename.c			# Some file.
++# Virtual memory code.
++vm_SRC = vm/pageframe.c			# Page frame management.
++vm_SRC += vm/swap.c			# Swap file management.
+ 
+ # Filesystem code.
+ filesys_SRC  = filesys/filesys.c	# Filesystem core.
 diff -urpN pintos.orig/src/constants.h pintos/src/constants.h
 --- pintos.orig/src/constants.h	2004-09-21 17:26:39.000000000 -0700
-+++ pintos/src/constants.h	2004-09-27 16:41:17.000000000 -0700
++++ pintos/src/constants.h	2004-09-27 13:29:43.000000000 -0700
 @@ -8,4 +8,4 @@
  /*#define MACRONAME 1 */
  
  /* Uncomment if if you've implemented thread_join(). */
 -/*#define THREAD_JOIN_IMPLEMENTED 1*/
 +#define THREAD_JOIN_IMPLEMENTED 1
+diff -urpN pintos.orig/src/threads/init.c pintos/src/threads/init.c
+--- pintos.orig/src/threads/init.c	2004-09-26 14:15:17.000000000 -0700
++++ pintos/src/threads/init.c	2004-09-27 16:08:03.000000000 -0700
+@@ -21,12 +21,15 @@
+ #include "threads/test.h"
+ #include "threads/thread.h"
+ #ifdef USERPROG
++#include "userprog/pagedir.h"
+ #include "userprog/process.h"
+ #include "userprog/exception.h"
+ #include "userprog/gdt.h"
+ #include "userprog/syscall.h"
+ #include "userprog/tss.h"
+ #endif
++#include "vm/pageframe.h"
++#include "vm/swap.h"
+ #ifdef FILESYS
+ #include "devices/disk.h"
+ #include "filesys/filesys.h"
+@@ -78,6 +81,7 @@ main (void)
+   /* Initialize memory system, segments, paging. */
+   palloc_init ();
+   paging_init ();
++  pageframe_init ();
+ #ifdef USERPROG
+   tss_init ();
+   gdt_init ();
+@@ -105,6 +109,7 @@ main (void)
+   disk_init ();
+   filesys_init (format_filesys);
+   fsutil_run ();
++  swap_init ();
+ #endif
+ 
+   printf ("Boot complete.\n");
+diff -urpN pintos.orig/src/threads/palloc.c pintos/src/threads/palloc.c
+diff -urpN pintos.orig/src/threads/palloc.h pintos/src/threads/palloc.h
 diff -urpN pintos.orig/src/threads/synch.c pintos/src/threads/synch.c
 --- pintos.orig/src/threads/synch.c	2004-09-19 21:29:53.000000000 -0700
-+++ pintos/src/threads/synch.c	2004-09-27 16:41:17.000000000 -0700
++++ pintos/src/threads/synch.c	2004-09-27 13:29:43.000000000 -0700
 @@ -330,3 +330,35 @@ cond_name (const struct condition *cond)
  
    return cond->name;
@@ -48,7 +100,7 @@ diff -urpN pintos.orig/src/threads/synch.c pintos/src/threads/synch.c
 +}
 diff -urpN pintos.orig/src/threads/synch.h pintos/src/threads/synch.h
 --- pintos.orig/src/threads/synch.h	2004-09-19 21:29:53.000000000 -0700
-+++ pintos/src/threads/synch.h	2004-09-27 16:41:17.000000000 -0700
++++ pintos/src/threads/synch.h	2004-09-27 13:29:43.000000000 -0700
 @@ -44,4 +44,16 @@ void cond_signal (struct condition *, st
  void cond_broadcast (struct condition *, struct lock *);
  const char *cond_name (const struct condition *);
@@ -68,7 +120,7 @@ diff -urpN pintos.orig/src/threads/synch.h pintos/src/threads/synch.h
  #endif /* threads/synch.h */
 diff -urpN pintos.orig/src/threads/thread.c pintos/src/threads/thread.c
 --- pintos.orig/src/threads/thread.c	2004-09-26 14:15:17.000000000 -0700
-+++ pintos/src/threads/thread.c	2004-09-27 16:41:17.000000000 -0700
++++ pintos/src/threads/thread.c	2004-09-27 13:29:43.000000000 -0700
 @@ -13,6 +13,7 @@
  #include "threads/synch.h"
  #ifdef USERPROG
@@ -173,16 +225,19 @@ diff -urpN pintos.orig/src/threads/thread.c pintos/src/threads/thread.c
  
 diff -urpN pintos.orig/src/threads/thread.h pintos/src/threads/thread.h
 --- pintos.orig/src/threads/thread.h	2004-09-26 14:15:17.000000000 -0700
-+++ pintos/src/threads/thread.h	2004-09-27 16:41:17.000000000 -0700
-@@ -4,6 +4,7 @@
++++ pintos/src/threads/thread.h	2004-09-27 13:29:43.000000000 -0700
+@@ -2,8 +2,10 @@
+ #define THREADS_THREAD_H
+ 
  #include <debug.h>
++#include <hash.h>
  #include <list.h>
  #include <stdint.h>
 +#include "threads/synch.h"
  
  /* States in a thread's life cycle. */
  enum thread_status
-@@ -89,12 +90,23 @@ struct thread
+@@ -89,12 +91,24 @@ struct thread
      uint8_t *stack;                     /* Saved stack pointer. */
      int priority;                       /* Priority. */
  
@@ -199,6 +254,7 @@ diff -urpN pintos.orig/src/threads/thread.h pintos/src/threads/thread.h
  #ifdef USERPROG
      /* Owned by userprog/process.c. */
      uint32_t *pagedir;                  /* Page directory. */
++    struct hash pages;                  /* Hash of `struct user_page's. */
 +
 +    /* Owned by syscall.c. */
 +    struct list fds;                    /* List of file descriptors. */
@@ -206,7 +262,7 @@ diff -urpN pintos.orig/src/threads/thread.h pintos/src/threads/thread.h
  #endif
  
      /* Owned by thread.c */
-@@ -119,7 +131,7 @@ void thread_yield (void);
+@@ -119,7 +133,7 @@ void thread_yield (void);
  void thread_block (void);
  
  /* This function will be implemented in problem 1-2. */
@@ -217,34 +273,156 @@ diff -urpN pintos.orig/src/threads/thread.h pintos/src/threads/thread.h
  void thread_set_priority (int);
 diff -urpN pintos.orig/src/userprog/exception.c pintos/src/userprog/exception.c
 --- pintos.orig/src/userprog/exception.c	2004-09-26 14:15:17.000000000 -0700
-+++ pintos/src/userprog/exception.c	2004-09-27 16:41:17.000000000 -0700
-@@ -147,6 +147,13 @@ page_fault (struct intr_frame *f) 
++++ pintos/src/userprog/exception.c	2004-09-27 13:29:44.000000000 -0700
+@@ -1,9 +1,16 @@
+ #include "userprog/exception.h"
+ #include <inttypes.h>
+ #include <stdio.h>
++#include <string.h>
+ #include "userprog/gdt.h"
++#include "userprog/pagedir.h"
++#include "userprog/process.h"
++#include "filesys/file.h"
+ #include "threads/interrupt.h"
++#include "threads/mmu.h"
+ #include "threads/thread.h"
++#include "vm/pageframe.h"
++#include "vm/swap.h"
+ 
+ /* Number of page faults processed. */
+ static long long page_fault_cnt;
+@@ -124,10 +131,13 @@ kill (struct intr_frame *f) 
+ static void
+ page_fault (struct intr_frame *f) 
+ {
++  struct thread *t;
+   bool not_present;  /* True: not-present page, false: writing r/o page. */
+   bool write;        /* True: access was write, false: access was read. */
+   bool user;         /* True: access by user, false: access by kernel. */
+   void *fault_addr;  /* Fault address. */
++  struct user_page tmp_up, *up;
++  hash_elem *e;
+ 
+   /* Obtain faulting address, the virtual address that was
+      accessed to cause the fault.  It may point to code or to
+@@ -147,14 +157,62 @@ page_fault (struct intr_frame *f) 
    write = (f->error_code & PF_W) != 0;
    user = (f->error_code & PF_U) != 0;
  
-+  if (!user) 
+-  /* To implement virtual memory, delete the rest of the function
+-     body, and replace it with code that brings in the page to
+-     which fault_addr refers. */
+-  printf ("Page fault at %p: %s error %s page in %s context.\n",
+-          fault_addr,
+-          not_present ? "not present" : "rights violation",
+-          write ? "writing" : "reading",
+-          user ? "user" : "kernel");
+-  kill (f);
++  if (!not_present) 
++    goto bad_access;
++
++  t = thread_current ();
++  if (t->pagedir == NULL)
++    goto bad_access;
++
++  //printf ("fault %p (page=%p)\n", fault_addr, pg_round_down (fault_addr));
++  tmp_up.upage = pg_round_down (fault_addr);
++  e = hash_find (&t->pages, &tmp_up.elem);
++  if (e == NULL) 
++    {
++      printf ("no user_page for %p\n", fault_addr);
++      goto bad_access; 
++    }
++  up = hash_entry (e, struct user_page, elem);
++
++  if (up->frame == NULL) 
++    {
++      if (!pageframe_allocate (up))
++        {
++          printf ("virtual memory exhausted, killing process\n");
++          if (!user)
++            goto bad_access;
++          thread_exit ();
++        }
++      if (up->file != NULL) 
++        {
++          off_t amt = file_read_at (up->file,
++                                    up->frame->kpage, up->file_size,
++                                    up->file_ofs);
++          ASSERT (amt == (off_t) up->file_size);
++          memset (up->frame->kpage + up->file_size, 0, PGSIZE - up->file_size);
++        }
++      else if (up->swap_page != SIZE_MAX)
++        swap_read (up);
++      else
++        memset (up->frame->kpage, 0, PGSIZE);
++    }
++  pagedir_set_page (t->pagedir, up->upage, up->frame->kpage, true);
++  return;
++
++ bad_access:
++  if (user || fault_addr > PHYS_BASE) 
++    {
++      printf ("Page fault at %p: %s error %s page in %s context.\n",
++              fault_addr,
++              not_present ? "not present" : "rights violation",
++              write ? "writing" : "reading",
++              user ? "user" : "kernel");
++      kill (f);
++    }
++  else
 +    {
 +      f->eip = (void (*) (void)) f->eax;
 +      f->eax = 0;
-+      return;
 +    }
-+
-   /* To implement virtual memory, delete the rest of the function
-      body, and replace it with code that brings in the page to
-      which fault_addr refers. */
+ }
+ 
 diff -urpN pintos.orig/src/userprog/process.c pintos/src/userprog/process.c
 --- pintos.orig/src/userprog/process.c	2004-09-22 17:58:29.000000000 -0700
-+++ pintos/src/userprog/process.c	2004-09-27 16:41:17.000000000 -0700
-@@ -182,7 +182,7 @@ struct Elf32_Phdr
++++ pintos/src/userprog/process.c	2004-09-27 14:43:09.000000000 -0700
+@@ -7,15 +7,18 @@
+ #include "userprog/gdt.h"
+ #include "userprog/pagedir.h"
+ #include "userprog/tss.h"
++#include "vm/pageframe.h"
+ #include "filesys/directory.h"
+ #include "filesys/file.h"
+ #include "filesys/filesys.h"
+ #include "threads/flags.h"
+ #include "threads/init.h"
+ #include "threads/interrupt.h"
++#include "threads/malloc.h"
+ #include "threads/mmu.h"
+ #include "threads/palloc.h"
+ #include "threads/thread.h"
++#include "vm/swap.h"
+ 
+ static thread_func execute_thread NO_RETURN;
+ static bool load (const char *cmdline, void (**eip) (void), void **esp);
+@@ -100,6 +103,10 @@ process_exit (void)
+       cur->pagedir = NULL;
+       pagedir_activate (NULL);
+       pagedir_destroy (pd);
++
++      /* We maintain the invariant that `hash' is initialized iff
++         `pd != NULL'. */
++      hash_destroy (&cur->pages);
+     }
+ }
+ 
+@@ -182,7 +189,10 @@ struct Elf32_Phdr
  #define PF_R 4          /* Readable. */
  
  static bool load_segment (struct file *, const struct Elf32_Phdr *);
 -static bool setup_stack (void **esp);
 +static bool setup_stack (const char *cmdline, void **esp);
++static unsigned user_page_hash (const hash_elem *, void *);
++static bool user_page_less (const hash_elem *, const hash_elem *, void *);
++static struct user_page *make_user_page (void *upage);
  
  /* Aborts loading an executable, with an error message. */
  #define LOAD_ERROR(MSG)                                         \
-@@ -198,13 +198,15 @@ static bool setup_stack (void **esp);
+@@ -198,19 +208,35 @@ static bool setup_stack (void **esp);
     and its initial stack pointer into *ESP.
     Returns true if successful, false otherwise. */
  bool
@@ -260,11 +438,19 @@ diff -urpN pintos.orig/src/userprog/process.c pintos/src/userprog/process.c
 +  char *cp;
    int i;
  
++  /* Create hash of user pages. */
++  hash_init (&t->pages, user_page_hash, user_page_less, NULL);
++
    /* Allocate page directory. */
-@@ -212,6 +214,14 @@ load (const char *filename, void (**eip)
-   if (t->pagedir == NULL)
-     LOAD_ERROR (("page directory allocation failed"));
- 
+   t->pagedir = pagedir_create ();
+-  if (t->pagedir == NULL)
+-    LOAD_ERROR (("page directory allocation failed"));
++  if (t->pagedir == NULL) 
++    {
++      hash_destroy (&t->pages);
++      LOAD_ERROR (("page directory allocation failed")); 
++    }
++
 +  /* Extract filename from command line. */
 +  while (*cmdline == ' ')
 +    cmdline++;
@@ -272,25 +458,105 @@ diff -urpN pintos.orig/src/userprog/process.c pintos/src/userprog/process.c
 +  cp = strchr (filename, ' ');
 +  if (cp != NULL)
 +    *cp = '\0';
-+
+ 
    /* Open executable file. */
    file = filesys_open (filename);
-   if (file == NULL)
-@@ -269,7 +279,7 @@ load (const char *filename, void (**eip)
+@@ -269,8 +295,23 @@ load (const char *filename, void (**eip)
      }
  
    /* Set up stack. */
 -  if (!setup_stack (esp))
 +  if (!setup_stack (cmdline, esp))
      goto done;
++  
++#if 0
++  {
++    struct hash_iterator i;
++
++    hash_first (&i, &thread_current ()->pages);
++    while (hash_next (&i))
++      {
++        struct user_page *up = hash_entry (hash_cur (&i),
++                                           struct user_page, elem);
++        printf ("%08x ", up->upage);
++      }
++    printf ("\n");
++  }
++#endif
  
    /* Start address. */
-@@ -371,10 +381,80 @@ load_segment (struct file *file, const s
-   return true;
- }
+   *eip = (void (*) (void)) ehdr.e_entry;
+@@ -279,14 +320,12 @@ load (const char *filename, void (**eip)
  
--/* Create a minimal stack by mapping a zeroed page at the top of
--   user virtual memory. */
+  done:
+   /* We arrive here whether the load is successful or not. */
+-  file_close (file);
++  //file_close (file);                  // FIXME
+   return success;
+ }
+ 
+ /* load() helpers. */
+ 
+-static bool install_page (void *upage, void *kpage);
+-
+ /* Loads the segment described by PHDR from FILE into user
+    address space.  Return true if successful, false otherwise. */
+ static bool
+@@ -296,6 +335,7 @@ load_segment (struct file *file, const s
+   uint8_t *upage;     /* Iterator from start to end. */
+   off_t filesz_left;  /* Bytes left of file data (as opposed to
+                          zero-initialized bytes). */
++  off_t file_ofs;
+ 
+   /* Is this a read-only segment?  Not currently used, so it's
+      commented out.  You'll want to use it when implementing VM
+@@ -340,70 +380,206 @@ load_segment (struct file *file, const s
+ 
+   /* Load the segment page-by-page into memory. */
+   filesz_left = phdr->p_filesz + (phdr->p_vaddr & PGMASK);
+-  file_seek (file, ROUND_DOWN (phdr->p_offset, PGSIZE));
++  file_ofs = ROUND_DOWN (phdr->p_offset, PGSIZE);
+   for (upage = start; upage < (uint8_t *) end; upage += PGSIZE) 
+     {
+       /* We want to read min(PGSIZE, filesz_left) bytes from the
+          file into the page and zero the rest. */
+       size_t read_bytes = filesz_left >= PGSIZE ? PGSIZE : filesz_left;
+-      size_t zero_bytes = PGSIZE - read_bytes;
+-      uint8_t *kpage = palloc_get_page (PAL_USER);
+-      if (kpage == NULL)
++      struct user_page *up = make_user_page (upage);
++      if (up == NULL)
+         return false;
+ 
+-      /* Do the reading and zeroing. */
+-      if (file_read (file, kpage, read_bytes) != (int) read_bytes) 
++      if (read_bytes > 0) 
+         {
+-          palloc_free_page (kpage);
+-          return false; 
++          /* Map page. */
++          up->file = file;
++          up->file_ofs = file_ofs;
++          up->file_size = read_bytes;
++          file_ofs += read_bytes;
+         }
+-      memset (kpage + read_bytes, 0, zero_bytes);
+-      filesz_left -= read_bytes;
+-
+-      /* Add the page to the process's address space. */
+-      if (!install_page (upage, kpage)) 
++      else 
+         {
+-          palloc_free_page (kpage);
+-          return false; 
++          /* Page is all zeros.  Nothing to do. */
+         }
++      filesz_left -= read_bytes;
+     }
++  
++  return true;
++}
++
 +static void
 +reverse (int argc, char **argv) 
 +{
@@ -301,7 +567,6 @@ diff -urpN pintos.orig/src/userprog/process.c pintos/src/userprog/process.c
 +      argv[argc - 1] = tmp;
 +    }
 +}
-+
 +static void *
 +push (uint8_t *kpage, size_t *ofs, const void *buf, size_t size) 
 +{
@@ -357,9 +622,12 @@ diff -urpN pintos.orig/src/userprog/process.c pintos/src/userprog/process.c
 +
 +  /* Set initial stack pointer. */
 +  *esp = upage + ofs;
-+  return true;
-+}
-+
+ 
+   return true;
+ }
+ 
+-/* Create a minimal stack by mapping a zeroed page at the top of
+-   user virtual memory. */
 +/* Create a minimal stack for T by mapping a page at the
 +   top of user virtual memory.  Fills in the page using CMDLINE
 +   and sets *ESP to the stack pointer. */
@@ -367,44 +635,185 @@ diff -urpN pintos.orig/src/userprog/process.c pintos/src/userprog/process.c
 -setup_stack (void **esp) 
 +setup_stack (const char *cmdline, void **esp) 
  {
-   uint8_t *kpage;
-   bool success = false;
-@@ -382,9 +462,9 @@ setup_stack (void **esp) 
-   kpage = palloc_get_page (PAL_USER | PAL_ZERO);
-   if (kpage != NULL) 
+-  uint8_t *kpage;
+-  bool success = false;
++  struct user_page *up = make_user_page ((uint8_t *) PHYS_BASE - PGSIZE);
++  return (up != NULL
++          && pageframe_allocate (up)
++          && init_cmdline (up->frame->kpage, up->upage, cmdline, esp));
++}
++
++static unsigned
++user_page_hash (const hash_elem *e, void *aux UNUSED) 
++{
++  struct user_page *up = hash_entry (e, struct user_page, elem);
++  return hash_bytes (&up->upage, sizeof up->upage);
++}
+ 
+-  kpage = palloc_get_page (PAL_USER | PAL_ZERO);
+-  if (kpage != NULL) 
++static bool
++user_page_less (const hash_elem *a_, const hash_elem *b_, void *aux UNUSED) 
++{
++  struct user_page *a = hash_entry (a_, struct user_page, elem);
++  struct user_page *b = hash_entry (b_, struct user_page, elem);
++
++  return a->upage < b->upage;
++}
++
++static struct user_page *
++make_user_page (void *upage) 
++{
++  struct user_page *up;
++
++  up = malloc (sizeof *up);
++  if (up != NULL) 
      {
 -      success = install_page (((uint8_t *) PHYS_BASE) - PGSIZE, kpage);
 -      if (success)
 -        *esp = PHYS_BASE;
-+      uint8_t *upage = ((uint8_t *) PHYS_BASE) - PGSIZE;
-+      if (install_page (upage, kpage))
-+        success = init_cmdline (kpage, upage, cmdline, esp);
++      memset (up, 0, sizeof *up);
++      up->swap_page = SIZE_MAX;
++
++      up->upage = upage;
++      if (hash_insert (&thread_current ()->pages, &up->elem) != NULL) 
++        {
++          free (up);
++          up = NULL;
++        }
++#if 0
        else
-         palloc_free_page (kpage);
+-        palloc_free_page (kpage);
++        printf ("make_user_page(%p) okay\n", upage);
++#endif
      }
+-  else
+-    printf ("failed to allocate process stack\n");
+ 
+-  return success;
++  return up;
+ }
+ 
+-/* Adds a mapping from user virtual address UPAGE to kernel
+-   virtual address KPAGE to the page table.  Fails if UPAGE is
+-   already mapped or if memory allocation fails. */
+-static bool
+-install_page (void *upage, void *kpage)
++static void
++dump_page (struct user_page *up) 
+ {
+-  struct thread *t = thread_current ();
++  off_t amt;
+ 
+-  /* Verify that there's not already a page at that virtual
+-     address, then map our page there. */
+-  return (pagedir_get_page (t->pagedir, upage) == NULL
+-          && pagedir_set_page (t->pagedir, upage, kpage, true));
++  ASSERT (up->file != NULL);
++  up->file_size = PGSIZE;
++  amt = file_write_at (up->file, up->frame->kpage,
++                       up->file_size, up->file_ofs);
++  ASSERT (amt == (off_t) up->file_size);
+ }
++
++bool
++process_evict_page (struct thread *t, struct user_page *up) 
++{
++  ASSERT (up->frame != NULL);
++
++  if (pagedir_test_accessed (t->pagedir, up->upage)) 
++    {
++      pagedir_clear_accessed (t->pagedir, up->upage);
++      return false;
++    }
++
++  if (up->file == NULL) 
++    {
++      if (!swap_write (up))
++        return false;
++    }
++  else if (pagedir_test_dirty (t->pagedir, up->upage)) 
++    {
++      /* Need to write out. */
++      if (up->private) 
++        {
++          up->file = NULL; // FIXME
++          up->private = false;
++          if (!swap_write (up))
++            return false;
++        }
++
++      dump_page (up);
++    }
++  else 
++    {
++      /* Already on disk, not dirty.
++         Nothing to do. */
++    }
++
++  pagedir_clear_page (t->pagedir, up->upage);
++  pageframe_free (up->frame);
++  return true;
++}
++
+diff -urpN pintos.orig/src/userprog/process.h pintos/src/userprog/process.h
+--- pintos.orig/src/userprog/process.h	2004-09-21 22:42:17.000000000 -0700
++++ pintos/src/userprog/process.h	2004-09-27 14:43:13.000000000 -0700
+@@ -2,9 +2,32 @@
+ #define USERPROG_PROCESS_H
+ 
+ #include "threads/thread.h"
++#include "filesys/off_t.h"
++
++struct user_page 
++  {
++    hash_elem elem;
++    void *upage;                /* Virtual address of mapping. */
++
++    /* If FRAME is nonnull, the page is in memory.
++       If FILE is nonnull, the page is on disk.
++       If both are null, the page is all zeroes.
++       If both are nonnull, the page is in memory and backed by a
++       file mapping (not the swap file). */
++    struct page_frame *frame;
++    size_t swap_page;
++    struct file *file;
++    off_t file_ofs;
++    size_t file_size;           /* Number of bytes on disk, <= PGSIZE. */
++
++    bool dirty : 1;
++    bool accessed : 1;
++    bool private : 1;           /* Write dirty pages to swap or to FILE? */
++  };
+ 
+ tid_t process_execute (const char *filename);
+ void process_exit (void);
+ void process_activate (void);
++bool process_evict_page (struct thread *, struct user_page *);
+ 
+ #endif /* userprog/process.h */
 diff -urpN pintos.orig/src/userprog/syscall.c pintos/src/userprog/syscall.c
 --- pintos.orig/src/userprog/syscall.c	2004-09-26 14:15:17.000000000 -0700
-+++ pintos/src/userprog/syscall.c	2004-09-27 16:43:00.000000000 -0700
++++ pintos/src/userprog/syscall.c	2004-09-27 14:42:01.000000000 -0700
 @@ -1,20 +1,429 @@
  #include "userprog/syscall.h"
  #include <stdio.h>
 +#include <string.h>
  #include <syscall-nr.h>
-+#include "userprog/process.h"
-+#include "userprog/pagedir.h"
-+#include "devices/kbd.h"
-+#include "filesys/filesys.h"
-+#include "filesys/file.h"
 +#include "threads/init.h"
  #include "threads/interrupt.h"
 +#include "threads/malloc.h"
 +#include "threads/mmu.h"
 +#include "threads/palloc.h"
  #include "threads/thread.h"
--
-+ 
++#include "userprog/pagedir.h"
++#include "userprog/process.h"
++#include "filesys/filesys.h"
++#include "filesys/file.h"
++#include "devices/kbd.h"
++
 +typedef int syscall_function (int, int, int);
-+ 
++
 +static int sys_halt (void);
 +static int sys_exit (int status);
 +static int sys_exec (const char *ufile);
@@ -418,13 +827,13 @@ diff -urpN pintos.orig/src/userprog/syscall.c pintos/src/userprog/syscall.c
 +static int sys_seek (int handle, unsigned position);
 +static int sys_tell (int handle);
 +static int sys_close (int handle);
-+ 
++
 +struct syscall 
 +  {
 +    size_t arg_cnt;
 +    syscall_function *func;
 +  };
-+ 
++
 +struct syscall syscall_table[] = 
 +  {
 +    {0, (syscall_function *) sys_halt},
@@ -442,88 +851,85 @@ diff -urpN pintos.orig/src/userprog/syscall.c pintos/src/userprog/syscall.c
 +    {1, (syscall_function *) sys_close},
 +  };
 +static const int syscall_cnt = sizeof syscall_table / sizeof *syscall_table;
-+ 
+ 
  static void syscall_handler (struct intr_frame *);
--
 +static void copy_in (void *, const void *, size_t);
-+ 
++
 +static struct lock fs_lock;
-+ 
+ 
  void
  syscall_init (void) 
  {
    intr_register (0x30, 3, INTR_ON, syscall_handler, "syscall");
 +  lock_init (&fs_lock, "fs");
  }
--
-+ 
+ 
  static void
 -syscall_handler (struct intr_frame *f UNUSED) 
 +syscall_handler (struct intr_frame *f) 
- {
--  printf ("system call!\n");
++{
 +  struct syscall *s;
 +  int call_nr;
 +  int args[3];
-+ 
++
 +  copy_in (&call_nr, f->esp, sizeof call_nr);
 +  if (call_nr < 0 || call_nr >= syscall_cnt)
 +    {
 +      printf ("bad syscall number %d\n", call_nr);
 +      thread_exit ();
 +    }
-+ 
++
 +  s = syscall_table + call_nr;
 +  ASSERT (s->arg_cnt <= sizeof args / sizeof *args);
 +  memset (args, 0, sizeof args);
 +  copy_in (args, (uint32_t *) f->esp + 1, sizeof *args * s->arg_cnt);
 +  f->eax = s->func (args[0], args[1], args[2]);
 +}
-+ 
++
 +static bool
 +verify_user (const void *uaddr) 
 +{
 +  return pagedir_get_page (thread_current ()->pagedir, uaddr) != NULL;
 +}
-+ 
++
 +static inline bool get_user (uint8_t *dst, const uint8_t *usrc) {
 +  int eax;
 +  asm ("movl $1f, %%eax; movb %2, %%al; movb %%al, %0; 1:"
 +       : "=m" (*dst), "=&a" (eax) : "m" (*usrc));
 +  return eax != 0;
 +}
-+ 
++
 +static inline bool put_user (uint8_t *udst, uint8_t byte) {
 +  int eax;
 +  asm ("movl $1f, %%eax; movb %b2, %0; 1:"
 +       : "=m" (*udst), "=&a" (eax) : "r" (byte));
 +  return eax != 0;
 +}
-+ 
++
 +static void
 +copy_in (void *dst_, const void *usrc_, size_t size) 
 +{
 +  uint8_t *dst = dst_;
 +  const uint8_t *usrc = usrc_;
-+ 
++
 +  for (; size > 0; size--, dst++, usrc++) 
 +    if (usrc >= (uint8_t *) PHYS_BASE || !get_user (dst, usrc)) 
 +      thread_exit ();
 +}
-+ 
++
 +static char *
 +copy_in_string (const char *us) 
 +{
 +  char *ks;
 +  size_t length;
-+ 
++
 +  ks = palloc_get_page (0);
 +  if (ks == NULL) 
 +    {
 +      printf ("copy_in_string: out of memory\n");
 +      thread_exit ();
 +    }
-+ 
++
 +  for (length = 0; length < PGSIZE; length++)
 +    {
 +      if (us >= (char *) PHYS_BASE || !get_user (ks + length, us++)) 
@@ -531,99 +937,100 @@ diff -urpN pintos.orig/src/userprog/syscall.c pintos/src/userprog/syscall.c
 +          printf ("bad user reference (%p)\n", us + length);
 +          thread_exit (); 
 +        }
-+       
++      
 +      if (ks[length] == '\0')
 +        return ks;
 +    }
-+ 
++
 +  printf ("copy_in_string: string too long\n");
 +  palloc_free_page (ks);
 +  thread_exit ();
 +}
-+ 
++
 +static int
 +sys_halt (void)
 +{
 +  power_off ();
 +}
-+ 
++
 +static int
 +sys_exit (int ret_code) 
-+{
+ {
+-  printf ("system call!\n");
 +  thread_current ()->ret_code = ret_code;
-+  thread_exit ();
+   thread_exit ();
 +  NOT_REACHED ();
 +}
-+ 
++
 +static int
 +sys_exec (const char *ufile) 
 +{
 +  tid_t tid;
 +  char *kfile = copy_in_string (ufile);
-+ 
++
 +  lock_acquire (&fs_lock);
 +  tid = process_execute (kfile);
 +  lock_release (&fs_lock);
-+ 
++
 +  palloc_free_page (kfile);
-+ 
++
 +  return tid;
 +}
-+ 
++
 +static int
 +sys_join (tid_t child) 
 +{
 +  return thread_join (child);
 +}
-+ 
++
 +static int
 +sys_create (const char *ufile, unsigned initial_size) 
 +{
 +  char *kfile = copy_in_string (ufile);
 +  bool ok;
-+   
++  
 +  lock_acquire (&fs_lock);
 +  ok = filesys_create (kfile, initial_size);
 +  lock_release (&fs_lock);
-+ 
++
 +  palloc_free_page (kfile);
-+ 
++
 +  return ok;
 +}
-+ 
++
 +static int
 +sys_remove (const char *ufile) 
 +{
 +  char *kfile = copy_in_string (ufile);
 +  bool ok;
-+   
++  
 +  lock_acquire (&fs_lock);
 +  ok = filesys_remove (kfile);
 +  lock_release (&fs_lock);
-+ 
++
 +  palloc_free_page (kfile);
-+ 
++
 +  return ok;
 +}
-+ 
++
 +struct fildes
 +  {
 +    list_elem elem;
 +    struct file *file;
 +    int handle;
 +  };
-+ 
++
 +static int
 +sys_open (const char *ufile) 
 +{
 +  char *kfile = copy_in_string (ufile);
 +  struct fildes *fd;
 +  int handle = -1;
-+ 
++
 +  fd = malloc (sizeof *fd);
 +  if (fd == NULL)
 +    goto exit;
-+ 
++
 +  lock_acquire (&fs_lock);
 +  fd->file = filesys_open (kfile);
 +  if (fd->file != NULL)
@@ -635,18 +1042,18 @@ diff -urpN pintos.orig/src/userprog/syscall.c pintos/src/userprog/syscall.c
 +  else 
 +    free (fd);
 +  lock_release (&fs_lock);
-+ 
++
 + exit:
 +  palloc_free_page (kfile);
 +  return handle;
 +}
-+ 
++
 +static struct fildes *
 +lookup_fd (int handle) 
 +{
 +  struct thread *cur = thread_current ();
 +  list_elem *e;
-+   
++  
 +  for (e = list_begin (&cur->fds); e != list_end (&cur->fds);
 +       e = list_next (e))
 +    {
@@ -654,31 +1061,31 @@ diff -urpN pintos.orig/src/userprog/syscall.c pintos/src/userprog/syscall.c
 +      if (fd->handle == handle)
 +        return fd;
 +    }
-+ 
++
 +  printf ("no handle %d\n", handle);
-   thread_exit ();
- }
-+ 
++thread_exit ();
++}
++
 +static int
 +sys_filesize (int handle) 
 +{
 +  struct fildes *fd = lookup_fd (handle);
 +  int size;
-+ 
++
 +  lock_acquire (&fs_lock);
 +  size = file_length (fd->file);
 +  lock_release (&fs_lock);
-+ 
++
 +  return size;
 +}
-+ 
++
 +static int
 +sys_read (int handle, void *udst_, unsigned size) 
 +{
 +  uint8_t *udst = udst_;
 +  struct fildes *fd;
 +  int bytes_read = 0;
-+ 
++
 +  if (handle == STDIN_FILENO) 
 +    {
 +      for (bytes_read = 0; (size_t) bytes_read < size; bytes_read++)
@@ -686,7 +1093,7 @@ diff -urpN pintos.orig/src/userprog/syscall.c pintos/src/userprog/syscall.c
 +          thread_exit ();
 +      return bytes_read;
 +    }
-+ 
++
 +  lock_acquire (&fs_lock);
 +  fd = lookup_fd (handle);
 +  while (size > 0) 
@@ -694,13 +1101,13 @@ diff -urpN pintos.orig/src/userprog/syscall.c pintos/src/userprog/syscall.c
 +      size_t page_left = PGSIZE - pg_ofs (udst);
 +      size_t read_amt = size < page_left ? size : page_left;
 +      off_t retval;
-+ 
++
 +      if (!verify_user (udst)) 
 +        {
 +          lock_release (&fs_lock);
 +          thread_exit ();
 +        }
-+       
++      
 +      retval = file_read (fd->file, udst, read_amt);
 +      if (retval < 0)
 +        {
@@ -708,26 +1115,26 @@ diff -urpN pintos.orig/src/userprog/syscall.c pintos/src/userprog/syscall.c
 +            bytes_read = -1; 
 +          break;
 +        }
-+ 
++
 +      bytes_read += retval;
 +      if (retval != (off_t) read_amt)
 +        break;
-+ 
++
 +      udst += retval;
 +      size -= retval;
 +    }
 +  lock_release (&fs_lock);
-+   
++  
 +  return bytes_read;
 +}
-+ 
++
 +static int
 +sys_write (int handle, void *usrc_, unsigned size) 
 +{
 +  uint8_t *usrc = usrc_;
 +  struct fildes *fd = NULL;
 +  int bytes_written = 0;
-+ 
++
 +  lock_acquire (&fs_lock);
 +  if (handle != STDOUT_FILENO)
 +    fd = lookup_fd (handle);
@@ -736,13 +1143,13 @@ diff -urpN pintos.orig/src/userprog/syscall.c pintos/src/userprog/syscall.c
 +      size_t page_left = PGSIZE - pg_ofs (usrc);
 +      size_t write_amt = size < page_left ? size : page_left;
 +      off_t retval;
-+ 
++
 +      if (!verify_user (usrc)) 
 +        {
 +          lock_release (&fs_lock);
 +          thread_exit ();
 +        }
-+ 
++
 +      if (handle == STDOUT_FILENO)
 +        {
 +          putbuf (usrc, write_amt);
@@ -756,44 +1163,44 @@ diff -urpN pintos.orig/src/userprog/syscall.c pintos/src/userprog/syscall.c
 +            bytes_written = -1;
 +          break;
 +        }
-+ 
++
 +      bytes_written += retval;
 +      if (retval != (off_t) write_amt)
 +        break;
-+ 
++
 +      usrc += retval;
 +      size -= retval;
 +    }
 +  lock_release (&fs_lock);
-+ 
++
 +  return bytes_written;
 +}
-+ 
++
 +static int
 +sys_seek (int handle, unsigned position) 
 +{
 +  struct fildes *fd = lookup_fd (handle);
-+   
++  
 +  lock_acquire (&fs_lock);
 +  file_seek (fd->file, position);
 +  lock_release (&fs_lock);
-+ 
++
 +  return 0;
 +}
-+ 
++
 +static int
 +sys_tell (int handle) 
 +{
 +  struct fildes *fd = lookup_fd (handle);
 +  unsigned position;
-+   
++  
 +  lock_acquire (&fs_lock);
 +  position = file_tell (fd->file);
 +  lock_release (&fs_lock);
-+ 
++
 +  return position;
 +}
-+ 
++
 +static int
 +sys_close (int handle) 
 +{
@@ -805,13 +1212,13 @@ diff -urpN pintos.orig/src/userprog/syscall.c pintos/src/userprog/syscall.c
 +  free (fd);
 +  return 0;
 +}
-+ 
++
 +void
 +syscall_exit (void) 
 +{
 +  struct thread *cur = thread_current ();
 +  list_elem *e, *next;
-+   
++  
 +  for (e = list_begin (&cur->fds); e != list_end (&cur->fds); e = next)
 +    {
 +      struct fildes *fd = list_entry (e, struct fildes, elem);
@@ -819,10 +1226,10 @@ diff -urpN pintos.orig/src/userprog/syscall.c pintos/src/userprog/syscall.c
 +      file_close (fd->file);
 +      free (fd);
 +    }
-+}
+ }
 diff -urpN pintos.orig/src/userprog/syscall.h pintos/src/userprog/syscall.h
 --- pintos.orig/src/userprog/syscall.h	2004-09-05 22:38:45.000000000 -0700
-+++ pintos/src/userprog/syscall.h	2004-09-27 16:41:17.000000000 -0700
++++ pintos/src/userprog/syscall.h	2004-09-27 13:29:44.000000000 -0700
 @@ -2,5 +2,6 @@
  #define USERPROG_SYSCALL_H
  
@@ -830,3 +1237,188 @@ diff -urpN pintos.orig/src/userprog/syscall.h pintos/src/userprog/syscall.h
 +void syscall_exit (void);
  
  #endif /* userprog/syscall.h */
+diff -urpN pintos.orig/src/vm/pageframe.c pintos/src/vm/pageframe.c
+--- pintos.orig/src/vm/pageframe.c	1969-12-31 16:00:00.000000000 -0800
++++ pintos/src/vm/pageframe.c	2004-09-27 13:29:44.000000000 -0700
+@@ -0,0 +1,75 @@
++#include "vm/pageframe.h"
++#include <stdint.h>
++#include "threads/init.h"
++#include "threads/malloc.h"
++#include "threads/mmu.h"
++#include "threads/palloc.h"
++#include "userprog/process.h"
++
++static struct page_frame *frames;
++static size_t frame_cnt;
++
++static struct page_frame *next_frame;
++
++static inline bool
++in_use (const struct page_frame *pf) 
++{
++  ASSERT ((pf->owner != NULL) == (pf->user_page != NULL));
++  return pf->owner != NULL;
++}
++
++void
++pageframe_init (void) 
++{
++  uint8_t *kpage;
++
++  frame_cnt = ram_pages;
++  frames = calloc (sizeof *frames, frame_cnt);
++  if (frames == NULL)
++    PANIC ("can't allocate page frames");
++
++  while ((kpage = palloc_get_page (PAL_USER)) != NULL)
++    {
++      struct page_frame *pf = frames + (vtop (kpage) >> PGBITS);
++      pf->kpage = kpage;
++    }
++
++  next_frame = frames;
++}
++
++bool
++pageframe_allocate (struct user_page *up) 
++{
++  struct page_frame *pf;
++  size_t loops;
++
++  ASSERT (up->frame == NULL);
++
++  loops = 0;
++  do 
++    {
++      pf = next_frame++;
++      if (next_frame >= frames + frame_cnt)
++        next_frame = frames;
++      if (loops++ > 2 * frame_cnt)
++        return false;
++    }
++  while (pf->kpage == NULL
++         || (in_use (pf) && !process_evict_page (pf->owner, pf->user_page)));
++
++  ASSERT (!in_use (pf));
++  pf->owner = thread_current ();
++  pf->user_page = up;
++  up->frame = pf;
++  return true; 
++}
++
++void
++pageframe_free (struct page_frame *pf) 
++{
++  ASSERT (in_use (pf));
++  
++  pf->owner = NULL;
++  pf->user_page->frame = NULL;
++  pf->user_page = NULL;
++}
+diff -urpN pintos.orig/src/vm/pageframe.h pintos/src/vm/pageframe.h
+--- pintos.orig/src/vm/pageframe.h	1969-12-31 16:00:00.000000000 -0800
++++ pintos/src/vm/pageframe.h	2004-09-27 13:29:44.000000000 -0700
+@@ -0,0 +1,17 @@
++#ifndef VM_PAGEFRAME_H
++#define VM_PAGEFRAME_H 1
++
++#include <stdbool.h>
++
++struct page_frame 
++  {
++    void *kpage;
++    struct thread *owner;
++    struct user_page *user_page;
++  };
++
++void pageframe_init (void);
++bool pageframe_allocate (struct user_page *);
++void pageframe_free (struct page_frame *);
++
++#endif /* vm/pageframe.h */
+diff -urpN pintos.orig/src/vm/swap.c pintos/src/vm/swap.c
+--- pintos.orig/src/vm/swap.c	1969-12-31 16:00:00.000000000 -0800
++++ pintos/src/vm/swap.c	2004-09-27 13:29:44.000000000 -0700
+@@ -0,0 +1,66 @@
++#include "vm/swap.h"
++#include <bitmap.h>
++#include <stdio.h>
++#include "vm/pageframe.h"
++#include "threads/mmu.h"
++#include "filesys/file.h"
++#include "filesys/filesys.h"
++#include "userprog/process.h"
++
++static size_t swap_pages;
++static struct disk *swap_disk;
++static struct bitmap *used_pages;
++
++void
++swap_init (void) 
++{
++  swap_disk = disk_get (1, 1);
++  if (swap_disk == NULL)
++    PANIC ("no swap disk");
++  swap_pages = disk_size (swap_disk) / (PGSIZE / DISK_SECTOR_SIZE);
++  printf ("swap disk has room for %zu pages\n", swap_pages);
++
++  used_pages = bitmap_create (swap_pages);
++  if (used_pages == NULL)
++    PANIC ("couldn't create swap bitmap");
++}
++
++bool
++swap_write (struct user_page *up) 
++{
++  size_t page;
++  disk_sector_t sector;
++  int i;
++
++  ASSERT (up->frame != NULL);
++  ASSERT (up->file == NULL);
++
++  page = bitmap_scan_and_flip (used_pages, 0, 1, false);
++  if (page == BITMAP_ERROR)
++    return false;
++
++  up->swap_page = page;
++  sector = (disk_sector_t) page * (PGSIZE / DISK_SECTOR_SIZE);
++  for (i = 0; i < PGSIZE / DISK_SECTOR_SIZE; i++)
++    disk_write (swap_disk, sector++, up->frame->kpage + i * DISK_SECTOR_SIZE);
++
++  return true;
++}
++
++void
++swap_read (struct user_page *up) 
++{
++  disk_sector_t sector;
++  int i;
++
++  ASSERT (up->frame != NULL);
++
++  ASSERT (bitmap_test (used_pages, up->swap_page));
++  bitmap_reset (used_pages, up->swap_page);
++
++  sector = (disk_sector_t) up->swap_page * (PGSIZE / DISK_SECTOR_SIZE);
++  for (i = 0; i < PGSIZE / DISK_SECTOR_SIZE; i++)
++    disk_read (swap_disk, sector++, up->frame->kpage + i * DISK_SECTOR_SIZE);
++
++  up->swap_page = SIZE_MAX;
++}
+diff -urpN pintos.orig/src/vm/swap.h pintos/src/vm/swap.h
+--- pintos.orig/src/vm/swap.h	1969-12-31 16:00:00.000000000 -0800
++++ pintos/src/vm/swap.h	2004-09-27 13:29:44.000000000 -0700
+@@ -0,0 +1,11 @@
++#ifndef VM_SWAP_H
++#define VM_SWAP_H 1
++
++#include <stdbool.h>
++
++struct user_page;
++void swap_init (void);
++bool swap_write (struct user_page *);
++void swap_read (struct user_page *);
++
++#endif /* vm/swap.h */

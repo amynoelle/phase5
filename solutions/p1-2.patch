@@ -1,9 +1,6 @@
-Only in pintos/src/threads: .#init.c
-Only in pintos/src/threads: build
-Only in pintos/src/threads: init.c~
-diff -urp pintos.orig/src/threads/synch.c pintos/src/threads/synch.c
+diff -X pat -urpN pintos.orig/src/threads/synch.c pintos/src/threads/synch.c
 --- pintos.orig/src/threads/synch.c	2004-09-19 21:29:53.000000000 -0700
-+++ pintos/src/threads/synch.c	2004-09-20 22:38:56.000000000 -0700
++++ pintos/src/threads/synch.c	2004-09-27 16:50:14.000000000 -0700
 @@ -330,3 +330,35 @@ cond_name (const struct condition *cond)
  
    return cond->name;
@@ -40,10 +37,9 @@ diff -urp pintos.orig/src/threads/synch.c pintos/src/threads/synch.c
 +    }
 +  lock_release (&latch->monitor_lock);
 +}
-Only in pintos/src/threads: synch.c.orig
-diff -urp pintos.orig/src/threads/synch.h pintos/src/threads/synch.h
+diff -X pat -urpN pintos.orig/src/threads/synch.h pintos/src/threads/synch.h
 --- pintos.orig/src/threads/synch.h	2004-09-19 21:29:53.000000000 -0700
-+++ pintos/src/threads/synch.h	2004-09-20 22:38:56.000000000 -0700
++++ pintos/src/threads/synch.h	2004-09-27 16:50:14.000000000 -0700
 @@ -44,4 +44,16 @@ void cond_signal (struct condition *, st
  void cond_broadcast (struct condition *, struct lock *);
  const char *cond_name (const struct condition *);
@@ -61,11 +57,10 @@ diff -urp pintos.orig/src/threads/synch.h pintos/src/threads/synch.h
 +void latch_release (struct latch *);
 +
  #endif /* threads/synch.h */
-Only in pintos/src/threads: synch.h.orig
-diff -urp pintos.orig/src/threads/thread.c pintos/src/threads/thread.c
---- pintos.orig/src/threads/thread.c	2004-09-20 19:32:31.000000000 -0700
-+++ pintos/src/threads/thread.c	2004-09-20 22:52:43.000000000 -0700
-@@ -76,6 +76,7 @@ thread_init (void) 
+diff -X pat -urpN pintos.orig/src/threads/thread.c pintos/src/threads/thread.c
+--- pintos.orig/src/threads/thread.c	2004-09-26 14:15:17.000000000 -0700
++++ pintos/src/threads/thread.c	2004-09-27 16:51:03.000000000 -0700
+@@ -80,6 +80,7 @@ thread_init (void) 
    init_thread (initial_thread, "main", PRI_DEFAULT);
    initial_thread->status = THREAD_RUNNING;
    initial_thread->tid = allocate_tid ();
@@ -73,7 +68,7 @@ diff -urp pintos.orig/src/threads/thread.c pintos/src/threads/thread.c
  }
  
  /* Starts preemptive thread scheduling by enabling interrupts.
-@@ -120,6 +121,7 @@ thread_create (const char *name, int pri
+@@ -148,6 +149,7 @@ thread_create (const char *name, int pri
    /* Initialize thread. */
    init_thread (t, name, priority);
    tid = t->tid = allocate_tid ();
@@ -81,7 +76,7 @@ diff -urp pintos.orig/src/threads/thread.c pintos/src/threads/thread.c
  
    /* Stack frame for kernel_thread(). */
    kf = alloc_frame (t, sizeof *kf);
-@@ -196,12 +198,30 @@ thread_tid (void) 
+@@ -224,16 +226,34 @@ thread_tid (void) 
  void
  thread_exit (void) 
  {
@@ -89,6 +84,10 @@ diff -urp pintos.orig/src/threads/thread.c pintos/src/threads/thread.c
 +  list_elem *e;
 +
    ASSERT (!intr_context ());
+ 
+ #ifdef USERPROG
+   process_exit ();
+ #endif
  
 +  /* Notify our parent that we're dying. */
 +  latch_release (&t->ready_to_die);
@@ -113,7 +112,7 @@ diff -urp pintos.orig/src/threads/thread.c pintos/src/threads/thread.c
    schedule ();
    NOT_REACHED ();
  }
-@@ -238,6 +258,22 @@ thread_block (void) 
+@@ -270,6 +290,22 @@ thread_block (void) 
    thread_current ()->status = THREAD_BLOCKED;
    schedule ();
  }
@@ -136,7 +135,7 @@ diff -urp pintos.orig/src/threads/thread.c pintos/src/threads/thread.c
  
  /* Idle thread.  Executes when no other thread is ready to run. */
  static void
-@@ -303,6 +339,9 @@ init_thread (struct thread *t, const cha
+@@ -335,6 +371,9 @@ init_thread (struct thread *t, const cha
    strlcpy (t->name, name, sizeof t->name);
    t->stack = (uint8_t *) t + PGSIZE;
    t->priority = priority;
@@ -146,13 +145,9 @@ diff -urp pintos.orig/src/threads/thread.c pintos/src/threads/thread.c
    t->magic = THREAD_MAGIC;
  }
  
-Only in pintos/src/threads: thread.c.orig
-Only in pintos/src/threads: thread.c.rej
-Only in pintos/src/threads: thread.c.rej~
-Only in pintos/src/threads: thread.c~
-diff -urp pintos.orig/src/threads/thread.h pintos/src/threads/thread.h
---- pintos.orig/src/threads/thread.h	2004-09-20 15:29:18.000000000 -0700
-+++ pintos/src/threads/thread.h	2004-09-20 22:36:55.000000000 -0700
+diff -X pat -urpN pintos.orig/src/threads/thread.h pintos/src/threads/thread.h
+--- pintos.orig/src/threads/thread.h	2004-09-26 14:15:17.000000000 -0700
++++ pintos/src/threads/thread.h	2004-09-27 16:50:14.000000000 -0700
 @@ -4,6 +4,7 @@
  #include <debug.h>
  #include <list.h>
@@ -174,5 +169,3 @@ diff -urp pintos.orig/src/threads/thread.h pintos/src/threads/thread.h
      /* Shared between thread.c and synch.c. */
      list_elem elem;                     /* List element. */
  
-Only in pintos/src/threads: thread.h.orig
-Only in pintos/src/threads: thread.h~
