@@ -1,24 +1,54 @@
 -*- text -*-
 
-* The p1-4.c testcase needs significant tuning.  Currently it takes
-  too long (especially when SHOW_PROGRESS is turned on) and doesn't
-  show significant improvement.
+* Code:
 
-* The semantics of the join system call should change so that it only
-  returns the exit code once.
+  - Speed up disk routines: filling an 8 MB disk takes a long time.
+    (They're only slow because timer_sleep always waits for at least
+    one timer tick.)
 
-* mmap/munmap should use segment IDs like Nachos.  Too hard otherwise.
+  - userprog project should mark read-only pages as actually read-only
+    in the page table.  Or, since this was consistently rated as the
+    easiest project by the students, require them to do it.
 
-* Finish writing the tour.
+  - For userprog project, don't provide per-process pagedir
+    implementation but only single-process implementation and require
+    students to implement the separation?  This project was rated as
+    the easiest after all.  Alternately we could just remove the
+    synchronization on pid selection and check that students fix it.
 
-* Come up with a way for us to release some of the tests.
+* Documentation:
 
-* userprog project should mark read-only pages as actually read-only
-  in the page table
+  - Finish writing tour.
 
-* Add src/testcases/vm, src/testcases/filesys and make it clear to use
-  them?
+  - Add "Digging Deeper" sections that describe the nitty-gritty x86
+    details for the benefit of those interested.
 
-* Speed up disk routines: filling an 8 MB disk takes a long time.
-  (They're only slow because timer_sleep always waits for at least one
-  timer tick.)
+* Assignments:
+
+  - Add extra credit:
+
+    . Low-level x86 stuff, like paged page tables.
+
+    . Other good ideas.
+
+  - The semantics of the join system call should change so that it
+    only returns the exit code once.
+
+  - mmap/munmap should use segment IDs like Nachos.  Too hard
+    otherwise.
+
+  - Add src/testcases/vm, src/testcases/filesys and make it clear to use
+    them?
+
+* Tests:
+
+  - Release some of them.
+
+  - The threads, userprog, vm test source files could use
+    factorization and cleanup along the lines of fslib in the filesys
+    tests.
+
+  - The p1-4.c testcase needs significant tuning.  Currently it takes
+    too long (especially when SHOW_PROGRESS is turned on) and doesn't
+    show significant improvement.
+
