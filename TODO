@@ -11,6 +11,12 @@
 
 * Userprog project:
 
+  - Don't emphasize that stuff needs to be copied from user space to
+    kernel space.  Instead, emphasize validation and suggest that
+    copying is a common solution and that it will be necessary in
+    project 3 and in real OSes.  Also revise the grading criteria to
+    match.
+
   - Move `join' implementation here, from `threads' project, to help
     normalize the project difficulties.
 
