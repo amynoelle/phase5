@@ -71,27 +71,3 @@ Filesys project:
 
   - A fair number of students thought this was the hardest project.
     Perhaps we could add some notes about where to start?
-
-
-Another student note:
-
-      3) This is probably an "unsupported" configuration, however I'll point
-      it out anyway.  Running user programs under Pintos compiled on my
-      desktop I get the following warning:
-
-      unknown ELF segment type 65041580
-
-      If you look at /usr/include/elf.h you will find:
-
-      #define PT_LOOS 0x60000000 /* Start of OS-specific */
-
-      It would appear that elf segments starting with this program header
-      are "OS-specific" My Occam's Razor explanation here is that the
-      segment holds the bits to configure the stack protection features in
-      newer GCCs.
-
-      gcc version is: gcc version 3.3.4 20040623 (Gentoo Linux 3.3.4-r1,
-      ssp-3.3.2-2, pie-8.7.6)
-
-This probably means that we should provide a linker script that leaves
-out weird stuff.
