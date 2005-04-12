@@ -52,8 +52,6 @@
 
   - Add option to disable buffer cache.
 
-  - Get rid of "dump" commands--they're not really useful.
-
   - Sample solution.
 
   - Need a better way to measure performance improvement of buffer
