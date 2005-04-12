@@ -115,6 +115,3 @@
     documentation.
 
   - Need to check the wait system call more thoroughly.
-
-  - Library is not precisely standard, e.g. ptrdiff_t should not be
-    defined by stdlib.h.
