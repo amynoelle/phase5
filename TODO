@@ -1,5 +1,7 @@
 -*- text -*-
 
+* Improve automatic interpretation of exception messages.
+
 * Remove names from synchronization primitives?  They don't seem
   useful in practice.
 
