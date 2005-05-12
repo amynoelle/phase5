@@ -1,6 +1,8 @@
 -*- text -*-
 
-* The tests in tests/ don't apply the grading patches.
+* debug_backtrace() in kernel should only dereference valid pointers.
+
+* Mention how to use add-symbol-file in gdb.
 
 * We need better and more example programs.
 
@@ -71,6 +73,8 @@
   - Add explanations of what "real" OSes do to give students some
     perspective.
 
+  - GNU make 3.80 or later is required.
+
 * Assignments:
 
   - Add extra credit:
@@ -85,9 +89,6 @@
 
     . everything needed for getcwd()
 
-  - Add src/testcases/vm, src/testcases/filesys and make it clear to use
-    them?
-
 * Tests:
 
   - Release some of them.
@@ -101,15 +102,6 @@
     show significant improvement.
 
 * Code:
-
-  - Make threads test use a program and arguments like the other
-    projects.
-
-  - Revise command-line arguments for sensibility instead of for
-    Nachos compatibility.
-
-  - Get rid of all compile-time flags, e.g. MLFQS should be a runtime
-    command-line option.
 
   - Need an optimization barrier and an explanation of it in the
     documentation.
