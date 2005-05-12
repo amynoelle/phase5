@@ -1,5 +1,8 @@
 -*- text -*-
 
+* Remove names from synchronization primitives?  They don't seem
+  useful in practice.
+
 * debug_backtrace() in kernel should only dereference valid pointers.
 
 * Mention how to use add-symbol-file in gdb.
