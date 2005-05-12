@@ -1,5 +1,11 @@
 -*- text -*-
 
+* Add a way for students to prints messages ignored by the autograder.
+
+  - Ignore lines that start with `#'?
+
+  - Allow for a comment on `exit' lines?
+
 * Improve automatic interpretation of exception messages.
 
 * Remove names from synchronization primitives?  They don't seem
