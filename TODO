@@ -1,8 +1,14 @@
 -*- text -*-
 
+* Test pintos with GSX.
+
+* Get rid of warnings for NDEBUG build.
+
+* Need targets for checking single tests or single subdirs
+
 * Add a way for students to prints messages ignored by the autograder.
 
-  - Ignore lines that start with `#'?
+  - Ignore text between /* and */.
 
   - Allow for a comment on `exit' lines?
 
