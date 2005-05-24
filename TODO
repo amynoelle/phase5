@@ -6,6 +6,12 @@
 
 * Need targets for checking single tests or single subdirs
 
+  - `make check' should say how to get more information
+
+  - `make recheck', `make clean-check'
+
+* Need to put time limits on tests.
+
 * Add a way for students to prints messages ignored by the autograder.
 
   - Ignore text between /* and */.
