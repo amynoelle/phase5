@@ -2,8 +2,6 @@
 
 * Test pintos with GSX.
 
-* Get rid of warnings for NDEBUG build.
-
 * Need targets for checking single tests or single subdirs
 
   - `make check' should say how to get more information
@@ -20,12 +18,7 @@
 
 * Improve automatic interpretation of exception messages.
 
-* Remove names from synchronization primitives?  They don't seem
-  useful in practice.
-
 * debug_backtrace() in kernel should only dereference valid pointers.
-
-* Mention how to use add-symbol-file in gdb.
 
 * We need better and more example programs.
 
