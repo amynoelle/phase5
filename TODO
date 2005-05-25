@@ -18,8 +18,6 @@
 
 * Improve automatic interpretation of exception messages.
 
-* debug_backtrace() in kernel should only dereference valid pointers.
-
 * We need better and more example programs.
 
   - Need an mmap example program as a replacement for the crappy mmap FAQ
@@ -55,10 +53,6 @@
   - Discuss the perils of mixing dirty bits between kernel and user virtual
     memory.
 
-  - Sample solution.
-
-  - Update grading/vm to reflect new mmap, munmap forms.
-
 * Filesys project:
 
   - Increase maximum disk size from 8 MB to something that actually
@@ -69,8 +63,6 @@
     Alternatively, shrink the inode size.
 
   - Add option to disable buffer cache.
-
-  - Sample solution.
 
   - Need a better way to measure performance improvement of buffer
     cache.  Some students reported that their system was slower with
@@ -106,8 +98,6 @@
     . everything needed for getcwd()
 
 * Tests:
-
-  - Release some of them.
 
   - The threads, userprog, vm test source files could use
     factorization and cleanup along the lines of fslib in the filesys
