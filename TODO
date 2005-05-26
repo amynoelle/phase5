@@ -16,6 +16,8 @@
 
   - Allow for a comment on `exit' lines?
 
+    . Get rid of LOAD_ERROR() macro by calling thread_exit() directly.
+
 * Improve automatic interpretation of exception messages.
 
 * We need better and more example programs.
