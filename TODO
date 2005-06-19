@@ -1,44 +1,33 @@
 -*- text -*-
 
-* Test pintos with GSX.
+* Put time limits on tests.
 
-* Need targets for checking single tests or single subdirs
-
-  - `make check' should say how to get more information
-
-  - `make recheck', `make clean-check'
-
-* Need to put time limits on tests.
-
-* Add a way for students to prints messages ignored by the autograder.
-
-  - Ignore text between /* and */.
-
-  - Allow for a comment on `exit' lines?
-
-    . Get rid of LOAD_ERROR() macro by calling thread_exit() directly.
-
-* Improve automatic interpretation of exception messages.
+* `make grade'
 
 * We need better and more example programs.
 
   - Need an mmap example program as a replacement for the crappy mmap FAQ
     question.
 
-  - How about `diff' and `cmp' programs?
+* Give advice on how to use `diff' to find out what has changed
 
-* Threads:
+* pintos script doesn't (always?) delete temp disks
 
-  - mlfqs tests suck.  They aren't even correct, e.g. the amarv
-    submission from win0405 is graded incorrectly.
+* GNU make 3.80 or later is required.
+
+* Finish writing tour.
+
+
+
+
+
+* process_death test needs improvement
+
+* Internal tests.
+
+* Improve automatic interpretation of exception messages.
 
 * Userprog project:
-
-  - Don't emphasize that stuff needs to be copied from user space to
-    kernel space.  Instead, emphasize validation and suggest that
-    copying is a common solution and that it will be necessary in
-    project 3 and in real OSes.  Also revise the grading criteria to
-    match.
 
   - Mark read-only pages as actually read-only in the page table.  Or,
     since this was consistently rated as the easiest project by the
@@ -50,40 +39,20 @@
     Alternately we could just remove the synchronization on pid
     selection and check that students fix it.
 
-* VM project:
-
-  - Discuss the perils of mixing dirty bits between kernel and user virtual
-    memory.
-
 * Filesys project:
-
-  - Increase maximum disk size from 8 MB to something that actually
-    requires doubly indirect nodes.  There is a negative pressure here
-    from the bitmap object--perhaps we need a specialized bitmap that
-    doesn't have to be all in-memory at once.
-
-    Alternatively, shrink the inode size.
-
-  - Add option to disable buffer cache.
 
   - Need a better way to measure performance improvement of buffer
     cache.  Some students reported that their system was slower with
     cache--likely, Bochs doesn't simulate a disk with a realistic
     speed.
 
-  - Clarify effect of remove(cwd).
-
 * Documentation:
-
-  - Finish writing tour.
 
   - Add "Digging Deeper" sections that describe the nitty-gritty x86
     details for the benefit of those interested.
 
   - Add explanations of what "real" OSes do to give students some
     perspective.
-
-  - GNU make 3.80 or later is required.
 
 * Assignments:
 
@@ -98,20 +67,3 @@
     . opendir/readdir/closedir
 
     . everything needed for getcwd()
-
-* Tests:
-
-  - The threads, userprog, vm test source files could use
-    factorization and cleanup along the lines of fslib in the filesys
-    tests.
-
-  - The p1-4.c testcase needs significant tuning.  Currently it takes
-    too long (especially when SHOW_PROGRESS is turned on) and doesn't
-    show significant improvement.
-
-* Code:
-
-  - Need an optimization barrier and an explanation of it in the
-    documentation.
-
-  - Need to check the wait system call more thoroughly.

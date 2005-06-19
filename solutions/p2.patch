@@ -1,6 +1,6 @@
-diff -urp -X pat src/threads/thread.c~ src/threads/thread.c
---- src/threads/thread.c~	2005-03-30 10:26:13.000000000 -0800
-+++ src/threads/thread.c	2005-03-30 16:19:26.000000000 -0800
+diff -u src/threads/thread.c~ src/threads/thread.c
+--- src/threads/thread.c~ 2005-06-02 14:35:12.000000000 -0700
++++ src/threads/thread.c 2005-06-08 13:45:28.000000000 -0700
 @@ -13,6 +13,7 @@
  #include "threads/synch.h"
  #ifdef USERPROG
@@ -9,7 +9,7 @@ diff -urp -X pat src/threads/thread.c~ src/threads/thread.c
  #endif
  
  /* Random value for struct thread's `magic' member.
-@@ -243,16 +244,19 @@ thread_tid (void) 
+@@ -251,16 +252,19 @@ thread_tid (void) 
  void
  thread_exit (void) 
  {
@@ -31,7 +31,7 @@ diff -urp -X pat src/threads/thread.c~ src/threads/thread.c
    schedule ();
    NOT_REACHED ();
  }
-@@ -353,6 +357,11 @@ init_thread (struct thread *t, const cha
+@@ -400,6 +404,11 @@ init_thread (struct thread *t, const cha
    strlcpy (t->name, name, sizeof t->name);
    t->stack = (uint8_t *) t + PGSIZE;
    t->priority = priority;
@@ -43,9 +43,9 @@ diff -urp -X pat src/threads/thread.c~ src/threads/thread.c
    t->magic = THREAD_MAGIC;
  }
  
-diff -urp -X pat src/threads/thread.h~ src/threads/thread.h
---- src/threads/thread.h~	2005-03-30 10:26:13.000000000 -0800
-+++ src/threads/thread.h	2005-03-30 16:17:45.000000000 -0800
+diff -u src/threads/thread.h~ src/threads/thread.h
+--- src/threads/thread.h~ 2005-06-02 14:32:36.000000000 -0700
++++ src/threads/thread.h 2005-06-08 13:47:09.000000000 -0700
 @@ -4,6 +4,7 @@
  #include <debug.h>
  #include <list.h>
@@ -66,14 +66,16 @@ diff -urp -X pat src/threads/thread.h~ src/threads/thread.h
      /* Shared between thread.c and synch.c. */
      struct list_elem elem;              /* List element. */
  
-@@ -97,10 +103,29 @@ struct thread
+@@ -96,11 +102,31 @@ struct thread
+     /* Owned by userprog/process.c. */
      uint32_t *pagedir;                  /* Page directory. */
  #endif
- 
++    struct file *bin_file;              /* Executable. */
++
 +    /* Owned by syscall.c. */
 +    struct list fds;                    /* List of file descriptors. */
 +    int next_handle;                    /* Next handle value. */
-+
+ 
      /* Owned by thread.c. */
      unsigned magic;                     /* Detects stack overflow. */
    };
@@ -96,9 +98,9 @@ diff -urp -X pat src/threads/thread.h~ src/threads/thread.h
  void thread_init (void);
  void thread_start (void);
  void thread_tick (void);
-diff -urp -X pat src/userprog/exception.c~ src/userprog/exception.c
---- src/userprog/exception.c~	2005-01-01 18:09:59.000000000 -0800
-+++ src/userprog/exception.c	2005-03-30 13:26:14.000000000 -0800
+diff -u src/userprog/exception.c~ src/userprog/exception.c
+--- src/userprog/exception.c~ 2005-01-01 18:09:59.000000000 -0800
++++ src/userprog/exception.c 2005-06-08 13:45:28.000000000 -0700
 @@ -150,6 +150,14 @@ page_fault (struct intr_frame *f) 
    write = (f->error_code & PF_W) != 0;
    user = (f->error_code & PF_U) != 0;
@@ -114,9 +116,9 @@ diff -urp -X pat src/userprog/exception.c~ src/userprog/exception.c
    /* To implement virtual memory, delete the rest of the function
       body, and replace it with code that brings in the page to
       which fault_addr refers. */
-diff -urp -X pat src/userprog/process.c~ src/userprog/process.c
---- src/userprog/process.c~	2005-03-30 10:40:10.000000000 -0800
-+++ src/userprog/process.c	2005-03-30 16:19:32.000000000 -0800
+diff -u src/userprog/process.c~ src/userprog/process.c
+--- src/userprog/process.c~ 2005-05-26 13:19:48.000000000 -0700
++++ src/userprog/process.c 2005-06-08 13:49:13.000000000 -0700
 @@ -14,11 +14,23 @@
  #include "threads/init.h"
  #include "threads/interrupt.h"
@@ -141,13 +143,15 @@ diff -urp -X pat src/userprog/process.c~ src/userprog/process.c
 +  };
  
  /* Starts a new thread running a user program loaded from
-    FILENAME.  The new thread may be scheduled before
-@@ -26,29 +38,33 @@ static bool load (const char *cmdline, v
+    FILENAME.  The new thread may be scheduled (and may even exit)
+@@ -27,29 +39,37 @@ static bool load (const char *cmdline, v
  tid_t
  process_execute (const char *filename) 
  {
 -  char *fn_copy;
 +  struct exec_info exec;
++  char thread_name[16];
++  char *save_ptr;
    tid_t tid;
  
 -  /* Make a copy of FILENAME.
@@ -158,13 +162,15 @@ diff -urp -X pat src/userprog/process.c~ src/userprog/process.c
 -  strlcpy (fn_copy, filename, PGSIZE);
 +  /* Initialize exec_info. */
 +  exec.filename = filename;
-+  sema_init (&exec.load_done, 0, "load done");
++  sema_init (&exec.load_done, 0);
  
    /* Create a new thread to execute FILENAME. */
 -  tid = thread_create (filename, PRI_DEFAULT, execute_thread, fn_copy);
 -  if (tid == TID_ERROR)
 -    palloc_free_page (fn_copy); 
-+  tid = thread_create (filename, PRI_DEFAULT, execute_thread, &exec);
++  strlcpy (thread_name, filename, sizeof thread_name);
++  strtok_r (thread_name, " ", &save_ptr);
++  tid = thread_create (thread_name, PRI_DEFAULT, execute_thread, &exec);
 +  if (tid != TID_ERROR)
 +    {
 +      sema_down (&exec.load_done);
@@ -188,7 +194,7 @@ diff -urp -X pat src/userprog/process.c~ src/userprog/process.c
    struct intr_frame if_;
    bool success;
  
-@@ -57,10 +73,28 @@ execute_thread (void *filename_)
+@@ -58,10 +78,28 @@ execute_thread (void *filename_)
    if_.gs = if_.fs = if_.es = if_.ds = if_.ss = SEL_UDSEG;
    if_.cs = SEL_UCSEG;
    if_.eflags = FLAG_IF | FLAG_MBS;
@@ -208,10 +214,10 @@ diff -urp -X pat src/userprog/process.c~ src/userprog/process.c
 +  /* Initialize wait_status. */
 +  if (success) 
 +    {
-+      lock_init (&exec->wait_status->lock, "child process");
++      lock_init (&exec->wait_status->lock);
 +      exec->wait_status->ref_cnt = 2;
 +      exec->wait_status->tid = thread_current ()->tid;
-+      sema_init (&exec->wait_status->dead, 0, "dead child");
++      sema_init (&exec->wait_status->dead, 0);
 +    }
 +  
 +  /* Notify parent thread and clean up. */
@@ -220,7 +226,7 @@ diff -urp -X pat src/userprog/process.c~ src/userprog/process.c
    if (!success) 
      thread_exit ();
  
-@@ -74,19 +108,48 @@ execute_thread (void *filename_)
+@@ -75,18 +113,47 @@ execute_thread (void *filename_)
    NOT_REACHED ();
  }
  
@@ -273,8 +279,7 @@ diff -urp -X pat src/userprog/process.c~ src/userprog/process.c
    return -1;
  }
  
- /* Free the current process's resources. */
-@@ -93,8 +157,29 @@ void
+@@ -95,8 +162,32 @@ void
  process_exit (void)
  {
    struct thread *cur = thread_current ();
@@ -282,6 +287,9 @@ diff -urp -X pat src/userprog/process.c~ src/userprog/process.c
    uint32_t *pd;
  
 +  printf ("%s: exit(%d)\n", cur->name, cur->exit_code);
++
++  /* Close executable (and allow writes). */
++  file_close (cur->bin_file);
 +
 +  /* Notify parent that we're dead. */
 +  if (cur->wait_status != NULL) 
@@ -304,16 +312,16 @@ diff -urp -X pat src/userprog/process.c~ src/userprog/process.c
    /* Destroy the current process's page directory and switch back
       to the kernel-only page directory. */
    pd = cur->pagedir;
-@@ -192,7 +277,7 @@ struct Elf32_Phdr
+@@ -193,7 +284,7 @@ struct Elf32_Phdr
  #define PF_R 4          /* Readable. */
  
  static bool load_segment (struct file *, const struct Elf32_Phdr *);
 -static bool setup_stack (void **esp);
 +static bool setup_stack (const char *cmd_line, void **esp);
  
- /* Aborts loading an executable, with an error message. */
- #define LOAD_ERROR(MSG)                                 \
-@@ -208,13 +293,15 @@ static bool setup_stack (void **esp);
+ /* Loads an ELF executable from FILENAME into the current thread.
+    Stores the executable's entry point into *EIP
+@@ -209,13 +300,15 @@ static bool setup_stack (void **esp);
     and its initial stack pointer into *ESP.
     Returns true if successful, false otherwise. */
  bool
@@ -330,8 +338,8 @@ diff -urp -X pat src/userprog/process.c~ src/userprog/process.c
    int i;
  
    /* Allocate and activate page directory. */
-@@ -223,6 +310,14 @@ load (const char *filename, void (**eip)
-     LOAD_ERROR (("page directory allocation failed"));
+@@ -224,13 +317,22 @@ load (const char *filename, void (**eip)
+     goto done;
    process_activate ();
  
 +  /* Extract filename from command line. */
@@ -343,9 +351,18 @@ diff -urp -X pat src/userprog/process.c~ src/userprog/process.c
 +    *cp = '\0';
 +
    /* Open executable file. */
-   file = filesys_open (filename);
-   if (file == NULL)
-@@ -283,7 +378,7 @@ load (const char *filename, void (**eip)
+-  file = filesys_open (filename);
++  t->bin_file = file = filesys_open (filename);
+   if (file == NULL) 
+     {
+       printf ("load: %s: open failed\n", filename);
+       goto done; 
+     }
++  file_deny_write (file);
+ 
+   /* Read and verify executable header. */
+   if (file_read (file, &ehdr, sizeof ehdr) != sizeof ehdr
+@@ -284,7 +386,7 @@ load (const char *filename, void (**eip)
      }
  
    /* Set up stack. */
@@ -354,7 +371,15 @@ diff -urp -X pat src/userprog/process.c~ src/userprog/process.c
      goto done;
  
    /* Start address. */
-@@ -392,10 +487,92 @@ load_segment (struct file *file, const s
+@@ -294,7 +396,6 @@ load (const char *filename, void (**eip)
+ 
+  done:
+   /* We arrive here whether the load is successful or not. */
+-  file_close (file);
+   return success;
+ }
+ 
+@@ -393,10 +494,92 @@ load_segment (struct file *file, const s
    return true;
  }
  
@@ -450,7 +475,7 @@ diff -urp -X pat src/userprog/process.c~ src/userprog/process.c
  {
    uint8_t *kpage;
    bool success = false;
-@@ -403,9 +580,9 @@ setup_stack (void **esp) 
+@@ -404,9 +587,9 @@ setup_stack (void **esp) 
    kpage = palloc_get_page (PAL_USER | PAL_ZERO);
    if (kpage != NULL) 
      {
@@ -463,10 +488,10 @@ diff -urp -X pat src/userprog/process.c~ src/userprog/process.c
        else
          palloc_free_page (kpage);
      }
-diff -urp -X pat src/userprog/syscall.c~ src/userprog/syscall.c
---- src/userprog/syscall.c~	2004-09-26 14:15:17.000000000 -0700
-+++ src/userprog/syscall.c	2005-03-30 15:11:37.000000000 -0800
-@@ -1,20 +1,478 @@
+diff -u src/userprog/syscall.c~ src/userprog/syscall.c
+--- src/userprog/syscall.c~ 2004-09-26 14:15:17.000000000 -0700
++++ src/userprog/syscall.c 2005-06-08 13:45:28.000000000 -0700
+@@ -1,20 +1,480 @@
  #include "userprog/syscall.h"
  #include <stdio.h>
 +#include <string.h>
@@ -508,8 +533,8 @@ diff -urp -X pat src/userprog/syscall.c~ src/userprog/syscall.c
  void
  syscall_init (void) 
  {
-   intr_register (0x30, 3, INTR_ON, syscall_handler, "syscall");
-+  lock_init (&fs_lock, "fs");
+   intr_register_int (0x30, 3, INTR_ON, syscall_handler, "syscall");
++  lock_init (&fs_lock);
  }
 + 
 +/* System call handler. */
@@ -568,7 +593,8 @@ diff -urp -X pat src/userprog/syscall.c~ src/userprog/syscall.c
 +static bool
 +verify_user (const void *uaddr) 
 +{
-+  return pagedir_get_page (thread_current ()->pagedir, uaddr) != NULL;
++  return (uaddr < PHYS_BASE
++          && pagedir_get_page (thread_current ()->pagedir, uaddr) != NULL);
 +}
 + 
 +/* Copies a byte from user address USRC to kernel address DST.
@@ -900,7 +926,8 @@ diff -urp -X pat src/userprog/syscall.c~ src/userprog/syscall.c
 +  struct file_descriptor *fd = lookup_fd (handle);
 +   
 +  lock_acquire (&fs_lock);
-+  file_seek (fd->file, position);
++  if ((off_t) position >= 0)
++    file_seek (fd->file, position);
 +  lock_release (&fs_lock);
 + 
 +  return 0;
@@ -949,9 +976,9 @@ diff -urp -X pat src/userprog/syscall.c~ src/userprog/syscall.c
 +      free (fd);
 +    }
 +}
-diff -urp -X pat src/userprog/syscall.h~ src/userprog/syscall.h
---- src/userprog/syscall.h~	2004-09-05 22:38:45.000000000 -0700
-+++ src/userprog/syscall.h	2005-03-30 13:26:14.000000000 -0800
+diff -u src/userprog/syscall.h~ src/userprog/syscall.h
+--- src/userprog/syscall.h~ 2004-09-05 22:38:45.000000000 -0700
++++ src/userprog/syscall.h 2005-06-08 13:45:28.000000000 -0700
 @@ -2,5 +2,6 @@
  #define USERPROG_SYSCALL_H
  

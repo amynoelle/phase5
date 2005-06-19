@@ -1,0 +1,4000 @@
+diff -u src/Makefile.build~ src/Makefile.build
+--- src/Makefile.build~ 2005-06-16 21:50:20.000000000 -0700
++++ src/Makefile.build 2005-06-16 15:09:31.000000000 -0700
+@@ -53,7 +53,9 @@ userprog_SRC += userprog/gdt.c		# GDT in
+ userprog_SRC += userprog/tss.c		# TSS management.
+ 
+ # No virtual memory code yet.
+-#vm_SRC = vm/filename.c			# Some file.
++vm_SRC = vm/page.c
++vm_SRC += vm/frame.c
++vm_SRC += vm/swap.c
+ 
+ # Filesystem code.
+ filesys_SRC  = filesys/filesys.c	# Filesystem core.
+@@ -62,6 +64,7 @@ filesys_SRC += filesys/file.c		# Files.
+ filesys_SRC += filesys/directory.c	# Directories.
+ filesys_SRC += filesys/inode.c		# File headers.
+ filesys_SRC += filesys/fsutil.c		# Utilities.
++filesys_SRC += filesys/cache.c		# Cache.
+ 
+ SOURCES = $(foreach dir,$(KERNEL_SUBDIRS),$($(dir)_SRC))
+ OBJECTS = $(patsubst %.c,%.o,$(patsubst %.S,%.o,$(SOURCES)))
+diff -u src/devices/timer.c~ src/devices/timer.c
+--- src/devices/timer.c~ 2005-06-15 15:21:01.000000000 -0700
++++ src/devices/timer.c 2005-06-16 15:09:31.000000000 -0700
+@@ -23,6 +23,9 @@ static volatile int64_t ticks;
+    Initialized by timer_calibrate(). */
+ static unsigned loops_per_tick;
+ 
++/* Threads waiting in timer_sleep(). */
++static struct list wait_list;
++
+ static intr_handler_func timer_interrupt;
+ static bool too_many_loops (unsigned loops);
+ static void busy_wait (int64_t loops);
+@@ -43,6 +46,8 @@ timer_init (void) 
+   outb (0x40, count >> 8);
+ 
+   intr_register_ext (0x20, timer_interrupt, "8254 Timer");
++
++  list_init (&wait_list);
+ }
+ 
+ /* Calibrates loops_per_tick, used to implement brief delays. */
+@@ -87,15 +92,36 @@ timer_elapsed (int64_t then) 
+   return timer_ticks () - then;
+ }
+ 
++/* Compares two threads based on their wake-up times. */
++static bool
++compare_threads_by_wakeup_time (const struct list_elem *a_,
++                                const struct list_elem *b_,
++                                void *aux UNUSED) 
++{
++  const struct thread *a = list_entry (a_, struct thread, timer_elem);
++  const struct thread *b = list_entry (b_, struct thread, timer_elem);
++
++  return a->wakeup_time < b->wakeup_time;
++}
++
+ /* Suspends execution for approximately TICKS timer ticks. */
+ void
+ timer_sleep (int64_t ticks) 
+ {
+-  int64_t start = timer_ticks ();
++  struct thread *t = thread_current ();
++
++  /* Schedule our wake-up time. */
++  t->wakeup_time = timer_ticks () + ticks;
+ 
++  /* Atomically insert the current thread into the wait list. */
+   ASSERT (intr_get_level () == INTR_ON);
+-  while (timer_elapsed (start) < ticks) 
+-    thread_yield ();
++  intr_disable ();
++  list_insert_ordered (&wait_list, &t->timer_elem,
++                       compare_threads_by_wakeup_time, NULL);
++  intr_enable ();
++
++  /* Wait. */
++  sema_down (&t->timer_sema);
+ }
+ 
+ /* Suspends execution for approximately MS milliseconds. */
+@@ -132,6 +158,16 @@ timer_interrupt (struct intr_frame *args
+ {
+   ticks++;
+   thread_tick ();
++
++  while (!list_empty (&wait_list))
++    {
++      struct thread *t = list_entry (list_front (&wait_list),
++                                     struct thread, timer_elem);
++      if (ticks < t->wakeup_time) 
++        break;
++      sema_up (&t->timer_sema);
++      list_pop_front (&wait_list);
++    }
+ }
+ 
+ /* Returns true if LOOPS iterations waits for more than one timer
+diff -u src/filesys/Make.vars~ src/filesys/Make.vars
+--- src/filesys/Make.vars~ 2005-05-24 14:46:45.000000000 -0700
++++ src/filesys/Make.vars 2005-06-16 15:09:31.000000000 -0700
+@@ -6,6 +6,6 @@ KERNEL_SUBDIRS = threads devices lib lib
+ TEST_SUBDIRS = tests/userprog tests/filesys/base tests/filesys/extended
+ 
+ # Uncomment the lines below to enable VM.
+-#os.dsk: DEFINES += -DVM
+-#KERNEL_SUBDIRS += vm
+-#TEST_SUBDIRS += tests/vm
++os.dsk: DEFINES += -DVM
++KERNEL_SUBDIRS += vm
++TEST_SUBDIRS += tests/vm
+diff -u src/filesys/cache.c~ src/filesys/cache.c
+--- src/filesys/cache.c~ 1969-12-31 16:00:00.000000000 -0800
++++ src/filesys/cache.c 2005-06-16 15:09:31.000000000 -0700
+@@ -0,0 +1,473 @@
++#include "filesys/cache.h"
++#include <debug.h>
++#include <string.h>
++#include "filesys/filesys.h"
++#include "devices/disk.h"
++#include "devices/timer.h"
++#include "threads/malloc.h"
++#include "threads/synch.h"
++#include "threads/thread.h"
++
++#define INVALID_SECTOR ((disk_sector_t) -1)
++
++/* A cached block. */
++struct cache_block 
++  {
++    /* Locking to prevent eviction. */
++    struct lock block_lock;                    /* Protects fields in group. */
++    struct condition no_readers_or_writers; /* readers == 0 && writers == 0 */
++    struct condition no_writers;                            /* writers == 0 */
++    int readers, read_waiters;          /* # of readers, # waiting to read. */
++    int writers, write_waiters; /* # of writers (<= 1), # waiting to write. */
++
++    /* Sector number.  INVALID_SECTOR indicates a free cache block.
++
++       Changing from free to allocated requires cache_sync.
++
++       Changing from allocated to free requires block_lock, block
++       must be up-to-date and not dirty, and no one may be
++       waiting on it. */
++    disk_sector_t sector;
++
++    /* Is data[] correct?
++       Requires write lock or data_lock. */
++    bool up_to_date;
++
++    /* Does data[] need to be written back to disk?
++       Valid only when up-to-date.
++       Requires read lock or write lock or data_lock. */
++    bool dirty;
++
++    /* Sector data.
++       Access to data[] requires up-to-date and read or write lock.
++       Bringing up-to-date requires write lock or data_lock. */
++    struct lock data_lock;              /* Protects fields in group. */
++    uint8_t data[DISK_SECTOR_SIZE];     /* Disk data. */
++  };
++
++/* Cache. */
++#define CACHE_CNT 64
++struct cache_block cache[CACHE_CNT];
++
++/* Cache lock.
++
++   Required to allocate a cache block to a sector, to prevent a
++   single sector being allocated two different cache blocks.
++
++   Required to search the cache for a sector, to prevent the
++   sector from being added while the search is ongoing.
++
++   Protects hand. */
++struct lock cache_sync;
++
++/* Cache eviction hand.
++   Protected by cache_sync. */
++static int hand = 0;
++
++static void flushd_init (void);
++static void readaheadd_init (void);
++static void readaheadd_submit (disk_sector_t sector);
++
++/* Initializes cache. */
++void
++cache_init (void) 
++{
++  int i;
++  
++  lock_init (&cache_sync);
++  for (i = 0; i < CACHE_CNT; i++) 
++    {
++      struct cache_block *b = &cache[i];
++      lock_init (&b->block_lock);
++      cond_init (&b->no_readers_or_writers);
++      cond_init (&b->no_writers);
++      b->readers = b->read_waiters = 0;
++      b->writers = b->write_waiters = 0;
++      b->sector = INVALID_SECTOR;
++      lock_init (&b->data_lock);
++    }
++
++  flushd_init ();
++  readaheadd_init ();
++}
++
++/* Flushes cache to disk. */
++void
++cache_flush (void) 
++{
++  int i;
++  
++  for (i = 0; i < CACHE_CNT; i++)
++    {
++      struct cache_block *b = &cache[i];
++      disk_sector_t sector;
++      
++      lock_acquire (&b->block_lock);
++      sector = b->sector;
++      lock_release (&b->block_lock);
++
++      if (sector == INVALID_SECTOR)
++        continue;
++
++      b = cache_lock (sector, EXCLUSIVE);
++      if (b->up_to_date && b->dirty) 
++        {
++          disk_write (filesys_disk, b->sector, b->data);
++          b->dirty = false; 
++        }
++      cache_unlock (b);
++    }
++}
++
++/* Locks the given SECTOR into the cache and returns the cache
++   block.
++   If TYPE is EXCLUSIVE, then the block returned will be locked
++   only by the caller.  The calling thread must not already
++   have any lock on the block.
++   If TYPE is NON_EXCLUSIVE, then block returned may be locked by
++   any number of other callers.  The calling thread may already
++   have any number of non-exclusive locks on the block. */
++struct cache_block *
++cache_lock (disk_sector_t sector, enum lock_type type) 
++{
++  int i;
++
++ try_again:
++  lock_acquire (&cache_sync);
++
++  /* Is the block already in-cache? */
++  for (i = 0; i < CACHE_CNT; i++)
++    {
++      /* Skip any blocks that don't hold SECTOR. */
++      struct cache_block *b = &cache[i];
++      lock_acquire (&b->block_lock);
++      if (b->sector != sector) 
++        {
++          lock_release (&b->block_lock);
++          continue;
++        }
++      lock_release (&cache_sync);
++
++      /* Get read or write lock. */
++      if (type == NON_EXCLUSIVE) 
++        {
++          /* Lock for read. */
++          b->read_waiters++;
++          if (b->writers || b->write_waiters)
++            do {
++              cond_wait (&b->no_writers, &b->block_lock);
++            } while (b->writers);
++          b->readers++;
++          b->read_waiters--;
++        }
++      else 
++        {
++          /* Lock for write. */
++          b->write_waiters++;
++          if (b->readers || b->read_waiters || b->writers)
++            do {
++              cond_wait (&b->no_readers_or_writers, &b->block_lock);
++            } while (b->readers || b->writers);
++          b->writers++;
++          b->write_waiters--;
++        }
++      lock_release (&b->block_lock);
++
++      /* Our sector should have been pinned in the cache while we
++         were waiting.  Make sure. */
++      ASSERT (b->sector == sector);
++
++      return b;
++    }
++
++  /* Not in cache.  Find empty slot.
++     We hold cache_sync. */
++  for (i = 0; i < CACHE_CNT; i++)
++    {
++      struct cache_block *b = &cache[i];
++      lock_acquire (&b->block_lock);
++      if (b->sector == INVALID_SECTOR) 
++        {
++          /* Drop block_lock, which is no longer needed because
++             this is the only code that allocates free blocks,
++             and we still have cache_sync.
++
++             We can't drop cache_sync yet because someone else
++             might try to allocate this same block (or read from
++             it) while we're still initializing the block. */
++          lock_release (&b->block_lock);
++
++          b->sector = sector;
++          b->up_to_date = false;
++          ASSERT (b->readers == 0);
++          ASSERT (b->writers == 0);
++          if (type == NON_EXCLUSIVE)
++            b->readers = 1;
++          else
++            b->writers = 1;
++          lock_release (&cache_sync);
++          return b;
++        }
++      lock_release (&b->block_lock); 
++    }
++
++  /* No empty slots.  Evict something.
++     We hold cache_sync. */
++  for (i = 0; i < CACHE_CNT; i++)
++    {
++      struct cache_block *b = &cache[hand];
++      if (++hand >= CACHE_CNT)
++        hand = 0;
++
++      /* Try to grab exclusive write access to block. */
++      lock_acquire (&b->block_lock);
++      if (b->readers || b->writers || b->read_waiters || b->write_waiters) 
++        {
++          lock_release (&b->block_lock);
++          continue;
++        }
++      b->writers = 1;
++      lock_release (&b->block_lock);
++
++      lock_release (&cache_sync);
++
++      /* Write block to disk if dirty. */
++      if (b->up_to_date && b->dirty) 
++        {
++          disk_write (filesys_disk, b->sector, b->data);
++          b->dirty = false;
++        }
++
++      /* Remove block from cache, if possible: someone might have
++         started waiting on it while the lock was released. */
++      lock_acquire (&b->block_lock);
++      b->writers = 0;
++      if (!b->read_waiters && !b->write_waiters) 
++        {
++          /* No one is waiting for it, so we can free it. */
++          b->sector = INVALID_SECTOR; 
++        }
++      else 
++        {
++          /* There is a waiter.  Give it the block. */
++          if (b->read_waiters)
++            cond_broadcast (&b->no_writers, &b->block_lock);
++          else
++            cond_signal (&b->no_readers_or_writers, &b->block_lock);
++        }
++      lock_release (&b->block_lock);
++
++      /* Try again. */
++      goto try_again;
++    }
++
++  /* Wait for cache contention to die down. */
++  lock_release (&cache_sync);
++  timer_sleep (1000);
++  goto try_again;
++}
++
++/* Bring block B up-to-date, by reading it from disk if
++   necessary, and return a pointer to its data.
++   The caller must have an exclusive or non-exclusive lock on
++   B. */
++void *
++cache_read (struct cache_block *b) 
++{
++  lock_acquire (&b->data_lock);
++  if (!b->up_to_date) 
++    {
++      disk_read (filesys_disk, b->sector, b->data);
++      b->up_to_date = true;
++      b->dirty = false; 
++    }
++  lock_release (&b->data_lock);
++
++  return b->data;
++}
++
++/* Zero out block B, without reading it from disk, and return a
++   pointer to the zeroed data.
++   The caller must have an exclusive lock on B. */
++void *
++cache_zero (struct cache_block *b) 
++{
++  ASSERT (b->writers);
++  memset (b->data, 0, DISK_SECTOR_SIZE);
++  b->up_to_date = true;
++  b->dirty = true;
++
++  return b->data;
++}
++
++/* Marks block B as dirty, so that it will be written back to
++   disk before eviction.
++   The caller must have a read or write lock on B,
++   and B must be up-to-date. */
++void
++cache_dirty (struct cache_block *b) 
++{
++  ASSERT (b->up_to_date);
++  b->dirty = true;
++}
++
++/* Unlocks block B.
++   If B is no longer locked by any thread, then it becomes a
++   candidate for immediate eviction. */
++void
++cache_unlock (struct cache_block *b) 
++{
++  lock_acquire (&b->block_lock);
++  if (b->readers) 
++    {
++      ASSERT (b->writers == 0);
++      if (--b->readers == 0)
++        cond_signal (&b->no_readers_or_writers, &b->block_lock);
++    }
++  else if (b->writers)
++    {
++      ASSERT (b->readers == 0);
++      ASSERT (b->writers == 1);
++      b->writers--;
++      if (b->read_waiters)
++        cond_broadcast (&b->no_writers, &b->block_lock);
++      else
++        cond_signal (&b->no_readers_or_writers, &b->block_lock);
++    }
++  else
++    NOT_REACHED ();
++  lock_release (&b->block_lock);
++}
++
++/* If SECTOR is in the cache, evicts it immediately without
++   writing it back to disk (even if dirty).
++   The block must be entirely unused. */
++void
++cache_free (disk_sector_t sector) 
++{
++  int i;
++  
++  lock_acquire (&cache_sync);
++  for (i = 0; i < CACHE_CNT; i++)
++    {
++      struct cache_block *b = &cache[i];
++
++      lock_acquire (&b->block_lock);
++      if (b->sector == sector) 
++        {
++          lock_release (&cache_sync);
++
++          /* Only invalidate the block if it's unused.  That
++             should be the normal case, but it could be part of a
++             read-ahead (in readaheadd()) or write-behind (in
++             cache_flush()). */
++          if (b->readers == 0 && b->read_waiters == 0
++              && b->writers == 0 && b->write_waiters == 0) 
++            b->sector = INVALID_SECTOR; 
++
++          lock_release (&b->block_lock);
++          return;
++        }
++      lock_release (&b->block_lock);
++    }
++  lock_release (&cache_sync);
++}
++
++void
++cache_readahead (disk_sector_t sector) 
++{
++  readaheadd_submit (sector);
++}
++
++/* Flush daemon. */
++
++static void flushd (void *aux);
++
++/* Initializes flush daemon. */
++static void
++flushd_init (void) 
++{
++  thread_create ("flushd", PRI_MIN, flushd, NULL);
++}
++
++/* Flush daemon thread. */
++static void
++flushd (void *aux UNUSED) 
++{
++  for (;;) 
++    {
++      timer_msleep (30 * 1000);
++      cache_flush ();
++    }
++}
++
++/* A block to read ahead. */
++struct readahead_block 
++  {
++    struct list_elem list_elem;         /* readahead_list element. */
++    disk_sector_t sector;               /* Sector to read. */
++  };
++
++/* Protects readahead_list.
++   Monitor lock for readahead_list_nonempty. */
++static struct lock readahead_lock;
++
++/* Signaled when a block is added to readahead_list. */
++static struct condition readahead_list_nonempty;
++
++/* List of blocks for read-ahead. */
++static struct list readahead_list;
++
++static void readaheadd (void *aux);
++
++/* Initialize read-ahead daemon. */
++static void
++readaheadd_init (void) 
++{
++  lock_init (&readahead_lock);
++  cond_init (&readahead_list_nonempty);
++  list_init (&readahead_list);
++  thread_create ("readaheadd", PRI_MIN, readaheadd, NULL);
++}
++
++/* Adds SECTOR to the read-ahead queue. */
++static void
++readaheadd_submit (disk_sector_t sector) 
++{
++  /* Allocate readahead block. */
++  struct readahead_block *block = malloc (sizeof *block);
++  if (block == NULL)
++    return;
++  block->sector = sector;
++
++  /* Add block to list. */
++  lock_acquire (&readahead_lock);
++  list_push_back (&readahead_list, &block->list_elem);
++  cond_signal (&readahead_list_nonempty, &readahead_lock);
++  lock_release (&readahead_lock);
++}
++
++/* Read-ahead daemon. */
++static void
++readaheadd (void *aux UNUSED) 
++{
++  for (;;) 
++    {
++      struct readahead_block *ra_block;
++      struct cache_block *cache_block;
++
++      /* Get readahead block from list. */
++      lock_acquire (&readahead_lock);
++      while (list_empty (&readahead_list)) 
++        cond_wait (&readahead_list_nonempty, &readahead_lock);
++      ra_block = list_entry (list_pop_front (&readahead_list),
++                             struct readahead_block, list_elem);
++      lock_release (&readahead_lock);
++
++      /* Read block into cache. */
++      cache_block = cache_lock (ra_block->sector, NON_EXCLUSIVE);
++      cache_read (cache_block);
++      cache_unlock (cache_block);
++      free (ra_block);
++    }
++}
+diff -u src/filesys/cache.h~ src/filesys/cache.h
+--- src/filesys/cache.h~ 1969-12-31 16:00:00.000000000 -0800
++++ src/filesys/cache.h 2005-06-16 15:09:31.000000000 -0700
+@@ -0,0 +1,23 @@
++#ifndef FILESYS_CACHE_H
++#define FILESYS_CACHE_H
++
++#include "devices/disk.h"
++
++/* Type of block lock. */
++enum lock_type 
++  {
++    NON_EXCLUSIVE,	/* Any number of lockers. */
++    EXCLUSIVE		/* Only one locker. */
++  };
++
++void cache_init (void);
++void cache_flush (void);
++struct cache_block *cache_lock (disk_sector_t, enum lock_type);
++void *cache_read (struct cache_block *);
++void *cache_zero (struct cache_block *);
++void cache_dirty (struct cache_block *);
++void cache_unlock (struct cache_block *);
++void cache_free (disk_sector_t);
++void cache_readahead (disk_sector_t);
++
++#endif /* filesys/cache.h */
+diff -u src/filesys/directory.c~ src/filesys/directory.c
+--- src/filesys/directory.c~ 2005-06-16 21:50:20.000000000 -0700
++++ src/filesys/directory.c 2005-06-16 21:09:01.000000000 -0700
+@@ -3,12 +3,17 @@
+ #include <string.h>
+ #include <list.h>
+ #include "filesys/filesys.h"
++#include "filesys/fsutil.h"
+ #include "filesys/inode.h"
+ #include "threads/malloc.h"
++#include "threads/synch.h"
+ 
+ /* A directory. */
+ struct dir 
+   {
++    struct list_elem list_elem;         /* open_dirs list element. */
++    struct lock dir_lock;               /* Protects inode. */
++    int open_cnt;                       /* Number of openers. */
+     struct inode *inode;                /* Backing store. */
+   };
+ 
+@@ -20,15 +25,21 @@ struct dir_entry 
+     bool in_use;                        /* In use or free? */
+   };
+ 
+-/* Creates a directory with space for ENTRY_CNT entries in the
+-   given SECTOR.  Returns true if successful, false on failure. */
+-bool
+-dir_create (disk_sector_t sector, size_t entry_cnt) 
++/* List of all open directories. */
++static struct list open_dirs;
++
++/* Protects open_dirs additions or removals. */
++static struct lock open_dirs_lock;
++
++/* Initializes directory modules. */
++void
++dir_init (void) 
+ {
+-  return inode_create (sector, entry_cnt * sizeof (struct dir_entry));
++  list_init (&open_dirs);
++  lock_init (&open_dirs_lock);
+ }
+ 
+-/* Opens the directory in the given INODE, of which it takes
++/* Opens the directory for the given INODE, of which it takes
+    ownership, and sets *DIRP to the new directory or a null
+    pointer on failure.  Return true if successful, false on
+    failure. */
+@@ -36,19 +47,46 @@ bool
+ dir_open (struct inode *inode, struct dir **dirp) 
+ {
+   struct dir *dir = NULL;
++  struct list_elem *e;
+   
+   ASSERT (dirp != NULL);
+ 
+-  if (inode != NULL) 
++  lock_acquire (&open_dirs_lock);
++
++  if (inode == NULL)
++    goto done;
++
++  /* Inode must refer to directory. */
++  if (inode_get_type (inode) != DIR_INODE)
++    goto done;
++
++  /* Check whether this directory is already open. */
++  for (e = list_begin (&open_dirs); e != list_end (&open_dirs);
++       e = list_next (e)) 
+     {
+-      dir = malloc (sizeof *dir);
+-      if (dir != NULL) 
+-        dir->inode = inode;
++      dir = list_entry (e, struct dir, list_elem);
++      if (dir->inode == inode) 
++        {
++          dir->open_cnt++;
++          goto done;
++        }
++    }
++
++  /* Create new directory. */
++  dir = calloc (1, sizeof *dir);
++  if (dir != NULL)
++    {
++      list_push_front (&open_dirs, &dir->list_elem);
++      lock_init (&dir->dir_lock);
++      dir->open_cnt = 1;
++      dir->inode = inode;
++      inode_reopen (dir->inode);
+     }
+   
++ done:
+   *dirp = dir;
+-  if (dir == NULL)
+-    inode_close (inode);
++  inode_close (inode);
++  lock_release (&open_dirs_lock);
+   return dir != NULL;
+ }
+ 
+@@ -61,22 +99,34 @@ dir_open_root (struct dir **dirp)
+   return dir_open (inode_open (ROOT_DIR_SECTOR), dirp);
+ }
+ 
++/* Re-opens DIR and returns true. */
++bool
++dir_reopen (struct dir *dir)
++{
++  dir->open_cnt++;
++  return true;
++}
++
+ /* Destroys DIR and frees associated resources. */
+ void
+ dir_close (struct dir *dir) 
+ {
+-  if (dir != NULL)
++  if (dir == NULL)
++    return;
++
++  lock_acquire (&open_dirs_lock);
++  if (--dir->open_cnt == 0) 
+     {
++      list_remove (&dir->list_elem);
+       inode_close (dir->inode);
+       free (dir);
+     }
++  lock_release (&open_dirs_lock);
+ }
+ 
+ /* Searches DIR for a file with the given NAME.
+-   If successful, returns true, sets *EP to the directory entry
+-   if EP is non-null, and sets *OFSP to the byte offset of the
+-   directory entry if OFSP is non-null.
+-   otherwise, returns false and ignores EP and OFSP. */
++   If successful, returns the file's entry;
++   otherwise, returns a null pointer. */
+ static bool
+ lookup (const struct dir *dir, const char *name,
+         struct dir_entry *ep, off_t *ofsp) 
+@@ -113,10 +163,12 @@ dir_lookup (const struct dir *dir, const
+   ASSERT (dir != NULL);
+   ASSERT (name != NULL);
+ 
++  lock_acquire ((struct lock *) &dir->dir_lock);
+   if (lookup (dir, name, &e, NULL))
+     *inode = inode_open (e.inode_sector);
+   else
+     *inode = NULL;
++  lock_release ((struct lock *)&dir->dir_lock);
+ 
+   return *inode != NULL;
+ }
+@@ -138,10 +190,11 @@ dir_add (struct dir *dir, const char *na
+   ASSERT (name != NULL);
+ 
+   /* Check NAME for validity. */
+-  if (*name == '\0' || strlen (name) > NAME_MAX)
++  if (*name == '\0' || strchr (name, '/') || strlen (name) > NAME_MAX)
+     return false;
+ 
+   /* Check that NAME is not in use. */
++  lock_acquire (&dir->dir_lock);
+   if (lookup (dir, name, NULL, NULL))
+     goto done;
+ 
+@@ -164,6 +217,7 @@ dir_add (struct dir *dir, const char *na
+   success = inode_write_at (dir->inode, &e, sizeof e, ofs) == sizeof e;
+ 
+  done:
++  lock_release (&dir->dir_lock);
+   return success;
+ }
+ 
+@@ -182,12 +236,14 @@ dir_remove (struct dir *dir, const char 
+   ASSERT (name != NULL);
+ 
+   /* Find directory entry. */
++  lock_acquire (&dir->dir_lock);
+   if (!lookup (dir, name, &e, &ofs))
+     goto done;
+ 
+-  /* Open inode. */
++  /* Open inode and verify that it is not an in-use directory. */
+   inode = inode_open (e.inode_sector);
+-  if (inode == NULL)
++  if (inode == NULL
++      || (inode_get_type (inode) == DIR_INODE && inode_open_cnt (inode) != 1))
+     goto done;
+ 
+   /* Erase directory entry. */
+@@ -201,6 +257,7 @@ dir_remove (struct dir *dir, const char 
+ 
+  done:
+   inode_close (inode);
++  lock_release (&dir->dir_lock);
+   return success;
+ }
+ 
+@@ -211,8 +268,10 @@ dir_list (const struct dir *dir)
+   struct dir_entry e;
+   size_t ofs;
+   
++  lock_acquire ((struct lock *) &dir->dir_lock);
+   for (ofs = 0; inode_read_at (dir->inode, &e, sizeof e, ofs) == sizeof e;
+        ofs += sizeof e) 
+     if (e.in_use)
+       printf ("%s\n", e.name);
++  lock_release ((struct lock *) &dir->dir_lock);
+ }
+diff -u src/filesys/directory.h~ src/filesys/directory.h
+--- src/filesys/directory.h~ 2005-06-16 21:50:20.000000000 -0700
++++ src/filesys/directory.h 2005-06-16 15:09:31.000000000 -0700
+@@ -13,9 +13,10 @@
+ 
+ struct inode;
+ struct dir;
+-bool dir_create (disk_sector_t sector, size_t entry_cnt);
++void dir_init (void);
+ bool dir_open (struct inode *, struct dir **);
+ bool dir_open_root (struct dir **);
++bool dir_reopen (struct dir *);
+ void dir_close (struct dir *);
+ bool dir_lookup (const struct dir *, const char *name, struct inode **);
+ bool dir_add (struct dir *, const char *name, disk_sector_t);
+diff -u src/filesys/file.c~ src/filesys/file.c
+--- src/filesys/file.c~ 2005-06-16 21:50:20.000000000 -0700
++++ src/filesys/file.c 2005-06-16 21:02:34.000000000 -0700
+@@ -1,6 +1,8 @@
+ #include "filesys/file.h"
+ #include <debug.h>
++#include "filesys/directory.h"
+ #include "filesys/inode.h"
++#include "filesys/filesys.h"
+ #include "threads/malloc.h"
+ 
+ /* An open file. */
+@@ -18,7 +20,7 @@ struct file *
+ file_open (struct inode *inode) 
+ {
+   struct file *file = calloc (1, sizeof *file);
+-  if (inode != NULL && file != NULL)
++  if (inode != NULL && file != NULL && inode_get_type (inode) == FILE_INODE)
+     {
+       file->inode = inode;
+       file->pos = 0;
+diff -u src/filesys/filesys.c~ src/filesys/filesys.c
+--- src/filesys/filesys.c~ 2005-06-16 21:50:20.000000000 -0700
++++ src/filesys/filesys.c 2005-06-16 21:03:07.000000000 -0700
+@@ -2,11 +2,13 @@
+ #include <debug.h>
+ #include <stdio.h>
+ #include <string.h>
++#include "filesys/cache.h"
+ #include "filesys/file.h"
+ #include "filesys/free-map.h"
+ #include "filesys/inode.h"
+ #include "filesys/directory.h"
+ #include "devices/disk.h"
++#include "threads/thread.h"
+ 
+ /* The disk that contains the filesystem. */
+ struct disk *filesys_disk;
+@@ -23,6 +24,8 @@ filesys_init (bool format) 
+     PANIC ("hd0:1 (hdb) not present, filesystem initialization failed");
+ 
+   inode_init ();
++  dir_init ();
++  cache_init ();
+   free_map_init ();
+ 
+   if (format) 
+@@ -37,6 +40,103 @@ void
+ filesys_done (void) 
+ {
+   free_map_close ();
++  cache_flush ();
++}
++
++/* Extracts a file name part from *SRCP into PART,
++   and updates *SRCP so that the next call will return the next
++   file name part.
++   Returns 1 if successful, 0 at end of string, -1 for a too-long
++   file name part. */
++static int
++get_next_part (char part[NAME_MAX], const char **srcp)
++{
++  const char *src = *srcp;
++  char *dst = part;
++
++  /* Skip leading slashes.
++     If it's all slashes, we're done. */
++  while (*src == '/')
++    src++;
++  if (*src == '\0')
++    return 0;
++
++  /* Copy up to NAME_MAX character from SRC to DST.
++     Add null terminator. */
++  while (*src != '/' && *src != '\0') 
++    {
++      if (dst < part + NAME_MAX)
++        *dst++ = *src;
++      else
++        return -1;
++      src++; 
++    }
++  *dst = '\0';
++
++  /* Advance source pointer. */
++  *srcp = src;
++  return 1;
++}
++
++/* Resolves relative or absolute file NAME.
++   Returns true if successful, false on failure.
++   Stores the directory corresponding to the name into *DIRP,
++   and the file name part into BASENAME. */
++static bool
++resolve_name (const char *name,
++              struct dir **dirp, char basename[NAME_MAX + 1]) 
++{
++  struct dir *dir = NULL;
++  struct inode *inode;
++  const char *cp;
++  char part[NAME_MAX + 1], next_part[NAME_MAX + 1];
++  int ok;
++
++  /* Find starting directory. */
++  if (name[0] == '/' || thread_current ()->wd == NULL) 
++    {
++      if (!dir_open_root (&dir))
++        goto error;
++    }
++  else 
++    {
++      if (!dir_reopen (thread_current ()->wd))
++        goto error;
++      dir = thread_current ()->wd;
++    }
++
++  /* Get first name part. */
++  cp = name;
++  if (get_next_part (part, &cp) <= 0)
++    goto error;
++
++  /* As long as another part follows the current one,
++     traverse down another directory. */
++  while ((ok = get_next_part (next_part, &cp)) > 0)
++    {
++      if (!dir_lookup (dir, part, &inode))
++        goto error;
++
++      dir_close (dir);
++      if (!dir_open (inode, &dir))
++        goto error;
++
++      strlcpy (part, next_part, NAME_MAX + 1);
++    }
++  if (ok < 0)
++    goto error;
++
++  /* Return our results. */
++  *dirp = dir;
++  strlcpy (basename, part, NAME_MAX + 1);
++  return true;
++
++ error:
++  /* Return failure. */
++  dir_close (dir);
++  *dirp = NULL;
++  basename[0] = '\0';
++  return false;
+ }
+ 
+ /* Creates a file named NAME with the given INITIAL_SIZE.
+@@ -44,16 +144,17 @@ filesys_done (void) 
+    Fails if a file named NAME already exists,
+    or if internal memory allocation fails. */
+ bool
+-filesys_create (const char *name, off_t initial_size) 
++filesys_create (const char *name, off_t initial_size, enum inode_type type) 
+ {
+   struct dir *dir;
++  char basename[NAME_MAX + 1];
+   disk_sector_t inode_sector = 0;
+-  bool success = (dir_open_root (&dir)
+-                  && free_map_allocate (1, &inode_sector)
+-                  && inode_create (inode_sector, initial_size)
+-                  && dir_add (dir, name, inode_sector));
+-  if (!success && inode_sector != 0) 
+-    free_map_release (inode_sector, 1);
++  bool success = (resolve_name (name, &dir, basename)
++                  && free_map_allocate (&inode_sector)
++                  && inode_create (inode_sector, initial_size, type)
++                  && dir_add (dir, basename, inode_sector));
++  if (!success && inode_sector) 
++    free_map_release (inode_sector);
+   dir_close (dir);
+ 
+   return success;
+@@ -64,17 +165,18 @@ filesys_create (const char *name, off_t 
+    otherwise.
+    Fails if no file named NAME exists,
+    or if an internal memory allocation fails. */
+-struct file *
++struct inode *
+ filesys_open (const char *name)
+ {
+   struct dir *dir;
++  char basename[NAME_MAX + 1];
+   struct inode *inode = NULL;
+ 
+-  if (dir_open_root (&dir))
+-    dir_lookup (dir, name, &inode);
++  if (resolve_name (name, &dir, basename))
++    dir_lookup (dir, basename, &inode);
+   dir_close (dir);
+ 
+-  return file_open (inode);
++  return inode;
+ }
+ 
+ /* Deletes the file named NAME.
+@@ -85,13 +187,54 @@ bool
+ filesys_remove (const char *name) 
+ {
+   struct dir *dir = NULL;
+-  bool success = (dir_open_root (&dir)
+-                  && dir_remove (dir, name));
++  char basename[NAME_MAX + 1];
++  bool success = false;
++
++  if (resolve_name (name, &dir, basename)) 
++    success = dir_remove (dir, basename);
+   dir_close (dir); 
+ 
+   return success;
+ }
+ 
++/* Change current directory to NAME.
++   Return true if successful, false on failure. */
++bool
++filesys_chdir (const char *name) 
++{
++  struct dir *dir;
++
++  /* Find new directory. */
++  if (*name == '\0')
++    return false;
++  else if (name[strspn (name, "/")] == '\0')
++    {
++      if (!dir_open_root (&dir))
++        return false; 
++    }
++  else 
++    {
++      char basename[NAME_MAX + 1];
++      struct inode *base_inode;
++      struct dir *base_dir;
++      if (!resolve_name (name, &dir, basename)
++          || !dir_lookup (dir, basename, &base_inode)
++          || !dir_open (base_inode, &base_dir))
++        {
++          dir_close (dir);
++          return false;
++        }
++      dir_close (dir);
++      dir = base_dir;
++    }
++
++  /* Change current directory. */
++  dir_close (thread_current ()->wd);
++  thread_current ()->wd = dir;
++  
++  return true;
++}
++
+ /* Prints a list of files in the filesystem to the system
+    console.
+    Returns true if successful, false on failure,
+@@ -99,13 +242,9 @@ filesys_remove (const char *name) 
+ bool
+ filesys_list (void) 
+ {
+-  struct dir *dir = NULL;
+-  bool success = dir_open_root (&dir);
+-  if (success)
+-    dir_list (dir);
+-  dir_close (dir);
++  dir_list (thread_current ()->wd);
+ 
+-  return success;
++  return true;
+ }
+ 
+ static void must_succeed_function (int, bool) NO_INLINE;
+@@ -128,8 +267,8 @@ filesys_self_test (void)
+     {
+       /* Create file and check that it contains zeros
+          throughout the created length. */
+-      MUST_SUCCEED (filesys_create ("foo", sizeof s));
+-      MUST_SUCCEED ((file = filesys_open ("foo")) != NULL);
++      MUST_SUCCEED (filesys_create ("foo", sizeof s, FILE_INODE));
++      MUST_SUCCEED ((file = file_open (filesys_open ("foo"))) != NULL);
+       MUST_SUCCEED (file_read (file, s2, sizeof s2) == sizeof s2);
+       MUST_SUCCEED (memcmp (s2, zeros, sizeof s) == 0);
+       MUST_SUCCEED (file_tell (file) == sizeof s);
+@@ -137,7 +276,7 @@ filesys_self_test (void)
+       file_close (file);
+ 
+       /* Reopen file and write to it. */
+-      MUST_SUCCEED ((file = filesys_open ("foo")) != NULL);
++      MUST_SUCCEED ((file = file_open (filesys_open ("foo"))) != NULL);
+       MUST_SUCCEED (file_write (file, s, sizeof s) == sizeof s);
+       MUST_SUCCEED (file_tell (file) == sizeof s);
+       MUST_SUCCEED (file_length (file) == sizeof s);
+@@ -145,7 +284,7 @@ filesys_self_test (void)
+ 
+       /* Reopen file and verify that it reads back correctly.
+          Delete file while open to check proper semantics. */
+-      MUST_SUCCEED ((file = filesys_open ("foo")) != NULL);
++      MUST_SUCCEED ((file = file_open (filesys_open ("foo"))) != NULL);
+       MUST_SUCCEED (filesys_remove ("foo"));
+       MUST_SUCCEED (filesys_open ("foo") == NULL);
+       MUST_SUCCEED (file_read (file, s2, sizeof s) == sizeof s);
+@@ -172,9 +311,13 @@ static void
+ do_format (void)
+ {
+   printf ("Formatting filesystem...");
++
++  /* Set up free map. */
+   free_map_create ();
+-  if (!dir_create (ROOT_DIR_SECTOR, 16))
++
++  /* Set up root directory. */
++  if (!inode_create (ROOT_DIR_SECTOR, 0, DIR_INODE))
+     PANIC ("root directory creation failed");
+-  free_map_close ();
++
+   printf ("done.\n");
+ }
+diff -u src/filesys/filesys.h~ src/filesys/filesys.h
+--- src/filesys/filesys.h~ 2005-06-16 21:50:20.000000000 -0700
++++ src/filesys/filesys.h 2005-06-16 20:55:14.000000000 -0700
+@@ -3,6 +3,7 @@
+ 
+ #include <stdbool.h>
+ #include "filesys/off_t.h"
++#include "filesys/inode.h"
+ 
+ /* Sectors of system file inodes. */
+ #define FREE_MAP_SECTOR 0       /* Free map file inode sector. */
+@@ -13,8 +14,8 @@ extern struct disk *filesys_disk;
+ 
+ void filesys_init (bool format);
+ void filesys_done (void);
+-bool filesys_create (const char *name, off_t initial_size);
+-struct file *filesys_open (const char *name);
++bool filesys_create (const char *name, off_t initial_size, enum inode_type);
++struct inode *filesys_open (const char *name);
+ bool filesys_remove (const char *name);
+ bool filesys_chdir (const char *name);
+ bool filesys_list (void);
+diff -u src/filesys/free-map.c~ src/filesys/free-map.c
+--- src/filesys/free-map.c~ 2005-06-16 21:50:20.000000000 -0700
++++ src/filesys/free-map.c 2005-06-16 20:57:13.000000000 -0700
+@@ -3,15 +3,18 @@
+ #include <debug.h>
+ #include "filesys/file.h"
+ #include "filesys/filesys.h"
+-#include "filesys/inode.h"
++#include "threads/synch.h"
+ 
+ static struct file *free_map_file;   /* Free map file. */
+ static struct bitmap *free_map;      /* Free map, one bit per disk sector. */
++static struct lock free_map_lock;    /* Mutual exclusion. */
+ 
+ /* Initializes the free map. */
+ void
+ free_map_init (void) 
+ {
++  lock_init (&free_map_lock);
++
+   free_map = bitmap_create (disk_size (filesys_disk));
+   if (free_map == NULL)
+     PANIC ("bitmap creation failed--disk is too large");
+@@ -19,33 +22,32 @@ free_map_init (void) 
+   bitmap_mark (free_map, ROOT_DIR_SECTOR);
+ }
+ 
+-/* Allocates CNT consecutive sectors from the free map and stores
+-   the first into *SECTORP.
+-   Returns true if successful, false if all sectors were
++/* Allocates a sector from the free map and stores it into
++   *SECTORP.
++   Return true if successful, false if all sectors were
+    available. */
+ bool
+-free_map_allocate (size_t cnt, disk_sector_t *sectorp) 
++free_map_allocate (disk_sector_t *sectorp) 
+ {
+-  disk_sector_t sector = bitmap_scan_and_flip (free_map, 0, cnt, false);
+-  if (sector != BITMAP_ERROR
+-      && free_map_file != NULL
+-      && !bitmap_write (free_map, free_map_file))
+-    {
+-      bitmap_set_multiple (free_map, sector, cnt, false); 
+-      sector = BITMAP_ERROR;
+-    }
+-  if (sector != BITMAP_ERROR)
++  size_t sector;
++  
++  lock_acquire (&free_map_lock);
++  sector = bitmap_scan_and_flip (free_map, 0, 1, false);
++  lock_release (&free_map_lock);
++
++  if (sector != BITMAP_ERROR) 
+     *sectorp = sector;
+   return sector != BITMAP_ERROR;
+ }
+ 
+-/* Makes CNT sectors starting at SECTOR available for use. */
++/* Makes SECTOR available for use. */
+ void
+-free_map_release (disk_sector_t sector, size_t cnt)
++free_map_release (disk_sector_t sector)
+ {
+-  ASSERT (bitmap_all (free_map, sector, cnt));
+-  bitmap_set_multiple (free_map, sector, cnt, false);
+-  bitmap_write (free_map, free_map_file);
++  lock_acquire (&free_map_lock);
++  ASSERT (bitmap_test (free_map, sector));
++  bitmap_reset (free_map, sector);
++  lock_release (&free_map_lock);
+ }
+ 
+ /* Opens the free map file and reads it from disk. */
+@@ -63,6 +65,8 @@ free_map_open (void) 
+ void
+ free_map_close (void) 
+ {
++  if (!bitmap_write (free_map, free_map_file))
++    PANIC ("can't write free map");
+   file_close (free_map_file);
+ }
+ 
+@@ -72,7 +76,7 @@ void
+ free_map_create (void) 
+ {
+   /* Create inode. */
+-  if (!inode_create (FREE_MAP_SECTOR, bitmap_file_size (free_map)))
++  if (!inode_create (FREE_MAP_SECTOR, bitmap_file_size (free_map), FILE_INODE))
+     PANIC ("free map creation failed");
+ 
+   /* Write bitmap to file. */
+@@ -81,4 +85,5 @@ free_map_create (void) 
+     PANIC ("can't open free map");
+   if (!bitmap_write (free_map, free_map_file))
+     PANIC ("can't write free map");
++  file_close (free_map_file);
+ }
+diff -u src/filesys/free-map.h~ src/filesys/free-map.h
+--- src/filesys/free-map.h~ 2005-06-16 21:50:20.000000000 -0700
++++ src/filesys/free-map.h 2005-06-16 20:48:04.000000000 -0700
+@@ -11,7 +11,7 @@ void free_map_create (void);
+ void free_map_open (void);
+ void free_map_close (void);
+ 
+-bool free_map_allocate (size_t, disk_sector_t *);
+-void free_map_release (disk_sector_t, size_t);
++bool free_map_allocate (disk_sector_t *);
++void free_map_release (disk_sector_t);
+ 
+ #endif /* filesys/free-map.h */
+diff -u src/filesys/fsutil.c~ src/filesys/fsutil.c
+--- src/filesys/fsutil.c~ 2005-06-16 21:50:20.000000000 -0700
++++ src/filesys/fsutil.c 2005-06-16 20:55:13.000000000 -0700
+@@ -30,7 +30,7 @@ fsutil_cat (char **argv)
+   char *buffer;
+ 
+   printf ("Printing '%s' to the console...\n", filename);
+-  file = filesys_open (filename);
++  file = file_open (filesys_open (filename));
+   if (file == NULL)
+     PANIC ("%s: open failed", filename);
+   buffer = palloc_get_page (PAL_ASSERT);
+@@ -102,9 +102,9 @@ fsutil_put (char **argv) 
+     PANIC ("%s: invalid file size %d", filename, size);
+   
+   /* Create destination file. */
+-  if (!filesys_create (filename, size))
++  if (!filesys_create (filename, size, FILE_INODE))
+     PANIC ("%s: create failed", filename);
+-  dst = filesys_open (filename);
++  dst = file_open (filesys_open (filename));
+   if (dst == NULL)
+     PANIC ("%s: open failed", filename);
+ 
+@@ -154,7 +154,7 @@ fsutil_get (char **argv)
+     PANIC ("couldn't allocate buffer");
+ 
+   /* Open source file. */
+-  src = filesys_open (filename);
++  src = file_open (filesys_open (filename));
+   if (src == NULL)
+     PANIC ("%s: open failed", filename);
+   size = file_length (src);
+diff -u src/filesys/inode.c~ src/filesys/inode.c
+--- src/filesys/inode.c~ 2005-06-16 21:50:20.000000000 -0700
++++ src/filesys/inode.c 2005-06-16 21:11:24.000000000 -0700
+@@ -1,26 +1,41 @@
+ #include "filesys/inode.h"
++#include <bitmap.h>
+ #include <list.h>
+ #include <debug.h>
+ #include <round.h>
++#include <stdio.h>
+ #include <string.h>
++#include "filesys/cache.h"
+ #include "filesys/filesys.h"
+ #include "filesys/free-map.h"
+ #include "threads/malloc.h"
++#include "threads/synch.h"
+ 
+ /* Identifies an inode. */
+ #define INODE_MAGIC 0x494e4f44
+ 
++#define DIRECT_CNT 123
++#define INDIRECT_CNT 1
++#define DBL_INDIRECT_CNT 1
++#define SECTOR_CNT (DIRECT_CNT + INDIRECT_CNT + DBL_INDIRECT_CNT)
++
++#define PTRS_PER_SECTOR ((off_t) (DISK_SECTOR_SIZE / sizeof (disk_sector_t))) 
++#define INODE_SPAN ((DIRECT_CNT                                              \
++                     + PTRS_PER_SECTOR * INDIRECT_CNT                        \
++                     + PTRS_PER_SECTOR * PTRS_PER_SECTOR * DBL_INDIRECT_CNT) \
++                    * DISK_SECTOR_SIZE)
++
+ /* On-disk inode.
+    Must be exactly DISK_SECTOR_SIZE bytes long. */
+ struct inode_disk
+   {
+-    disk_sector_t start;                /* First data sector. */
++    disk_sector_t sectors[SECTOR_CNT];  /* Sectors. */
++    enum inode_type type;               /* FILE_INODE or DIR_INODE. */
+     off_t length;                       /* File size in bytes. */
+     unsigned magic;                     /* Magic number. */
+-    uint32_t unused[125];               /* Not used. */
+   };
+ 
+-/* Returns the number of sectors to allocate for an inode SIZE
++/* Returns the number of sectors to allocate for an indoe SIZE
+    bytes long. */
+ static inline size_t
+ bytes_to_sectors (off_t size)
+@@ -35,33 +49,29 @@ struct inode 
+     disk_sector_t sector;               /* Sector number of disk location. */
+     int open_cnt;                       /* Number of openers. */
+     bool removed;                       /* True if deleted, false otherwise. */
++
++    /* Denying writes. */
++    struct lock deny_write_lock;        /* Protects members below. */
++    struct condition no_writers_cond;   /* Signaled when no writers. */ 
+     int deny_write_cnt;                 /* 0: writes ok, >0: deny writes. */
+-    struct inode_disk data;             /* Inode content. */
++    int writer_cnt;                     /* Number of writers. */
+   };
+ 
+-/* Returns the disk sector that contains byte offset POS within
+-   INODE.
+-   Returns -1 if INODE does not contain data for a byte at offset
+-   POS. */
+-static disk_sector_t
+-byte_to_sector (const struct inode *inode, off_t pos) 
+-{
+-  ASSERT (inode != NULL);
+-  if (pos < inode->data.length)
+-    return inode->data.start + pos / DISK_SECTOR_SIZE;
+-  else
+-    return -1;
+-}
+-
+ /* List of open inodes, so that opening a single inode twice
+    returns the same `struct inode'. */
+ static struct list open_inodes;
+ 
++/* Controls access to open_inodes list. */
++static struct lock open_inodes_lock;
++
++static void deallocate_inode (const struct inode *);
++
+ /* Initializes the inode module. */
+ void
+ inode_init (void) 
+ {
+   list_init (&open_inodes);
++  lock_init (&open_inodes_lock);
+ }
+ 
+ /* Initializes an inode with LENGTH bytes of data and
+@@ -70,35 +80,32 @@ inode_init (void) 
+    Returns true if successful.
+    Returns false if memory or disk allocation fails. */
+ bool
+-inode_create (disk_sector_t sector, off_t length)
++inode_create (disk_sector_t sector, off_t length, enum inode_type type) 
+ {
+-  struct inode_disk *disk_inode = NULL;
+-  bool success = false;
++  struct cache_block *block;
++  struct inode_disk *disk_inode;
++  bool success;
+ 
+   ASSERT (length >= 0);
++
++  block = cache_lock (sector, EXCLUSIVE);
+   ASSERT (sizeof *disk_inode == DISK_SECTOR_SIZE);
++  disk_inode = cache_zero (block);
++  disk_inode->type = type;
++  disk_inode->length = 0;
++  disk_inode->magic = INODE_MAGIC;
++  cache_dirty (block);
++  cache_unlock (block);
+ 
+-  disk_inode = calloc (1, sizeof *disk_inode);
+-  if (disk_inode != NULL)
++  if (length > 0) 
+     {
+-      size_t sectors = bytes_to_sectors (length);
+-      disk_inode->length = length;
+-      disk_inode->magic = INODE_MAGIC;
+-      if (free_map_allocate (sectors, &disk_inode->start))
+-        {
+-          disk_write (filesys_disk, sector, disk_inode);
+-          if (sectors > 0) 
+-            {
+-              static char zeros[DISK_SECTOR_SIZE];
+-              size_t i;
+-              
+-              for (i = 0; i < sectors; i++) 
+-                disk_write (filesys_disk, disk_inode->start + i, zeros); 
+-            }
+-          success = true; 
+-        } 
+-      free (disk_inode);
++      struct inode *inode = inode_open (sector);
++      success = inode != NULL && inode_write_at (inode, "", 1, length - 1);
++      inode_close (inode);
+     }
++  else
++    success = true;
++
+   return success;
+ }
+ 
+@@ -112,6 +119,7 @@ inode_open (disk_sector_t sector) 
+   struct inode *inode;
+ 
+   /* Check whether this inode is already open. */
++  lock_acquire (&open_inodes_lock);
+   for (e = list_begin (&open_inodes); e != list_end (&open_inodes);
+        e = list_next (e)) 
+     {
+@@ -119,22 +127,26 @@ inode_open (disk_sector_t sector) 
+       if (inode->sector == sector) 
+         {
+           inode_reopen (inode);
+-          return inode; 
++          goto done; 
+         }
+     }
+ 
+   /* Allocate memory. */
+   inode = malloc (sizeof *inode);
+   if (inode == NULL)
+-    return NULL;
++    goto done;
+ 
+   /* Initialize. */
+   list_push_front (&open_inodes, &inode->elem);
+   inode->sector = sector;
+   inode->open_cnt = 1;
+   inode->deny_write_cnt = 0;
++  lock_init (&inode->deny_write_lock);
++  cond_init (&inode->no_writers_cond);
+   inode->removed = false;
+-  disk_read (filesys_disk, inode->sector, &inode->data);
++  
++ done:
++  lock_release (&open_inodes_lock);
+   return inode;
+ }
+ 
+@@ -147,6 +159,17 @@ inode_reopen (struct inode *inode) 
+   return inode;
+ }
+ 
++/* Returns the type of INODE. */
++enum inode_type
++inode_get_type (const struct inode *inode) 
++{
++  struct cache_block *inode_block = cache_lock (inode->sector, NON_EXCLUSIVE);
++  struct inode_disk *disk_inode = cache_read (inode_block);
++  enum inode_type type = disk_inode->type;
++  cache_unlock (inode_block);
++  return type;
++}
++
+ /* Closes INODE and writes it to disk.
+    If this was the last reference to INODE, frees its memory.
+    If INODE was also a removed inode, frees its blocks. */
+@@ -158,18 +181,59 @@ inode_close (struct inode *inode) 
+     return;
+ 
+   /* Release resources if this was the last opener. */
++  lock_acquire (&open_inodes_lock);
+   if (--inode->open_cnt == 0)
+     {
+       /* Remove from inode list and release lock. */
+       list_remove (&inode->elem);
++      lock_release (&open_inodes_lock);
+ 
+       /* Deallocate blocks if removed. */
+       if (inode->removed)
+-        free_map_release (inode->sector,
+-                          bytes_to_sectors (inode->data.length));
+-
++        deallocate_inode (inode);
+       free (inode); 
+     }
++  else
++    lock_release (&open_inodes_lock);
++}
++
++/* Deallocates SECTOR and anything it points to recursively.
++   LEVEL is 2 if SECTOR is doubly indirect,
++   or 1 if SECTOR is indirect,
++   or 0 if SECTOR is a data sector. */
++static void
++deallocate_recursive (disk_sector_t sector, int level) 
++{
++  if (level > 0) 
++    {
++      struct cache_block *block = cache_lock (sector, EXCLUSIVE);
++      disk_sector_t *pointers = cache_read (block);
++      int i;
++      for (i = 0; i < PTRS_PER_SECTOR; i++)
++        if (pointers[i])
++          deallocate_recursive (sector, level - 1);
++      cache_unlock (block);
++    }
++  
++  cache_free (sector);
++  free_map_release (sector);
++}
++
++/* Deallocates the blocks allocated for INODE. */
++static void
++deallocate_inode (const struct inode *inode)
++{
++  struct cache_block *block = cache_lock (inode->sector, EXCLUSIVE);
++  struct inode_disk *disk_inode = cache_read (block);
++  int i;
++  for (i = 0; i < SECTOR_CNT; i++)
++    if (disk_inode->sectors[i]) 
++      {
++        int level = (i >= DIRECT_CNT) + (i >= DIRECT_CNT + INDIRECT_CNT);
++        deallocate_recursive (disk_inode->sectors[i], level); 
++      }
++  cache_unlock (block);
++  deallocate_recursive (inode->sector, 0);
+ }
+ 
+ /* Marks INODE to be deleted when it is closed by the last caller who
+@@ -181,6 +245,156 @@ inode_remove (struct inode *inode) 
+   inode->removed = true;
+ }
+ 
++/* Translates SECTOR_IDX into a sequence of block indexes in
++   OFFSETS and sets *OFFSET_CNT to the number of offsets. */
++static void
++calculate_indices (off_t sector_idx, size_t offsets[], size_t *offset_cnt)
++{
++  /* Handle direct blocks. */
++  if (sector_idx < DIRECT_CNT) 
++    {
++      offsets[0] = sector_idx;
++      *offset_cnt = 1;
++      return;
++    }
++  sector_idx -= DIRECT_CNT;
++
++  /* Handle indirect blocks. */
++  if (sector_idx < PTRS_PER_SECTOR * INDIRECT_CNT)
++    {
++      offsets[0] = DIRECT_CNT + sector_idx / PTRS_PER_SECTOR;
++      offsets[1] = sector_idx % PTRS_PER_SECTOR;
++      *offset_cnt = 2;
++      return;
++    }
++  sector_idx -= PTRS_PER_SECTOR * INDIRECT_CNT;
++
++  /* Handle doubly indirect blocks. */
++  if (sector_idx < DBL_INDIRECT_CNT * PTRS_PER_SECTOR * PTRS_PER_SECTOR)
++    {
++      offsets[0] = (DIRECT_CNT + INDIRECT_CNT
++                    + sector_idx / (PTRS_PER_SECTOR * PTRS_PER_SECTOR));
++      offsets[1] = sector_idx / PTRS_PER_SECTOR;
++      offsets[2] = sector_idx % PTRS_PER_SECTOR;
++      *offset_cnt = 3;
++      return;
++    }
++  NOT_REACHED ();
++}
++
++/* Retrieves the data block for the given byte OFFSET in INODE,
++   setting *DATA_BLOCK to the block.
++   Returns true if successful, false on failure.
++   If ALLOCATE is false, then missing blocks will be successful
++   with *DATA_BLOCk set to a null pointer.
++   If ALLOCATE is true, then missing blocks will be allocated.
++   The block returned will be locked, normally non-exclusively,
++   but a newly allocated block will have an exclusive lock. */
++static bool
++get_data_block (struct inode *inode, off_t offset, bool allocate,
++                struct cache_block **data_block) 
++{
++  disk_sector_t this_level_sector;
++  size_t offsets[3];
++  size_t offset_cnt;
++  size_t level;
++
++  ASSERT (offset >= 0);
++
++  calculate_indices (offset / DISK_SECTOR_SIZE, offsets, &offset_cnt);
++  level = 0;
++  this_level_sector = inode->sector;
++  for (;;) 
++    {
++      struct cache_block *this_level_block;
++      uint32_t *this_level_data;
++
++      struct cache_block *next_level_block;
++
++      /* Check whether the block for the next level is allocated. */
++      this_level_block = cache_lock (this_level_sector, NON_EXCLUSIVE);
++      this_level_data = cache_read (this_level_block);
++      if (this_level_data[offsets[level]] != 0)
++        {
++          /* Yes, it's allocated.  Advance to next level. */
++          this_level_sector = this_level_data[offsets[level]];
++
++          if (++level == offset_cnt) 
++            {
++              /* We hit the data block.
++                 Do read-ahead. */
++              if ((level == 0 && offsets[level] + 1 < DIRECT_CNT)
++                  || (level > 0 && offsets[level] + 1 < PTRS_PER_SECTOR)) 
++                {
++                  uint32_t next_sector = this_level_data[offsets[level] + 1];
++                  if (next_sector && next_sector < disk_size (filesys_disk))
++                    cache_readahead (next_sector); 
++                }
++              cache_unlock (this_level_block);
++
++              /* Return block. */
++              *data_block = cache_lock (this_level_sector, NON_EXCLUSIVE);
++              return true;
++            }
++          cache_unlock (this_level_block);
++          continue;
++        }
++      cache_unlock (this_level_block);
++
++      /* No block is allocated.  Nothing is locked.
++         If we're not allocating new blocks, then this is
++         "success" (with all-zero data). */
++      if (!allocate) 
++        {
++          *data_block = NULL;
++          return true;
++        }
++
++      /* We need to allocate a new block.
++         Grab an exclusive lock on this level's block so we can
++         insert the new block. */
++      this_level_block = cache_lock (this_level_sector, EXCLUSIVE);
++      this_level_data = cache_read (this_level_block);
++
++      /* Since we released this level's block, someone else might
++         have allocated the block in the meantime.  Recheck. */
++      if (this_level_data[offsets[level]] != 0)
++        {
++          cache_unlock (this_level_block);
++          continue;
++        }
++
++      /* Allocate the new block. */
++      if (!free_map_allocate (&this_level_data[offsets[level]]))
++        {
++          cache_unlock (this_level_block);
++          *data_block = NULL;
++          return false;
++        }
++      cache_dirty (this_level_block);
++
++      /* Lock and clear the new block. */
++      next_level_block = cache_lock (this_level_data[offsets[level]],
++                                     EXCLUSIVE);
++      cache_zero (next_level_block);
++
++      /* Release this level's block.  No one else can access the
++         new block yet, because we have an exclusive lock on it. */
++      cache_unlock (this_level_block);
++
++      /* If this is the final level, then return the new block. */
++      if (level == offset_cnt - 1) 
++        {
++          *data_block = next_level_block;
++          return true;
++        }
++
++      /* Otherwise, release the new block and go around again to
++         follow the new pointer. */
++      cache_unlock (next_level_block);
++    }
++}
++
+ /* Reads SIZE bytes from INODE into BUFFER, starting at position OFFSET.
+    Returns the number of bytes actually read, which may be less
+    than SIZE if an error occurs or end of file is reached. */
+@@ -189,13 +403,12 @@ inode_read_at (struct inode *inode, void
+ {
+   uint8_t *buffer = buffer_;
+   off_t bytes_read = 0;
+-  uint8_t *bounce = NULL;
+ 
+   while (size > 0) 
+     {
+-      /* Disk sector to read, starting byte offset within sector. */
+-      disk_sector_t sector_idx = byte_to_sector (inode, offset);
++      /* Sector to read, starting byte offset within sector, sector data. */
+       int sector_ofs = offset % DISK_SECTOR_SIZE;
++      struct cache_block *block;
+ 
+       /* Bytes left in inode, bytes left in sector, lesser of the two. */
+       off_t inode_left = inode_length (inode) - offset;
+@@ -204,26 +417,16 @@ inode_read_at (struct inode *inode, void
+ 
+       /* Number of bytes to actually copy out of this sector. */
+       int chunk_size = size < min_left ? size : min_left;
+-      if (chunk_size <= 0)
++      if (chunk_size <= 0 || !get_data_block (inode, offset, false, &block))
+         break;
+ 
+-      if (sector_ofs == 0 && chunk_size == DISK_SECTOR_SIZE) 
+-        {
+-          /* Read full sector directly into caller's buffer. */
+-          disk_read (filesys_disk, sector_idx, buffer + bytes_read); 
+-        }
++      if (block == NULL) 
++        memset (buffer + bytes_read, 0, chunk_size);
+       else 
+         {
+-          /* Read sector into bounce buffer, then partially copy
+-             into caller's buffer. */
+-          if (bounce == NULL) 
+-            {
+-              bounce = malloc (DISK_SECTOR_SIZE);
+-              if (bounce == NULL)
+-                break;
+-            }
+-          disk_read (filesys_disk, sector_idx, bounce);
+-          memcpy (buffer + bytes_read, bounce + sector_ofs, chunk_size);
++          const uint8_t *sector_data = cache_read (block);
++          memcpy (buffer + bytes_read, sector_data + sector_ofs, chunk_size);
++          cache_unlock (block);
+         }
+       
+       /* Advance. */
+@@ -231,75 +434,84 @@ inode_read_at (struct inode *inode, void
+       offset += chunk_size;
+       bytes_read += chunk_size;
+     }
+-  free (bounce);
+ 
+   return bytes_read;
+ }
+ 
++/* Extends INODE to be at least LENGTH bytes long. */
++static void
++extend_file (struct inode *inode, off_t length) 
++{
++  if (length > inode_length (inode)) 
++    {
++      struct cache_block *inode_block = cache_lock (inode->sector, EXCLUSIVE);
++      struct inode_disk *disk_inode = cache_read (inode_block);
++      if (length > disk_inode->length) 
++        {
++          disk_inode->length = length;
++          cache_dirty (inode_block);
++        }
++      cache_unlock (inode_block);
++    }
++}
++
+ /* Writes SIZE bytes from BUFFER into INODE, starting at OFFSET.
+    Returns the number of bytes actually written, which may be
+    less than SIZE if end of file is reached or an error occurs.
+-   (Normally a write at end of file would extend the inode, but
+-   growth is not yet implemented.) */
++   (Normally a write at end of file would extend the file, but
++   file growth is not yet implemented.) */
+ off_t
+ inode_write_at (struct inode *inode, const void *buffer_, off_t size,
+                 off_t offset) 
+ {
+   const uint8_t *buffer = buffer_;
+   off_t bytes_written = 0;
+-  uint8_t *bounce = NULL;
+ 
+-  if (inode->deny_write_cnt)
+-    return 0;
++  /* Don't write if writes are denied. */
++  lock_acquire (&inode->deny_write_lock);
++  if (inode->deny_write_cnt) 
++    {
++      lock_release (&inode->deny_write_lock);
++      return 0;
++    }
++  inode->writer_cnt++;
++  lock_release (&inode->deny_write_lock);
+ 
+   while (size > 0) 
+     {
+-      /* Sector to write, starting byte offset within sector. */
+-      off_t sector_idx = byte_to_sector (inode, offset);
++      /* Sector to write, starting byte offset within sector, sector data. */
+       int sector_ofs = offset % DISK_SECTOR_SIZE;
++      struct cache_block *block;
++      uint8_t *sector_data;
+ 
+-      /* Bytes left in inode, bytes left in sector, lesser of the two. */
+-      off_t inode_left = inode_length (inode) - offset;
++      /* Bytes to max inode size, bytes left in sector, lesser of the two. */
++      off_t inode_left = INODE_SPAN - offset;
+       int sector_left = DISK_SECTOR_SIZE - sector_ofs;
+       int min_left = inode_left < sector_left ? inode_left : sector_left;
+ 
+       /* Number of bytes to actually write into this sector. */
+       int chunk_size = size < min_left ? size : min_left;
+-      if (chunk_size <= 0)
+-        break;
+ 
+-      if (sector_ofs == 0 && chunk_size == DISK_SECTOR_SIZE) 
+-        {
+-          /* Write full sector directly to disk. */
+-          disk_write (filesys_disk, sector_idx, buffer + bytes_written); 
+-        }
+-      else 
+-        {
+-          /* We need a bounce buffer. */
+-          if (bounce == NULL) 
+-            {
+-              bounce = malloc (DISK_SECTOR_SIZE);
+-              if (bounce == NULL)
+-                break;
+-            }
++      if (chunk_size <= 0 || !get_data_block (inode, offset, true, &block))
++        break;
+ 
+-          /* If the sector contains data before or after the chunk
+-             we're writing, then we need to read in the sector
+-             first.  Otherwise we start with a sector of all zeros. */
+-          if (sector_ofs > 0 || chunk_size < sector_left) 
+-            disk_read (filesys_disk, sector_idx, bounce);
+-          else
+-            memset (bounce, 0, DISK_SECTOR_SIZE);
+-          memcpy (bounce + sector_ofs, buffer + bytes_written, chunk_size);
+-          disk_write (filesys_disk, sector_idx, bounce); 
+-        }
++      sector_data = cache_read (block);
++      memcpy (sector_data + sector_ofs, buffer + bytes_written, chunk_size);
++      cache_dirty (block);
++      cache_unlock (block);
+ 
+       /* Advance. */
+       size -= chunk_size;
+       offset += chunk_size;
+       bytes_written += chunk_size;
+     }
+-  free (bounce);
++
++  extend_file (inode, offset);
++
++  lock_acquire (&inode->deny_write_lock);
++  if (--inode->writer_cnt == 0)
++    cond_signal (&inode->no_writers_cond, &inode->deny_write_lock);
++  lock_release (&inode->deny_write_lock);
+ 
+   return bytes_written;
+ }
+@@ -309,8 +521,12 @@ inode_write_at (struct inode *inode, con
+ void
+ inode_deny_write (struct inode *inode) 
+ {
++  lock_acquire (&inode->deny_write_lock);
++  while (inode->writer_cnt > 0)
++    cond_wait (&inode->no_writers_cond, &inode->deny_write_lock);
++  ASSERT (inode->deny_write_cnt < inode->open_cnt);
+   inode->deny_write_cnt++;
+-  ASSERT (inode->deny_write_cnt <= inode->open_cnt);
++  lock_release (&inode->deny_write_lock);
+ }
+ 
+ /* Re-enables writes to INODE.
+@@ -319,14 +535,33 @@ inode_deny_write (struct inode *inode) 
+ void
+ inode_allow_write (struct inode *inode) 
+ {
++  lock_acquire (&inode->deny_write_lock);
+   ASSERT (inode->deny_write_cnt > 0);
+   ASSERT (inode->deny_write_cnt <= inode->open_cnt);
+   inode->deny_write_cnt--;
++  lock_release (&inode->deny_write_lock);
+ }
+ 
+ /* Returns the length, in bytes, of INODE's data. */
+ off_t
+ inode_length (const struct inode *inode)
+ {
+-  return inode->data.length;
++  struct cache_block *inode_block = cache_lock (inode->sector, NON_EXCLUSIVE);
++  struct inode_disk *disk_inode = cache_read (inode_block);
++  off_t length = disk_inode->length;
++  cache_unlock (inode_block);
++  return length;
++}
++
++/* Returns the number of openers. */
++int
++inode_open_cnt (const struct inode *inode) 
++{
++  int open_cnt;
++  
++  lock_acquire (&open_inodes_lock);
++  open_cnt = inode->open_cnt;
++  lock_release (&open_inodes_lock);
++
++  return open_cnt;
+ }
+diff -u src/filesys/inode.h~ src/filesys/inode.h
+--- src/filesys/inode.h~ 2005-06-16 21:50:20.000000000 -0700
++++ src/filesys/inode.h 2005-06-16 20:53:47.000000000 -0700
+@@ -7,10 +7,18 @@
+ 
+ struct bitmap;
+ 
++/* Type of an inode. */
++enum inode_type 
++  {
++    FILE_INODE,	/* Ordinary file. */
++    DIR_INODE		/* Directory. */
++  };
++
+ void inode_init (void);
+-bool inode_create (disk_sector_t, off_t);
++bool inode_create (disk_sector_t, off_t, enum inode_type);
+ struct inode *inode_open (disk_sector_t);
+ struct inode *inode_reopen (struct inode *);
++enum inode_type inode_get_type (const struct inode *);
+ void inode_close (struct inode *);
+ void inode_remove (struct inode *);
+ off_t inode_read_at (struct inode *, void *, off_t size, off_t offset);
+@@ -18,5 +26,6 @@ off_t inode_write_at (struct inode *, co
+ void inode_deny_write (struct inode *);
+ void inode_allow_write (struct inode *);
+ off_t inode_length (const struct inode *);
++int inode_open_cnt (const struct inode *);
+ 
+ #endif /* filesys/inode.h */
+diff -u src/lib/kernel/bitmap.h~ src/lib/kernel/bitmap.h
+diff -u src/threads/init.c~ src/threads/init.c
+--- src/threads/init.c~ 2005-06-14 14:04:06.000000000 -0700
++++ src/threads/init.c 2005-06-16 15:09:31.000000000 -0700
+@@ -33,6 +33,8 @@
+ #include "filesys/filesys.h"
+ #include "filesys/fsutil.h"
+ #endif
++#include "vm/frame.h"
++#include "vm/swap.h"
+ 
+ /* Amount of physical memory, in 4 kB pages. */
+ size_t ram_pages;
+@@ -131,6 +133,9 @@ main (void)
+   filesys_init (format_filesys);
+ #endif
+ 
++  frame_init ();
++  swap_init ();
++
+   printf ("Boot complete.\n");
+   
+   /* Run actions specified on kernel command line. */
+diff -u src/threads/interrupt.c~ src/threads/interrupt.c
+--- src/threads/interrupt.c~ 2005-06-15 15:22:43.000000000 -0700
++++ src/threads/interrupt.c 2005-06-16 15:09:31.000000000 -0700
+@@ -343,6 +343,8 @@ intr_handler (struct intr_frame *frame) 
+       in_external_intr = true;
+       yield_on_return = false;
+     }
++  else 
++    thread_current ()->user_esp = frame->esp;
+ 
+   /* Invoke the interrupt's handler.
+      If there is no handler, invoke the unexpected interrupt
+diff -u src/threads/thread.c~ src/threads/thread.c
+--- src/threads/thread.c~ 2005-06-15 14:41:47.000000000 -0700
++++ src/threads/thread.c 2005-06-16 15:09:31.000000000 -0700
+@@ -13,6 +13,7 @@
+ #include "threads/synch.h"
+ #ifdef USERPROG
+ #include "userprog/process.h"
++#include "userprog/syscall.h"
+ #endif
+ 
+ /* Random value for struct thread's `magic' member.
+@@ -55,7 +56,8 @@ static void kernel_thread (thread_func *
+ static void idle (void *aux UNUSED);
+ static struct thread *running_thread (void);
+ static struct thread *next_thread_to_run (void);
+-static void init_thread (struct thread *, const char *name, int priority);
++static void init_thread (struct thread *, const char *name, int priority,
++                         tid_t);
+ static bool is_thread (struct thread *) UNUSED;
+ static void *alloc_frame (struct thread *, size_t size);
+ static void schedule (void);
+@@ -82,9 +84,8 @@ thread_init (void) 
+ 
+   /* Set up a thread structure for the running thread. */
+   initial_thread = running_thread ();
+-  init_thread (initial_thread, "main", PRI_DEFAULT);
++  init_thread (initial_thread, "main", PRI_DEFAULT, 0);
+   initial_thread->status = THREAD_RUNNING;
+-  initial_thread->tid = allocate_tid ();
+ }
+ 
+ /* Starts preemptive thread scheduling by enabling interrupts.
+@@ -158,8 +159,8 @@ thread_create (const char *name, int pri
+     return TID_ERROR;
+ 
+   /* Initialize thread. */
+-  init_thread (t, name, priority);
+-  tid = t->tid = allocate_tid ();
++  init_thread (t, name, priority, allocate_tid ());
++  tid = t->tid;
+ 
+   /* Stack frame for kernel_thread(). */
+   kf = alloc_frame (t, sizeof *kf);
+@@ -252,16 +253,19 @@ thread_tid (void) 
+ void
+ thread_exit (void) 
+ {
++  struct thread *t = thread_current ();
++
+   ASSERT (!intr_context ());
+ 
++  syscall_exit ();
+ #ifdef USERPROG
+   process_exit ();
+ #endif
+-
++  
+   /* Just set our status to dying and schedule another process.
+      We will be destroyed during the call to schedule_tail(). */
+   intr_disable ();
+-  thread_current ()->status = THREAD_DYING;
++  t->status = THREAD_DYING;
+   schedule ();
+   NOT_REACHED ();
+ }
+@@ -390,17 +394,29 @@ is_thread (struct thread *t)
+ /* Does basic initialization of T as a blocked thread named
+    NAME. */
+ static void
+-init_thread (struct thread *t, const char *name, int priority)
++init_thread (struct thread *t, const char *name, int priority, tid_t tid)
+ {
+   ASSERT (t != NULL);
+   ASSERT (PRI_MIN <= priority && priority <= PRI_MAX);
+   ASSERT (name != NULL);
+ 
+   memset (t, 0, sizeof *t);
++  t->tid = tid;
+   t->status = THREAD_BLOCKED;
+   strlcpy (t->name, name, sizeof t->name);
+   t->stack = (uint8_t *) t + PGSIZE;
+   t->priority = priority;
++  t->exit_code = -1;
++  t->wait_status = NULL;
++  list_init (&t->children);
++  sema_init (&t->timer_sema, 0);
++  t->pagedir = NULL;
++  t->pages = NULL;
++  t->bin_file = NULL;
++  list_init (&t->fds);
++  list_init (&t->mappings);
++  t->next_handle = 2;
++  t->wd = NULL;
+   t->magic = THREAD_MAGIC;
+ }
+ 
+diff -u src/threads/thread.h~ src/threads/thread.h
+--- src/threads/thread.h~ 2005-06-15 14:49:06.000000000 -0700
++++ src/threads/thread.h 2005-06-16 15:09:31.000000000 -0700
+@@ -2,8 +2,10 @@
+ #define THREADS_THREAD_H
+ 
+ #include <debug.h>
++#include <hash.h>
+ #include <list.h>
+ #include <stdint.h>
++#include "threads/synch.h"
+ 
+ /* States in a thread's life cycle. */
+ enum thread_status
+@@ -89,18 +91,50 @@ struct thread
+     uint8_t *stack;                     /* Saved stack pointer. */
+     int priority;                       /* Priority. */
+ 
++    /* Owned by process.c. */
++    int exit_code;                      /* Exit code. */
++    struct wait_status *wait_status;    /* This process's completion status. */
++    struct list children;               /* Completion status of children. */
++
+     /* Shared between thread.c and synch.c. */
+     struct list_elem elem;              /* List element. */
+ 
+-#ifdef USERPROG
++    /* Alarm clock. */
++    int64_t wakeup_time;                /* Time to wake this thread up. */
++    struct list_elem timer_elem;        /* Element in timer_wait_list. */
++    struct semaphore timer_sema;        /* Semaphore. */
++
+     /* Owned by userprog/process.c. */
+     uint32_t *pagedir;                  /* Page directory. */
+-#endif
++    struct hash *pages;                 /* Page table. */
++    struct file *bin_file;              /* The binary executable. */
++
++    /* Owned by syscall.c. */
++    struct list fds;                    /* List of file descriptors. */
++    struct list mappings;               /* Memory-mapped files. */
++    int next_handle;                    /* Next handle value. */
++    void *user_esp;                     /* User's stack pointer. */
++    struct dir *wd;                     /* Working directory. */
+ 
+     /* Owned by thread.c. */
+     unsigned magic;                     /* Detects stack overflow. */
+   };
+ 
++/* Tracks the completion of a process.
++   Reference held by both the parent, in its `children' list,
++   and by the child, in its `wait_status' pointer. */
++struct wait_status
++  {
++    struct list_elem elem;              /* `children' list element. */
++    struct lock lock;                   /* Protects ref_cnt. */
++    int ref_cnt;                        /* 2=child and parent both alive,
++                                           1=either child or parent alive,
++                                           0=child and parent both dead. */
++    tid_t tid;                          /* Child thread id. */
++    int exit_code;                      /* Child exit code, if dead. */
++    struct semaphore dead;              /* 1=child alive, 0=child dead. */
++  };
++
+ void thread_init (void);
+ void thread_start (void);
+ 
+diff -u src/userprog/exception.c~ src/userprog/exception.c
+--- src/userprog/exception.c~ 2005-06-15 15:14:10.000000000 -0700
++++ src/userprog/exception.c 2005-06-16 15:09:31.000000000 -0700
+@@ -4,6 +4,7 @@
+ #include "userprog/gdt.h"
+ #include "threads/interrupt.h"
+ #include "threads/thread.h"
++#include "vm/page.h"
+ 
+ /* Number of page faults processed. */
+ static long long page_fault_cnt;
+@@ -153,9 +154,14 @@ page_fault (struct intr_frame *f) 
+   write = (f->error_code & PF_W) != 0;
+   user = (f->error_code & PF_U) != 0;
+ 
+-  /* To implement virtual memory, delete the rest of the function
+-     body, and replace it with code that brings in the page to
+-     which fault_addr refers. */
++  /* Allow the pager to try to handle it. */
++  if (user && not_present)
++    {
++      if (!page_in (fault_addr))
++        thread_exit ();
++      return;
++    }
++
+   printf ("Page fault at %p: %s error %s page in %s context.\n",
+           fault_addr,
+           not_present ? "not present" : "rights violation",
+diff -u src/userprog/pagedir.c~ src/userprog/pagedir.c
+--- src/userprog/pagedir.c~ 2005-06-14 13:16:22.000000000 -0700
++++ src/userprog/pagedir.c 2005-06-16 15:09:31.000000000 -0700
+@@ -35,15 +35,7 @@ pagedir_destroy (uint32_t *pd) 
+   ASSERT (pd != base_page_dir);
+   for (pde = pd; pde < pd + pd_no (PHYS_BASE); pde++)
+     if (*pde & PG_P) 
+-      {
+-        uint32_t *pt = pde_get_pt (*pde);
+-        uint32_t *pte;
+-        
+-        for (pte = pt; pte < pt + PGSIZE / sizeof *pte; pte++)
+-          if (*pte & PG_P) 
+-            palloc_free_page (pte_get_page (*pte));
+-        palloc_free_page (pt);
+-      }
++      palloc_free_page (pde_get_pt (*pde));
+   palloc_free_page (pd);
+ }
+ 
+diff -u src/userprog/process.c~ src/userprog/process.c
+--- src/userprog/process.c~ 2005-06-14 13:09:39.000000000 -0700
++++ src/userprog/process.c 2005-06-16 15:09:31.000000000 -0700
+@@ -14,11 +14,26 @@
+ #include "threads/init.h"
+ #include "threads/interrupt.h"
+ #include "threads/mmu.h"
++#include "threads/malloc.h"
+ #include "threads/palloc.h"
+ #include "threads/thread.h"
++#include "vm/page.h"
++#include "vm/frame.h"
+ 
+ static thread_func execute_thread NO_RETURN;
+-static bool load (const char *cmdline, void (**eip) (void), void **esp);
++static bool load (const char *cmd_line, void (**eip) (void), void **esp);
++
++/* Data structure shared between process_execute() in the
++   invoking thread and execute_thread() in the newly invoked
++   thread. */
++struct exec_info 
++  {
++    const char *filename;               /* Program to load. */
++    struct semaphore load_done;         /* "Up"ed when loading complete. */
++    struct wait_status *wait_status;    /* Child process. */
++    struct dir *wd;                     /* Working directory. */
++    bool success;                       /* Program successfully loaded? */
++  };
+ 
+ /* Starts a new thread running a user program loaded from
+    FILENAME.  The new thread may be scheduled (and may even exit)
+@@ -27,41 +42,82 @@ static bool load (const char *cmdline, v
+ tid_t
+ process_execute (const char *filename) 
+ {
+-  char *fn_copy;
++  struct dir *wd = thread_current ()->wd;
++  struct exec_info exec;
++  char thread_name[16];
++  char *save_ptr;
+   tid_t tid;
+ 
+-  /* Make a copy of FILENAME.
+-     Otherwise there's a race between the caller and load(). */
+-  fn_copy = palloc_get_page (0);
+-  if (fn_copy == NULL)
++  /* Initialize exec_info. */
++  exec.filename = filename;
++  if (wd) 
++    {
++      dir_reopen (wd);
++      exec.wd = wd; 
++    }
++  else if (!dir_open_root (&exec.wd))
+     return TID_ERROR;
+-  strlcpy (fn_copy, filename, PGSIZE);
++  sema_init (&exec.load_done, 0);
+ 
+   /* Create a new thread to execute FILENAME. */
+-  tid = thread_create (filename, PRI_DEFAULT, execute_thread, fn_copy);
+-  if (tid == TID_ERROR)
+-    palloc_free_page (fn_copy); 
++  strlcpy (thread_name, filename, sizeof thread_name);
++  strtok_r (thread_name, " ", &save_ptr);
++  tid = thread_create (thread_name, PRI_DEFAULT, execute_thread, &exec);
++  if (tid != TID_ERROR)
++    {
++      sema_down (&exec.load_done);
++      if (exec.success)
++        list_push_back (&thread_current ()->children, &exec.wait_status->elem);
++      else 
++        {
++          tid = TID_ERROR;
++          /* Don't close exec.wd; child process will have done so. */
++        }
++    }
++  else
++    dir_close (exec.wd);
++
+   return tid;
+ }
+ 
+ /* A thread function that loads a user process and starts it
+    running. */
+ static void
+-execute_thread (void *filename_)
++execute_thread (void *exec_)
+ {
+-  char *filename = filename_;
++  struct exec_info *exec = exec_;
+   struct intr_frame if_;
+   bool success;
+ 
++  thread_current ()->wd = exec->wd;
++
+   /* Initialize interrupt frame and load executable. */
+   memset (&if_, 0, sizeof if_);
+   if_.gs = if_.fs = if_.es = if_.ds = if_.ss = SEL_UDSEG;
+   if_.cs = SEL_UCSEG;
+   if_.eflags = FLAG_IF | FLAG_MBS;
+-  success = load (filename, &if_.eip, &if_.esp);
++  success = load (exec->filename, &if_.eip, &if_.esp);
++
++  /* Allocate wait_status. */
++  if (success)
++    {
++      exec->wait_status = thread_current ()->wait_status
++        = malloc (sizeof *exec->wait_status);
++      success = exec->wait_status != NULL; 
++    }
+ 
+-  /* If load failed, quit. */
+-  palloc_free_page (filename);
++  /* Initialize wait_status. */
++  if (success) 
++    {
++      lock_init (&exec->wait_status->lock);
++      exec->wait_status->ref_cnt = 2;
++      exec->wait_status->tid = thread_current ()->tid;
++      sema_init (&exec->wait_status->dead, 0);
++    }
++  
++  /* Notify parent thread and clean up. */
++  exec->success = success;
++  sema_up (&exec->load_done);
+   if (!success) 
+     thread_exit ();
+ 
+@@ -75,18 +131,47 @@ execute_thread (void *filename_)
+   NOT_REACHED ();
+ }
+ 
++/* Releases one reference to CS and, if it is now unreferenced,
++   frees it. */
++static void
++release_child (struct wait_status *cs) 
++{
++  int new_ref_cnt;
++  
++  lock_acquire (&cs->lock);
++  new_ref_cnt = --cs->ref_cnt;
++  lock_release (&cs->lock);
++
++  if (new_ref_cnt == 0)
++    free (cs);
++}
++
+ /* Waits for thread TID to die and returns its exit status.  If
+    it was terminated by the kernel (i.e. killed due to an
+    exception), returns -1.  If TID is invalid or if it was not a
+    child of the calling process, or if process_wait() has already
+    been successfully called for the given TID, returns -1
+-   immediately, without waiting.
+-
+-   This function will be implemented in problem 2-2.  For now, it
+-   does nothing. */
++   immediately, without waiting. */
+ int
+-process_wait (tid_t child_tid UNUSED) 
++process_wait (tid_t child_tid) 
+ {
++  struct thread *cur = thread_current ();
++  struct list_elem *e;
++
++  for (e = list_begin (&cur->children); e != list_end (&cur->children);
++       e = list_next (e)) 
++    {
++      struct wait_status *cs = list_entry (e, struct wait_status, elem);
++      if (cs->tid == child_tid) 
++        {
++          int exit_code;
++          list_remove (e);
++          sema_down (&cs->dead);
++          exit_code = cs->exit_code;
++          release_child (cs);
++          return exit_code;
++        }
++    }
+   return -1;
+ }
+ 
+@@ -95,8 +180,35 @@ void
+ process_exit (void)
+ {
+   struct thread *cur = thread_current ();
++  struct list_elem *e, *next;
+   uint32_t *pd;
+ 
++  printf ("%s: exit(%d)\n", cur->name, cur->exit_code);
++
++  /* Notify parent that we're dead. */
++  if (cur->wait_status != NULL) 
++    {
++      struct wait_status *cs = cur->wait_status;
++      cs->exit_code = cur->exit_code;
++      sema_up (&cs->dead);
++      release_child (cs);
++    }
++
++  /* Free entries of children list. */
++  for (e = list_begin (&cur->children); e != list_end (&cur->children);
++       e = next) 
++    {
++      struct wait_status *cs = list_entry (e, struct wait_status, elem);
++      next = list_remove (e);
++      release_child (cs);
++    }
++
++  /* Destroy the page hash table. */
++  page_exit ();
++
++  /* Close executable (and allow writes). */
++  file_close (cur->bin_file);
++  
+   /* Destroy the current process's page directory and switch back
+      to the kernel-only page directory. */
+   pd = cur->pagedir;
+@@ -194,20 +306,22 @@ struct Elf32_Phdr
+ #define PF_R 4          /* Readable. */
+ 
+ static bool load_segment (struct file *, const struct Elf32_Phdr *);
+-static bool setup_stack (void **esp);
++static bool setup_stack (const char *cmd_line, void **esp);
+ 
+ /* Loads an ELF executable from FILENAME into the current thread.
+    Stores the executable's entry point into *EIP
+    and its initial stack pointer into *ESP.
+    Returns true if successful, false otherwise. */
+ bool
+-load (const char *filename, void (**eip) (void), void **esp) 
++load (const char *cmd_line, void (**eip) (void), void **esp) 
+ {
+   struct thread *t = thread_current ();
++  char filename[NAME_MAX + 2];
+   struct Elf32_Ehdr ehdr;
+   struct file *file = NULL;
+   off_t file_ofs;
+   bool success = false;
++  char *cp;
+   int i;
+ 
+   /* Allocate and activate page directory. */
+@@ -216,13 +330,28 @@ load (const char *filename, void (**eip)
+     goto done;
+   process_activate ();
+ 
++  /* Create page hash table. */
++  t->pages = malloc (sizeof *t->pages);
++  if (t->pages == NULL)
++    goto done;
++  hash_init (t->pages, page_hash, page_less, NULL);
++
++  /* Extract filename from command line. */
++  while (*cmd_line == ' ')
++    cmd_line++;
++  strlcpy (filename, cmd_line, sizeof filename);
++  cp = strchr (filename, ' ');
++  if (cp != NULL)
++    *cp = '\0';
++
+   /* Open executable file. */
+-  file = filesys_open (filename);
++  t->bin_file = file = file_open (filesys_open (filename));
+   if (file == NULL) 
+     {
+       printf ("load: %s: open failed\n", filename);
+       goto done; 
+     }
++  file_deny_write (file);
+ 
+   /* Read and verify executable header. */
+   if (file_read (file, &ehdr, sizeof ehdr) != sizeof ehdr
+@@ -271,7 +400,7 @@ load (const char *filename, void (**eip)
+     }
+ 
+   /* Set up stack. */
+-  if (!setup_stack (esp))
++  if (!setup_stack (cmd_line, esp))
+     goto done;
+ 
+   /* Start address. */
+@@ -280,15 +409,11 @@ load (const char *filename, void (**eip)
+   success = true;
+ 
+  done:
+-  /* We arrive here whether the load is successful or not. */
+-  file_close (file);
+   return success;
+ }
+ 
+ /* load() helpers. */
+ 
+-static bool install_page (void *upage, void *kpage);
+-
+ /* Loads the segment described by PHDR from FILE into user
+    address space.  Return true if successful, false otherwise. */
+ static bool
+@@ -296,6 +421,7 @@ load_segment (struct file *file, const s
+ {
+   void *start, *end;  /* Page-rounded segment start and end. */
+   uint8_t *upage;     /* Iterator from start to end. */
++  off_t file_offset;  /* Offset into file. */
+   off_t filesz_left;  /* Bytes left of file data (as opposed to
+                          zero-initialized bytes). */
+ 
+@@ -303,7 +429,7 @@ load_segment (struct file *file, const s
+      commented out.  You'll want to use it when implementing VM
+      to decide whether to page the segment from its executable or
+      from swap. */
+-  //bool read_only = (phdr->p_flags & PF_W) == 0;
++  bool read_only = (phdr->p_flags & PF_W) == 0;
+ 
+   ASSERT (file != NULL);
+   ASSERT (phdr != NULL);
+@@ -332,69 +458,129 @@ load_segment (struct file *file, const s
+       || start == 0)
+     return false; 
+ 
+-  /* Load the segment page-by-page into memory. */
++  /* Add the segment page-by-page to the hash table. */
+   filesz_left = phdr->p_filesz + (phdr->p_vaddr & PGMASK);
+-  file_seek (file, ROUND_DOWN (phdr->p_offset, PGSIZE));
++  file_offset = ROUND_DOWN (phdr->p_offset, PGSIZE);
+   for (upage = start; upage < (uint8_t *) end; upage += PGSIZE) 
+     {
+-      /* We want to read min(PGSIZE, filesz_left) bytes from the
+-         file into the page and zero the rest. */
+-      size_t read_bytes = filesz_left >= PGSIZE ? PGSIZE : filesz_left;
+-      size_t zero_bytes = PGSIZE - read_bytes;
+-      uint8_t *kpage = palloc_get_page (PAL_USER);
+-      if (kpage == NULL)
++      struct page *p = page_allocate (upage, read_only);
++      if (p == NULL)
+         return false;
+ 
+-      /* Do the reading and zeroing. */
+-      if (file_read (file, kpage, read_bytes) != (int) read_bytes) 
++      if (filesz_left > 0) 
+         {
+-          palloc_free_page (kpage);
+-          return false; 
+-        }
+-      memset (kpage + read_bytes, 0, zero_bytes);
+-      filesz_left -= read_bytes;
+-
+-      /* Add the page to the process's address space. */
+-      if (!install_page (upage, kpage)) 
+-        {
+-          palloc_free_page (kpage);
+-          return false; 
++          size_t file_bytes = filesz_left >= PGSIZE ? PGSIZE : filesz_left;
++          p->file = file;
++          p->file_offset = file_offset;
++          p->file_bytes = file_bytes;
++          filesz_left -= file_bytes;
++          file_offset += file_bytes;
+         }
+     }
+ 
+   return true;
+ }
+ 
+-/* Create a minimal stack by mapping a zeroed page at the top of
+-   user virtual memory. */
++/* Reverse the order of the ARGC pointers to char in ARGV. */
++static void
++reverse (int argc, char **argv) 
++{
++  for (; argc > 1; argc -= 2, argv++) 
++    {
++      char *tmp = argv[0];
++      argv[0] = argv[argc - 1];
++      argv[argc - 1] = tmp;
++    }
++}
++ 
++/* Pushes the SIZE bytes in BUF onto the stack in KPAGE, whose
++   page-relative stack pointer is *OFS, and then adjusts *OFS
++   appropriately.  The bytes pushed are rounded to a 32-bit
++   boundary.
++
++   If successful, returns a pointer to the newly pushed object.
++   On failure, returns a null pointer. */
++static void *
++push (uint8_t *kpage, size_t *ofs, const void *buf, size_t size) 
++{
++  size_t padsize = ROUND_UP (size, sizeof (uint32_t));
++  if (*ofs < padsize)
++    return NULL;
++
++  *ofs -= padsize;
++  memcpy (kpage + *ofs + (padsize - size), buf, size);
++  return kpage + *ofs + (padsize - size);
++}
++
++/* Sets up command line arguments in KPAGE, which will be mapped
++   to UPAGE in user space.  The command line arguments are taken
++   from CMD_LINE, separated by spaces.  Sets *ESP to the initial
++   stack pointer for the process. */
+ static bool
+-setup_stack (void **esp) 
++init_cmd_line (uint8_t *kpage, uint8_t *upage, const char *cmd_line,
++               void **esp) 
+ {
+-  uint8_t *kpage;
+-  bool success = false;
++  size_t ofs = PGSIZE;
++  char *const null = NULL;
++  char *cmd_line_copy;
++  char *karg, *saveptr;
++  int argc;
++  char **argv;
++
++  /* Push command line string. */
++  cmd_line_copy = push (kpage, &ofs, cmd_line, strlen (cmd_line) + 1);
++  if (cmd_line_copy == NULL)
++    return false;
++
++  if (push (kpage, &ofs, &null, sizeof null) == NULL)
++    return false;
+ 
+-  kpage = palloc_get_page (PAL_USER | PAL_ZERO);
+-  if (kpage != NULL) 
++  /* Parse command line into arguments
++     and push them in reverse order. */
++  argc = 0;
++  for (karg = strtok_r (cmd_line_copy, " ", &saveptr); karg != NULL;
++       karg = strtok_r (NULL, " ", &saveptr))
+     {
+-      success = install_page (((uint8_t *) PHYS_BASE) - PGSIZE, kpage);
+-      if (success)
+-        *esp = PHYS_BASE;
+-      else
+-        palloc_free_page (kpage);
++      char *uarg = upage + (karg - (char *) kpage);
++      if (push (kpage, &ofs, &uarg, sizeof uarg) == NULL)
++        return false;
++      argc++;
+     }
+-  return success;
++
++  /* Reverse the order of the command line arguments. */
++  argv = (char **) (upage + ofs);
++  reverse (argc, (char **) (kpage + ofs));
++
++  /* Push argv, argc, "return address". */
++  if (push (kpage, &ofs, &argv, sizeof argv) == NULL
++      || push (kpage, &ofs, &argc, sizeof argc) == NULL
++      || push (kpage, &ofs, &null, sizeof null) == NULL)
++    return false;
++
++  /* Set initial stack pointer. */
++  *esp = upage + ofs;
++  return true;
+ }
+ 
+-/* Adds a mapping from user virtual address UPAGE to kernel
+-   virtual address KPAGE to the page table.  Fails if UPAGE is
+-   already mapped or if memory allocation fails. */
++/* Create a minimal stack for T by mapping a page at the
++   top of user virtual memory.  Fills in the page using CMD_LINE
++   and sets *ESP to the stack pointer. */
+ static bool
+-install_page (void *upage, void *kpage)
++setup_stack (const char *cmd_line, void **esp) 
+ {
+-  struct thread *t = thread_current ();
+-
+-  /* Verify that there's not already a page at that virtual
+-     address, then map our page there. */
+-  return (pagedir_get_page (t->pagedir, upage) == NULL
+-          && pagedir_set_page (t->pagedir, upage, kpage, true));
++  struct page *page = page_allocate (((uint8_t *) PHYS_BASE) - PGSIZE, false);
++  if (page != NULL) 
++    {
++      page->frame = frame_alloc_and_lock (page);
++      if (page->frame != NULL)
++        {
++          bool ok;
++          page->read_only = false;
++          page->private = false;
++          ok = init_cmd_line (page->frame->base, page->addr, cmd_line, esp);
++          frame_unlock (page->frame);
++          return ok;
++        }
++    }
++  return false;
+ }
+diff -u src/userprog/syscall.c~ src/userprog/syscall.c
+--- src/userprog/syscall.c~ 2005-06-16 14:56:52.000000000 -0700
++++ src/userprog/syscall.c 2005-06-16 15:09:31.000000000 -0700
+@@ -1,20 +1,594 @@
+ #include "userprog/syscall.h"
+ #include <stdio.h>
++#include <string.h>
+ #include <syscall-nr.h>
++#include "userprog/process.h"
++#include "userprog/pagedir.h"
++#include "devices/kbd.h"
++#include "filesys/directory.h"
++#include "filesys/filesys.h"
++#include "filesys/file.h"
++#include "threads/init.h"
+ #include "threads/interrupt.h"
++#include "threads/malloc.h"
++#include "threads/mmu.h"
++#include "threads/palloc.h"
+ #include "threads/thread.h"
+-
++#include "vm/page.h"
++ 
++ 
++static int sys_halt (void);
++static int sys_exit (int status);
++static int sys_exec (const char *ufile);
++static int sys_wait (tid_t);
++static int sys_create (const char *ufile, unsigned initial_size);
++static int sys_remove (const char *ufile);
++static int sys_open (const char *ufile);
++static int sys_filesize (int handle);
++static int sys_read (int handle, void *udst_, unsigned size);
++static int sys_write (int handle, void *usrc_, unsigned size);
++static int sys_seek (int handle, unsigned position);
++static int sys_tell (int handle);
++static int sys_close (int handle);
++static int sys_mmap (int handle, void *addr);
++static int sys_munmap (int mapping);
++static int sys_chdir (const char *udir);
++static int sys_mkdir (const char *udir);
++static int sys_lsdir (void);
++ 
+ static void syscall_handler (struct intr_frame *);
+-
++static void copy_in (void *, const void *, size_t);
++ 
+ void
+ syscall_init (void) 
+ {
+   intr_register_int (0x30, 3, INTR_ON, syscall_handler, "syscall");
+ }
++ 
++/* System call handler. */
++static void
++syscall_handler (struct intr_frame *f) 
++{
++  typedef int syscall_function (int, int, int);
++
++  /* A system call. */
++  struct syscall 
++    {
++      size_t arg_cnt;           /* Number of arguments. */
++      syscall_function *func;   /* Implementation. */
++    };
++
++  /* Table of system calls. */
++  static const struct syscall syscall_table[] =
++    {
++      {0, (syscall_function *) sys_halt},
++      {1, (syscall_function *) sys_exit},
++      {1, (syscall_function *) sys_exec},
++      {1, (syscall_function *) sys_wait},
++      {2, (syscall_function *) sys_create},
++      {1, (syscall_function *) sys_remove},
++      {1, (syscall_function *) sys_open},
++      {1, (syscall_function *) sys_filesize},
++      {3, (syscall_function *) sys_read},
++      {3, (syscall_function *) sys_write},
++      {2, (syscall_function *) sys_seek},
++      {1, (syscall_function *) sys_tell},
++      {1, (syscall_function *) sys_close},
++      {2, (syscall_function *) sys_mmap},
++      {1, (syscall_function *) sys_munmap},
++      {1, (syscall_function *) sys_chdir},
++      {1, (syscall_function *) sys_mkdir},
++      {0, (syscall_function *) sys_lsdir},
++    };
+ 
++  const struct syscall *sc;
++  unsigned call_nr;
++  int args[3];
++
++  /* Get the system call. */
++  copy_in (&call_nr, f->esp, sizeof call_nr);
++  if (call_nr >= sizeof syscall_table / sizeof *syscall_table)
++    thread_exit ();
++  sc = syscall_table + call_nr;
++
++  /* Get the system call arguments. */
++  ASSERT (sc->arg_cnt <= sizeof args / sizeof *args);
++  memset (args, 0, sizeof args);
++  copy_in (args, (uint32_t *) f->esp + 1, sizeof *args * sc->arg_cnt);
++
++  /* Execute the system call,
++     and set the return value. */
++  f->eax = sc->func (args[0], args[1], args[2]);
++}
++ 
++/* Copies SIZE bytes from user address USRC to kernel address
++   DST.
++   Call thread_exit() if any of the user accesses are invalid. */
+ static void
+-syscall_handler (struct intr_frame *f UNUSED) 
++copy_in (void *dst_, const void *usrc_, size_t size) 
++{
++  uint8_t *dst = dst_;
++  const uint8_t *usrc = usrc_;
++
++  while (size > 0) 
++    {
++      size_t chunk_size = PGSIZE - pg_ofs (usrc);
++      if (chunk_size > size)
++        chunk_size = size;
++      
++      if (!page_lock (usrc, false))
++        thread_exit ();
++      memcpy (dst, usrc, chunk_size);
++      page_unlock (usrc);
++
++      dst += chunk_size;
++      usrc += chunk_size;
++      size -= chunk_size;
++    }
++}
++ 
++/* Creates a copy of user string US in kernel memory
++   and returns it as a page that must be freed with
++   palloc_free_page().
++   Truncates the string at PGSIZE bytes in size.
++   Call thread_exit() if any of the user accesses are invalid. */
++static char *
++copy_in_string (const char *us) 
++{
++  char *ks;
++  char *upage;
++  size_t length;
++ 
++  ks = palloc_get_page (0);
++  if (ks == NULL) 
++    thread_exit ();
++
++  length = 0;
++  for (;;) 
++    {
++      upage = pg_round_down (us);
++      if (!page_lock (upage, false))
++        goto lock_error;
++
++      for (; us < upage + PGSIZE; us++) 
++        {
++          ks[length++] = *us;
++          if (*us == '\0') 
++            {
++              page_unlock (upage);
++              return ks; 
++            }
++          else if (length >= PGSIZE) 
++            goto too_long_error;
++        }
++
++      page_unlock (upage);
++    }
++
++ too_long_error:
++  page_unlock (upage);
++ lock_error:
++  palloc_free_page (ks);
++  thread_exit ();
++}
++ 
++/* Halt system call. */
++static int
++sys_halt (void)
++{
++  power_off ();
++}
++ 
++/* Exit system call. */
++static int
++sys_exit (int exit_code) 
++{
++  thread_current ()->exit_code = exit_code;
++  thread_exit ();
++  NOT_REACHED ();
++}
++ 
++/* Exec system call. */
++static int
++sys_exec (const char *ufile) 
++{
++  tid_t tid;
++  char *kfile = copy_in_string (ufile);
++ 
++  tid = process_execute (kfile);
++ 
++  palloc_free_page (kfile);
++ 
++  return tid;
++}
++ 
++/* Wait system call. */
++static int
++sys_wait (tid_t child) 
++{
++  return process_wait (child);
++}
++ 
++/* Create system call. */
++static int
++sys_create (const char *ufile, unsigned initial_size) 
++{
++  char *kfile = copy_in_string (ufile);
++  bool ok = filesys_create (kfile, initial_size, FILE_INODE);
++  palloc_free_page (kfile);
++ 
++  return ok;
++}
++ 
++/* Remove system call. */
++static int
++sys_remove (const char *ufile) 
++{
++  char *kfile = copy_in_string (ufile);
++  bool ok = filesys_remove (kfile);
++  palloc_free_page (kfile);
++ 
++  return ok;
++}
++
++/* A file descriptor, for binding a file handle to a file. */
++struct file_descriptor
++  {
++    struct list_elem elem;      /* List element. */
++    struct file *file;          /* File. */
++    int handle;                 /* File handle. */
++  };
++ 
++/* Open system call. */
++static int
++sys_open (const char *ufile) 
++{
++  char *kfile = copy_in_string (ufile);
++  struct file_descriptor *fd;
++  int handle = -1;
++ 
++  fd = malloc (sizeof *fd);
++  if (fd != NULL)
++    {
++      fd->file = file_open (filesys_open (kfile));
++      if (fd->file != NULL)
++        {
++          struct thread *cur = thread_current ();
++          handle = fd->handle = cur->next_handle++;
++          list_push_front (&cur->fds, &fd->elem);
++        }
++      else 
++        free (fd);
++    }
++  
++  palloc_free_page (kfile);
++  return handle;
++}
++ 
++/* Returns the file descriptor associated with the given handle.
++   Terminates the process if HANDLE is not associated with an
++   open file. */
++static struct file_descriptor *
++lookup_fd (int handle) 
++{
++  struct thread *cur = thread_current ();
++  struct list_elem *e;
++   
++  for (e = list_begin (&cur->fds); e != list_end (&cur->fds);
++       e = list_next (e))
++    {
++      struct file_descriptor *fd;
++      fd = list_entry (e, struct file_descriptor, elem);
++      if (fd->handle == handle)
++        return fd;
++    }
++ 
++  thread_exit ();
++}
++ 
++/* Filesize system call. */
++static int
++sys_filesize (int handle) 
++{
++  struct file_descriptor *fd = lookup_fd (handle);
++  int size;
++ 
++  size = file_length (fd->file);
++ 
++  return size;
++}
++ 
++/* Read system call. */
++static int
++sys_read (int handle, void *udst_, unsigned size) 
++{
++  uint8_t *udst = udst_;
++  struct file_descriptor *fd;
++  int bytes_read = 0;
++
++  /* Look up file descriptor. */
++  if (handle != STDIN_FILENO)
++    fd = lookup_fd (handle);
++
++  while (size > 0) 
++    {
++      /* How much to read into this page? */
++      size_t page_left = PGSIZE - pg_ofs (udst);
++      size_t read_amt = size < page_left ? size : page_left;
++      off_t retval;
++
++      /* Check that touching this page is okay. */
++      if (!page_lock (udst, true)) 
++        thread_exit ();
++
++      /* Read from file into page. */
++      if (handle != STDIN_FILENO) 
++        {
++          retval = file_read (fd->file, udst, read_amt);
++          if (retval < 0)
++            {
++              if (bytes_read == 0)
++                bytes_read = -1; 
++              break;
++            }
++          bytes_read += retval; 
++        }
++      else 
++        {
++          size_t i;
++          
++          for (i = 0; i < read_amt; i++) 
++            udst[i] = kbd_getc ();
++          bytes_read = read_amt;
++        }
++
++      /* Release page. */
++      page_unlock (udst);
++
++      /* If it was a short read we're done. */
++      if (retval != (off_t) read_amt)
++        break;
++
++      /* Advance. */
++      udst += retval;
++      size -= retval;
++    }
++   
++  return bytes_read;
++}
++ 
++/* Write system call. */
++static int
++sys_write (int handle, void *usrc_, unsigned size) 
+ {
+-  printf ("system call!\n");
++  uint8_t *usrc = usrc_;
++  struct file_descriptor *fd = NULL;
++  int bytes_written = 0;
++
++  /* Lookup up file descriptor. */
++  if (handle != STDOUT_FILENO)
++    fd = lookup_fd (handle);
++
++  while (size > 0) 
++    {
++      /* How much bytes to write to this page? */
++      size_t page_left = PGSIZE - pg_ofs (usrc);
++      size_t write_amt = size < page_left ? size : page_left;
++      off_t retval;
++
++      /* Check that we can touch this user page. */
++      if (!page_lock (usrc, false)) 
++        thread_exit ();
++
++      /* Do the write. */
++      if (handle == STDOUT_FILENO)
++        {
++          putbuf (usrc, write_amt);
++          retval = write_amt;
++        }
++      else
++        retval = file_write (fd->file, usrc, write_amt);
++
++      /* Release user page. */
++      page_unlock (usrc);
++
++      /* Handle return value. */
++      if (retval < 0) 
++        {
++          if (bytes_written == 0)
++            bytes_written = -1;
++          break;
++        }
++      bytes_written += retval;
++
++      /* If it was a short write we're done. */
++      if (retval != (off_t) write_amt)
++        break;
++
++      /* Advance. */
++      usrc += retval;
++      size -= retval;
++    }
++ 
++  return bytes_written;
++}
++ 
++/* Seek system call. */
++static int
++sys_seek (int handle, unsigned position) 
++{
++  if ((off_t) position >= 0)
++    file_seek (lookup_fd (handle)->file, position);
++  return 0;
++}
++ 
++/* Tell system call. */
++static int
++sys_tell (int handle) 
++{
++  return file_tell (lookup_fd (handle)->file);
++}
++ 
++/* Close system call. */
++static int
++sys_close (int handle) 
++{
++  struct file_descriptor *fd = lookup_fd (handle);
++  file_close (fd->file);
++  list_remove (&fd->elem);
++  free (fd);
++  return 0;
++}
++
++/* Binds a mapping id to a region of memory and a file. */
++struct mapping
++  {
++    struct list_elem elem;      /* List element. */
++    int handle;                 /* Mapping id. */
++    struct file *file;          /* File. */
++    uint8_t *base;              /* Start of memory mapping. */
++    size_t page_cnt;            /* Number of pages mapped. */
++  };
++
++/* Returns the file descriptor associated with the given handle.
++   Terminates the process if HANDLE is not associated with a
++   memory mapping. */
++static struct mapping *
++lookup_mapping (int handle) 
++{
++  struct thread *cur = thread_current ();
++  struct list_elem *e;
++   
++  for (e = list_begin (&cur->mappings); e != list_end (&cur->mappings);
++       e = list_next (e))
++    {
++      struct mapping *m = list_entry (e, struct mapping, elem);
++      if (m->handle == handle)
++        return m;
++    }
++ 
+   thread_exit ();
+ }
++
++/* Remove mapping M from the virtual address space,
++   writing back any pages that have changed. */
++static void
++unmap (struct mapping *m) 
++{
++  list_remove (&m->elem);
++  while (m->page_cnt-- > 0) 
++    {
++      page_deallocate (m->base);
++      m->base += PGSIZE;
++    }
++  file_close (m->file);
++  free (m);
++}
++ 
++/* Mmap system call. */
++static int
++sys_mmap (int handle, void *addr)
++{
++  struct file_descriptor *fd = lookup_fd (handle);
++  struct mapping *m = malloc (sizeof *m);
++  size_t offset;
++  off_t length;
++
++  if (m == NULL || addr == NULL || pg_ofs (addr) != 0)
++    return -1;
++
++  m->handle = thread_current ()->next_handle++;
++  m->file = file_reopen (fd->file);
++  if (m->file == NULL) 
++    {
++      free (m);
++      return -1;
++    }
++  m->base = addr;
++  m->page_cnt = 0;
++  list_push_front (&thread_current ()->mappings, &m->elem);
++
++  offset = 0;
++  length = file_length (m->file);
++  while (length > 0)
++    {
++      struct page *p = page_allocate ((uint8_t *) addr + offset, false);
++      if (p == NULL)
++        {
++          unmap (m);
++          return -1;
++        }
++      p->private = false;
++      p->file = m->file;
++      p->file_offset = offset;
++      p->file_bytes = length >= PGSIZE ? PGSIZE : length;
++      offset += p->file_bytes;
++      length -= p->file_bytes;
++      m->page_cnt++;
++    }
++  
++  return m->handle;
++}
++
++/* Munmap system call. */
++static int
++sys_munmap (int mapping) 
++{
++  unmap (lookup_mapping (mapping));
++  return 0;
++}
++
++/* Chdir system call. */
++static int
++sys_chdir (const char *udir) 
++{
++  char *kdir = copy_in_string (udir);
++  bool ok = filesys_chdir (kdir);
++  palloc_free_page (kdir);
++  return ok;
++}
++
++/* Mkdir system call. */
++static int
++sys_mkdir (const char *udir)
++{
++  char *kdir = copy_in_string (udir);
++  bool ok = filesys_create (kdir, 0, DIR_INODE);
++  palloc_free_page (kdir);
++ 
++  return ok;
++}
++
++/* Lsdir system call. */
++static int
++sys_lsdir (void) 
++{
++  dir_list (thread_current ()->wd);
++  return 0;
++}
++ 
++/* On thread exit, close all open files and unmap all mappings. */
++void
++syscall_exit (void) 
++{
++  struct thread *cur = thread_current ();
++  struct list_elem *e, *next;
++   
++  for (e = list_begin (&cur->fds); e != list_end (&cur->fds); e = next)
++    {
++      struct file_descriptor *fd = list_entry (e, struct file_descriptor, elem);
++      next = list_next (e);
++      file_close (fd->file);
++      free (fd);
++    }
++   
++  for (e = list_begin (&cur->mappings); e != list_end (&cur->mappings);
++       e = next)
++    {
++      struct mapping *m = list_entry (e, struct mapping, elem);
++      next = list_next (e);
++      unmap (m);
++    }
++
++  dir_close (cur->wd);
++}
+diff -u src/userprog/syscall.h~ src/userprog/syscall.h
+--- src/userprog/syscall.h~ 2004-09-05 22:38:45.000000000 -0700
++++ src/userprog/syscall.h 2005-06-16 15:09:31.000000000 -0700
+@@ -2,5 +2,6 @@
+ #define USERPROG_SYSCALL_H
+ 
+ void syscall_init (void);
++void syscall_exit (void);
+ 
+ #endif /* userprog/syscall.h */
+diff -u src/vm/frame.c~ src/vm/frame.c
+--- src/vm/frame.c~ 1969-12-31 16:00:00.000000000 -0800
++++ src/vm/frame.c 2005-06-16 15:09:31.000000000 -0700
+@@ -0,0 +1,161 @@
++#include "vm/frame.h"
++#include <stdio.h>
++#include "vm/page.h"
++#include "devices/timer.h"
++#include "threads/init.h"
++#include "threads/malloc.h"
++#include "threads/mmu.h"
++#include "threads/palloc.h"
++#include "threads/synch.h"
++
++static struct frame *frames;
++static size_t frame_cnt;
++
++static struct lock scan_lock;
++static size_t hand;
++
++/* Initialize the frame manager. */
++void
++frame_init (void) 
++{
++  void *base;
++
++  lock_init (&scan_lock);
++  
++  frames = malloc (sizeof *frames * ram_pages);
++  if (frames == NULL)
++    PANIC ("out of memory allocating page frames");
++
++  while ((base = palloc_get_page (PAL_USER)) != NULL) 
++    {
++      struct frame *f = &frames[frame_cnt++];
++      lock_init (&f->lock);
++      f->base = base;
++      f->page = NULL;
++    }
++}
++
++/* Tries to allocate and lock a frame for PAGE.
++   Returns the frame if successful, false on failure. */
++static struct frame *
++try_frame_alloc_and_lock (struct page *page) 
++{
++  size_t i;
++
++  lock_acquire (&scan_lock);
++
++  /* Find a free frame. */
++  for (i = 0; i < frame_cnt; i++)
++    {
++      struct frame *f = &frames[i];
++      if (!lock_try_acquire (&f->lock))
++        continue;
++      if (f->page == NULL) 
++        {
++          f->page = page;
++          lock_release (&scan_lock);
++          return f;
++        } 
++      lock_release (&f->lock);
++    }
++
++  /* No free frame.  Find a frame to evict. */
++  for (i = 0; i < frame_cnt * 2; i++) 
++    {
++      /* Get a frame. */
++      struct frame *f = &frames[hand];
++      if (++hand >= frame_cnt)
++        hand = 0;
++
++      if (!lock_try_acquire (&f->lock))
++        continue;
++
++      if (f->page == NULL) 
++        {
++          f->page = page;
++          lock_release (&scan_lock);
++          return f;
++        } 
++
++      if (page_accessed_recently (f->page)) 
++        {
++          lock_release (&f->lock);
++          continue;
++        }
++          
++      lock_release (&scan_lock);
++      
++      /* Evict this frame. */
++      if (!page_out (f->page))
++        {
++          lock_release (&f->lock);
++          return NULL;
++        }
++
++      f->page = page;
++      return f;
++    }
++
++  lock_release (&scan_lock);
++  return NULL;
++}
++
++/* Tries really hard to allocate and lock a frame for PAGE.
++   Returns the frame if successful, false on failure. */
++struct frame *
++frame_alloc_and_lock (struct page *page) 
++{
++  size_t try;
++
++  for (try = 0; try < 3; try++) 
++    {
++      struct frame *f = try_frame_alloc_and_lock (page);
++      if (f != NULL) 
++        {
++          ASSERT (lock_held_by_current_thread (&f->lock));
++          return f; 
++        }
++      timer_msleep (1000);
++    }
++
++  return NULL;
++}
++
++/* Locks P's frame into memory, if it has one.
++   Upon return, p->frame will not change until P is unlocked. */
++void
++frame_lock (struct page *p) 
++{
++  /* A frame can be asynchronously removed, but never inserted. */
++  struct frame *f = p->frame;
++  if (f != NULL) 
++    {
++      lock_acquire (&f->lock);
++      if (f != p->frame)
++        {
++          lock_release (&f->lock);
++          ASSERT (p->frame == NULL); 
++        } 
++    }
++}
++
++/* Releases frame F for use by another page.
++   F must be locked for use by the current process.
++   Any data in F is lost. */
++void
++frame_free (struct frame *f)
++{
++  ASSERT (lock_held_by_current_thread (&f->lock));
++          
++  f->page = NULL;
++  lock_release (&f->lock);
++}
++
++/* Unlocks frame F, allowing it to be evicted.
++   F must be locked for use by the current process. */
++void
++frame_unlock (struct frame *f) 
++{
++  ASSERT (lock_held_by_current_thread (&f->lock));
++  lock_release (&f->lock);
++}
+diff -u src/vm/frame.h~ src/vm/frame.h
+--- src/vm/frame.h~ 1969-12-31 16:00:00.000000000 -0800
++++ src/vm/frame.h 2005-06-16 15:09:31.000000000 -0700
+@@ -0,0 +1,23 @@
++#ifndef VM_FRAME_H
++#define VM_FRAME_H
++
++#include <stdbool.h>
++#include "threads/synch.h"
++
++/* A physical frame. */
++struct frame 
++  {
++    struct lock lock;           /* Prevent simultaneous access. */
++    void *base;                 /* Kernel virtual base address. */
++    struct page *page;          /* Mapped process page, if any. */
++  };
++
++void frame_init (void);
++
++struct frame *frame_alloc_and_lock (struct page *);
++void frame_lock (struct page *);
++
++void frame_free (struct frame *);
++void frame_unlock (struct frame *);
++
++#endif /* vm/frame.h */
+diff -u src/vm/page.c~ src/vm/page.c
+--- src/vm/page.c~ 1969-12-31 16:00:00.000000000 -0800
++++ src/vm/page.c 2005-06-16 15:09:31.000000000 -0700
+@@ -0,0 +1,297 @@
++#include "vm/page.h"
++#include <stdio.h>
++#include <string.h>
++#include "vm/frame.h"
++#include "vm/swap.h"
++#include "filesys/file.h"
++#include "threads/malloc.h"
++#include "threads/mmu.h"
++#include "threads/thread.h"
++#include "userprog/pagedir.h"
++
++/* Maximum size of process stack, in bytes. */
++#define STACK_MAX (1024 * 1024)
++
++/* Destroys the current process's page table. */
++void
++page_exit (void) 
++{
++  struct hash *h;
++  struct hash_iterator i;
++
++  h = thread_current ()->pages;
++  if (h == NULL)
++    return;
++  
++  hash_first (&i, h);
++  hash_next (&i);
++  while (hash_cur (&i))
++    {
++      struct page *p = hash_entry (hash_cur (&i), struct page, hash_elem);
++      hash_next (&i);
++      frame_lock (p);
++      if (p->frame)
++        frame_free (p->frame);
++      free (p);
++    }
++  hash_destroy (h);
++}
++
++/* Returns the page containing the given virtual ADDRESS,
++   or a null pointer if no such page exists.
++   Allocates stack pages as necessary. */
++static struct page *
++page_for_addr (const void *address) 
++{
++  if (address < PHYS_BASE) 
++    {
++      struct page p;
++      struct hash_elem *e;
++
++      /* Find existing page. */
++      p.addr = (void *) pg_round_down (address);
++      e = hash_find (thread_current ()->pages, &p.hash_elem);
++      if (e != NULL)
++        return hash_entry (e, struct page, hash_elem);
++
++      /* No page.  Expand stack? */
++      if (address >= PHYS_BASE - STACK_MAX
++          && address >= thread_current ()->user_esp - 32)
++        return page_allocate ((void *) address, false);
++    }
++  return NULL;
++}
++
++/* Locks a frame for page P and pages it in.
++   Returns true if successful, false on failure. */
++static bool
++do_page_in (struct page *p)
++{
++  /* Get a frame for the page. */
++  p->frame = frame_alloc_and_lock (p);
++  if (p->frame == NULL)
++    return false;
++
++  /* Copy data into the frame. */
++  if (p->sector != (disk_sector_t) -1) 
++    {
++      /* Get data from swap. */
++      swap_in (p); 
++    }
++  else if (p->file != NULL) 
++    {
++      /* Get data from file. */
++      off_t read_bytes = file_read_at (p->file, p->frame->base,
++                                        p->file_bytes, p->file_offset);
++      off_t zero_bytes = PGSIZE - read_bytes;
++      memset (p->frame->base + read_bytes, 0, zero_bytes);
++      if (read_bytes != p->file_bytes)
++        printf ("bytes read (%"PROTd") != bytes requested (%"PROTd")\n",
++                read_bytes, p->file_bytes);
++    }
++  else 
++    {
++      /* Provide all-zero page. */
++      memset (p->frame->base, 0, PGSIZE);
++    }
++
++  return true;
++}
++
++/* Faults in the page containing FAULT_ADDR.
++   Returns true if successful, false on failure. */
++bool
++page_in (void *fault_addr) 
++{
++  struct page *p;
++  bool success;
++
++  /* Can't handle page faults without a hash table. */
++  if (thread_current ()->pages == NULL) 
++    return false;
++
++  p = page_for_addr (fault_addr);
++  if (p == NULL) 
++    return false; 
++
++  frame_lock (p);
++  if (p->frame == NULL)
++    {
++      if (!do_page_in (p))
++        return false;
++    }
++  ASSERT (lock_held_by_current_thread (&p->frame->lock));
++    
++  /* Install frame into page table. */
++  success = pagedir_set_page (thread_current ()->pagedir, p->addr,
++                              p->frame->base, !p->read_only);
++
++  /* Release frame. */
++  frame_unlock (p->frame);
++
++  return success;
++}
++
++/* Evicts page P.
++   P must have a locked frame.
++   Return true if successful, false on failure. */
++bool
++page_out (struct page *p) 
++{
++  bool dirty;
++  bool ok;
++
++  ASSERT (p->frame != NULL);
++  ASSERT (lock_held_by_current_thread (&p->frame->lock));
++
++  /* Mark page not present in page table, forcing accesses by the
++     process to fault.  This must happen before checking the
++     dirty bit, to prevent a race with the process dirtying the
++     page. */
++  pagedir_clear_page (p->thread->pagedir, p->addr);
++
++  /* Has the frame been modified? */
++  dirty = pagedir_is_dirty (p->thread->pagedir, p->addr);
++
++  /* Write frame contents to disk if necessary. */
++  if (p->file != NULL) 
++    {
++      if (dirty) 
++        {
++          if (p->private)
++            ok = swap_out (p);
++          else 
++            ok = file_write_at (p->file, p->frame->base, p->file_bytes,
++                                p->file_offset) == p->file_bytes;
++        }
++      else
++        ok = true;
++    }
++  else
++    ok = swap_out (p);
++  if (ok) 
++    {
++      //memset (p->frame->base, 0xcc, PGSIZE);
++      p->frame = NULL; 
++    }
++  return ok;
++}
++
++/* Returns true if page P's data has been accessed recently,
++   false otherwise.
++   P must have a frame locked into memory. */
++bool
++page_accessed_recently (struct page *p) 
++{
++  bool was_accessed;
++
++  ASSERT (p->frame != NULL);
++  ASSERT (lock_held_by_current_thread (&p->frame->lock));
++
++  was_accessed = pagedir_is_accessed (p->thread->pagedir, p->addr);
++  if (was_accessed)
++    pagedir_set_accessed (p->thread->pagedir, p->addr, false);
++  return was_accessed;
++}
++
++/* Adds a mapping for user virtual address VADDR to the page hash
++   table.  Fails if VADDR is already mapped or if memory
++   allocation fails. */
++struct page *
++page_allocate (void *vaddr, bool read_only)
++{
++  struct thread *t = thread_current ();
++  struct page *p = malloc (sizeof *p);
++  if (p != NULL) 
++    {
++      p->addr = pg_round_down (vaddr);
++
++      p->read_only = read_only;
++      p->private = !read_only;
++
++      p->frame = NULL;
++
++      p->sector = (disk_sector_t) -1;
++
++      p->file = NULL;
++      p->file_offset = 0;
++      p->file_bytes = 0;
++
++      p->thread = thread_current ();
++
++      if (hash_insert (t->pages, &p->hash_elem) != NULL) 
++        {
++          /* Already mapped. */
++          free (p);
++          p = NULL;
++        }
++    }
++  return p;
++}
++
++/* Evicts the page containing address VADDR
++   and removes it from the page table. */
++void
++page_deallocate (void *vaddr) 
++{
++  struct page *p = page_for_addr (vaddr);
++  ASSERT (p != NULL);
++  frame_lock (p);
++  if (p->frame)
++    {
++      struct frame *f = p->frame;
++      if (p->file && !p->private) 
++        page_out (p); 
++      frame_free (f);
++    }
++  hash_delete (thread_current ()->pages, &p->hash_elem);
++  free (p);
++}
++
++/* Returns a hash value for the page that E refers to. */
++unsigned
++page_hash (const struct hash_elem *e, void *aux UNUSED) 
++{
++  const struct page *p = hash_entry (e, struct page, hash_elem);
++  return ((uintptr_t) p->addr) >> PGBITS;
++}
++
++/* Returns true if page A precedes page B. */
++bool
++page_less (const struct hash_elem *a_, const struct hash_elem *b_,
++           void *aux UNUSED) 
++{
++  const struct page *a = hash_entry (a_, struct page, hash_elem);
++  const struct page *b = hash_entry (b_, struct page, hash_elem);
++  
++  return a->addr < b->addr;
++}
++
++/* Tries to lock the page containing ADDR into physical memory.
++   If WILL_WRITE is true, the page must be writeable;
++   otherwise it may be read-only.
++   Returns true if successful, false on failure. */
++bool
++page_lock (const void *addr, bool will_write) 
++{
++  struct page *p = page_for_addr (addr);
++  if (p == NULL || (p->read_only && will_write))
++    return false;
++  
++  frame_lock (p);
++  if (p->frame == NULL)
++    return (do_page_in (p)
++            && pagedir_set_page (thread_current ()->pagedir, p->addr,
++                                 p->frame->base, !p->read_only)); 
++  else
++    return true;
++}
++
++/* Unlocks a page locked with page_lock(). */
++void
++page_unlock (const void *addr) 
++{
++  struct page *p = page_for_addr (addr);
++  ASSERT (p != NULL);
++  frame_unlock (p->frame);
++}
+diff -u src/vm/page.h~ src/vm/page.h
+--- src/vm/page.h~ 1969-12-31 16:00:00.000000000 -0800
++++ src/vm/page.h 2005-06-16 15:09:31.000000000 -0700
+@@ -0,0 +1,50 @@
++#ifndef VM_PAGE_H
++#define VM_PAGE_H
++
++#include <hash.h>
++#include "devices/disk.h"
++#include "filesys/off_t.h"
++#include "threads/synch.h"
++
++/* Virtual page. */
++struct page 
++  {
++    /* Immutable members. */
++    void *addr;                 /* User virtual address. */
++    bool read_only;             /* Read-only page? */
++    struct thread *thread;      /* Owning thread. */
++
++    /* Accessed only in owning process context. */
++    struct hash_elem hash_elem; /* struct thread `pages' hash element. */
++
++    /* Set only in owning process context with frame->frame_lock held.
++       Cleared only with scan_lock and frame->frame_lock held. */
++    struct frame *frame;        /* Page frame. */
++
++    /* Swap information, protected by frame->frame_lock. */
++    disk_sector_t sector;       /* Starting sector of swap area, or -1. */
++    
++    /* Memory-mapped file information, protected by frame->frame_lock. */
++    bool private;               /* False to write back to file,
++                                   true to write back to swap. */
++    struct file *file;          /* File. */
++    off_t file_offset;          /* Offset in file. */
++    off_t file_bytes;           /* Bytes to read/write, 1...PGSIZE. */
++  };
++
++void page_exit (void);
++
++struct page *page_allocate (void *, bool read_only);
++void page_deallocate (void *vaddr);
++
++bool page_in (void *fault_addr);
++bool page_out (struct page *);
++bool page_accessed_recently (struct page *);
++
++bool page_lock (const void *, bool will_write);
++void page_unlock (const void *);
++
++hash_hash_func page_hash;
++hash_less_func page_less;
++
++#endif /* vm/page.h */
+diff -u src/vm/swap.c~ src/vm/swap.c
+--- src/vm/swap.c~ 1969-12-31 16:00:00.000000000 -0800
++++ src/vm/swap.c 2005-06-16 15:09:31.000000000 -0700
+@@ -0,0 +1,85 @@
++#include "vm/swap.h"
++#include <bitmap.h>
++#include <debug.h>
++#include <stdio.h>
++#include "vm/frame.h"
++#include "vm/page.h"
++#include "devices/disk.h"
++#include "threads/mmu.h"
++#include "threads/synch.h"
++
++/* The swap disk. */
++static struct disk *swap_disk;
++
++/* Used swap pages. */
++static struct bitmap *swap_bitmap;
++
++/* Protects swap_bitmap. */
++static struct lock swap_lock;
++
++/* Number of sectors per page. */
++#define PAGE_SECTORS (PGSIZE / DISK_SECTOR_SIZE)
++
++/* Sets up swap. */
++void
++swap_init (void) 
++{
++  swap_disk = disk_get (1, 1);
++  if (swap_disk == NULL) 
++    {
++      printf ("no swap disk--swap disabled\n");
++      swap_bitmap = bitmap_create (0);
++    }
++  else
++    swap_bitmap = bitmap_create (disk_size (swap_disk) / PAGE_SECTORS);
++  if (swap_bitmap == NULL)
++    PANIC ("couldn't create swap bitmap");
++  lock_init (&swap_lock);
++}
++
++/* Swaps in page P, which must have a locked frame
++   (and be swapped out). */
++void
++swap_in (struct page *p) 
++{
++  size_t i;
++  
++  ASSERT (p->frame != NULL);
++  ASSERT (lock_held_by_current_thread (&p->frame->lock));
++  ASSERT (p->sector != (disk_sector_t) -1);
++
++  for (i = 0; i < PAGE_SECTORS; i++)
++    disk_read (swap_disk, p->sector + i,
++               p->frame->base + i * DISK_SECTOR_SIZE);
++  bitmap_reset (swap_bitmap, p->sector / PAGE_SECTORS);
++  p->sector = (disk_sector_t) -1;
++}
++
++/* Swaps out page P, which must have a locked frame. */
++bool
++swap_out (struct page *p) 
++{
++  size_t slot;
++  size_t i;
++
++  ASSERT (p->frame != NULL);
++  ASSERT (lock_held_by_current_thread (&p->frame->lock));
++
++  lock_acquire (&swap_lock);
++  slot = bitmap_scan_and_flip (swap_bitmap, 0, 1, false);
++  lock_release (&swap_lock);
++  if (slot == BITMAP_ERROR) 
++    return false; 
++
++  p->sector = slot * PAGE_SECTORS;
++  for (i = 0; i < PAGE_SECTORS; i++)
++    disk_write (swap_disk, p->sector + i,
++                p->frame->base + i * DISK_SECTOR_SIZE);
++  
++  p->private = false;
++  p->file = NULL;
++  p->file_offset = 0;
++  p->file_bytes = 0;
++
++  return true;
++}
+diff -u src/vm/swap.h~ src/vm/swap.h
+--- src/vm/swap.h~ 1969-12-31 16:00:00.000000000 -0800
++++ src/vm/swap.h 2005-06-16 15:09:31.000000000 -0700
+@@ -0,0 +1,11 @@
++#ifndef VM_SWAP_H
++#define VM_SWAP_H 1
++
++#include <stdbool.h>
++
++struct page;
++void swap_init (void);
++void swap_in (struct page *);
++bool swap_out (struct page *);
++
++#endif /* vm/swap.h */
