@@ -102,16 +102,18 @@ diff -u src/devices/timer.c~ src/devices/timer.c
 diff -u src/filesys/Make.vars~ src/filesys/Make.vars
 --- src/filesys/Make.vars~ 2005-05-24 14:46:45.000000000 -0700
 +++ src/filesys/Make.vars 2005-06-16 15:09:31.000000000 -0700
-@@ -6,6 +6,6 @@ KERNEL_SUBDIRS = threads devices lib lib
- TEST_SUBDIRS = tests/userprog tests/filesys/base tests/filesys/extended
+@@ -6,7 +6,7 @@ KERNEL_SUBDIRS = threads devices lib lib
+ GRADING_FILE = $(SRCDIR)/tests/filesys/Grading.no-vm
  
  # Uncomment the lines below to enable VM.
 -#os.dsk: DEFINES += -DVM
 -#KERNEL_SUBDIRS += vm
 -#TEST_SUBDIRS += tests/vm
+-#GRADING_FILE = $(SRCDIR)/tests/filesys/Grading.with-vm
 +os.dsk: DEFINES += -DVM
 +KERNEL_SUBDIRS += vm
 +TEST_SUBDIRS += tests/vm
++GRADING_FILE = $(SRCDIR)/tests/filesys/Grading.with-vm
 diff -u src/filesys/cache.c~ src/filesys/cache.c
 --- src/filesys/cache.c~ 1969-12-31 16:00:00.000000000 -0800
 +++ src/filesys/cache.c 2005-06-16 15:09:31.000000000 -0700
