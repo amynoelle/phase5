@@ -1532,7 +1532,7 @@ diff -u src/filesys/inode.c~ src/filesys/inode.c
  /* Closes INODE and writes it to disk.
     If this was the last reference to INODE, frees its memory.
     If INODE was also a removed inode, frees its blocks. */
-@@ -158,18 +181,59 @@ inode_close (struct inode *inode) 
+@@ -158,21 +181,60 @@ inode_close (struct inode *inode) 
      return;
  
    /* Release resources if this was the last opener. */
@@ -1542,13 +1542,16 @@ diff -u src/filesys/inode.c~ src/filesys/inode.c
        /* Remove from inode list and release lock. */
        list_remove (&inode->elem);
 +      lock_release (&open_inodes_lock);
- 
+  
        /* Deallocate blocks if removed. */
-       if (inode->removed)
--        free_map_release (inode->sector,
--                          bytes_to_sectors (inode->data.length));
--
+       if (inode->removed) 
+-        {
+-          free_map_release (inode->sector, 1);
+-          free_map_release (inode->data.start,
+-                            bytes_to_sectors (inode->data.length)); 
+-        }
 +        deallocate_inode (inode);
+ 
        free (inode); 
      }
 +  else
