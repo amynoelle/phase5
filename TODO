@@ -1,19 +1,10 @@
 -*- text -*-
 
-* Put time limits on tests.
+* Get rid of rox--causes more trouble than it's worth
 
-* `make grade'
-
-* We need better and more example programs.
-
-  - Need an mmap example program as a replacement for the crappy mmap FAQ
-    question.
-
-* Give advice on how to use `diff' to find out what has changed
+* Reconsider command line arg style--confuses everyone.
 
 * pintos script doesn't (always?) delete temp disks
-
-* GNU make 3.80 or later is required.
 
 * Finish writing tour.
 
