@@ -8,6 +8,14 @@
 
 * Finish writing tour.
 
+via Godmar Back:
+
+* Project 3 solution needs FS lock.
+
+* Get rid of mmap syscall, add sbrk.
+
+* hash_destroy() should take function arg.
+
 
 
 
