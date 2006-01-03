@@ -16,6 +16,9 @@ via Godmar Back:
 
 * hash_destroy() should take function arg.
 
+* Make backtrace program accept multiple object file arguments,
+  e.g. add -u option to allow backtracing user program also.
+
 
 
 
