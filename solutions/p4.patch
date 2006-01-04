@@ -3547,7 +3547,7 @@ diff -u src/vm/frame.h~ src/vm/frame.h
 diff -u src/vm/page.c~ src/vm/page.c
 --- src/vm/page.c~ 1969-12-31 16:00:00.000000000 -0800
 +++ src/vm/page.c 2005-06-16 15:09:31.000000000 -0700
-@@ -0,0 +1,297 @@
+@@ -0,0 +1,294 @@
 +#include "vm/page.h"
 +#include <stdio.h>
 +#include <string.h>
@@ -3562,29 +3562,26 @@ diff -u src/vm/page.c~ src/vm/page.c
 +/* Maximum size of process stack, in bytes. */
 +#define STACK_MAX (1024 * 1024)
 +
++/* Destroys a page, which must be in the current process's
++   page table.  Used as a callback for hash_destroy(). */
++static void
++destroy_page (struct hash_elem *p_, void *aux UNUSED)
++{
++  struct page *p = hash_entry (p_, struct page, hash_elem);
++  frame_lock (p);
++  if (p->frame)
++    frame_free (p->frame);
++  free (p);
++}
++
++
 +/* Destroys the current process's page table. */
 +void
 +page_exit (void) 
 +{
-+  struct hash *h;
-+  struct hash_iterator i;
-+
-+  h = thread_current ()->pages;
-+  if (h == NULL)
-+    return;
-+  
-+  hash_first (&i, h);
-+  hash_next (&i);
-+  while (hash_cur (&i))
-+    {
-+      struct page *p = hash_entry (hash_cur (&i), struct page, hash_elem);
-+      hash_next (&i);
-+      frame_lock (p);
-+      if (p->frame)
-+        frame_free (p->frame);
-+      free (p);
-+    }
-+  hash_destroy (h);
++  struct hash *h = thread_current ()->pages;
++  if (h != NULL)
++    hash_destroy (h, destroy_page);
 +}
 +
 +/* Returns the page containing the given virtual ADDRESS,
