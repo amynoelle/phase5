@@ -19,8 +19,8 @@ via Godmar Back:
 * Make backtrace program accept multiple object file arguments,
   e.g. add -u option to allow backtracing user program also.
 
-* VM projects do not use enough memory to force eviction.
-  Should reduce user limit or increase memory consumption.
+* page-linear, page-shuffle VM tests do not use enough memory to force
+  eviction.  Should increase memory consumption.
 
 
 
