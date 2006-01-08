@@ -8,6 +8,8 @@
 
 * Finish writing tour.
 
+* Introduce a "yield" system call to speed up the syn-* tests.
+
 via Godmar Back:
 
 * Project 3 solution needs FS lock.
