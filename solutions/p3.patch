@@ -633,7 +633,7 @@ diff -u src/userprog/process.c~ src/userprog/process.c
  
    ASSERT (file != NULL);
    ASSERT (phdr != NULL);
-@@ -360,69 +471,129 @@ load_segment (struct file *file, const s
+@@ -360,73 +471,129 @@ load_segment (struct file *file, const s
        return false; 
      }
  
@@ -728,8 +728,12 @@ diff -u src/userprog/process.c~ src/userprog/process.c
  }
  
 -/* Adds a mapping from user virtual address UPAGE to kernel
--   virtual address KPAGE to the page table.  Fails if UPAGE is
--   already mapped or if memory allocation fails. */
+-   virtual address KPAGE to the page table.
+-   UPAGE must not already be mapped.
+-   KPAGE should probably be a page obtained from the user pool
+-   with palloc_get_page().
+-   Returns true on success, false if UPAGE is already mapped or
+-   if memory allocation fails. */
 +/* Sets up command line arguments in KPAGE, which will be mapped
 +   to UPAGE in user space.  The command line arguments are taken
 +   from CMD_LINE, separated by spaces.  Sets *ESP to the initial
