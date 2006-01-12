@@ -1,10 +1,42 @@
 -*- text -*-
 
+From: Godmar Back <godmar@gmail.com>
+Subject: on caching in project 4
+To: Ben Pfaff <blp@cs.stanford.edu>
+Date: Mon, 9 Jan 2006 20:58:01 -0500
+
+here's an idea for future semesters.
+
+I'm in the middle of project 4, I've started by implementing a buffer
+cache and plugging it into the existing filesystem.  Along the way I
+was wondering how we could test the cache.
+
+Maybe one could adopt a similar testing strategy as in project 1 for
+the MLQFS scheduler: add a function that reads "get_cache_accesses()"
+and a function "get_cache_hits()".  Then create a version of pintos
+that creates access traces for a to-be-determined workload.  Run an
+off-line analysis that would determine how many hits a perfect cache
+would have (MAX), and how much say an LRU strategy would give (MIN).
+Then add a fudge factor to account for different index strategies and
+test that the reported number of cache hits/accesses is within (MIN,
+MAX) +/- fudge factor.
+
+(As an aside - I am curious why you chose to use a clock-style
+algorithm rather than the more straightforward LRU for your buffer
+cache implementation in your sample solution. Is there a reason for
+that?  I was curious to see if it made a difference, so I implemented
+LRU for your cache implementation and ran the test workload of project
+4 and printed cache hits/accesses.
+I found that for that workload, the clock-based algorithm performs
+almost identical to LRU (within about 1%, but I ran nondeterministally
+with QEMU). I then reduced the cache size to 32 blocks and found again
+the same performance, which raises the suspicion that the test
+workload might not force any cache replacement, so the eviction
+strategy doesn't matter.)
+
 * Get rid of rox--causes more trouble than it's worth
 
 * Reconsider command line arg style--confuses everyone.
-
-* pintos script doesn't (always?) delete temp disks
 
 * Finish writing tour.
 
