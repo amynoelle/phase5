@@ -1,6 +1,29 @@
 -*- text -*-
 
 From: Godmar Back <godmar@gmail.com>
+Subject: project 4 question/comment regarding caching inode data
+To: Ben Pfaff <blp@cs.stanford.edu>
+Date: Sat, 14 Jan 2006 15:59:33 -0500
+
+Ben,
+
+in section 6.3.3 in the P4 FAQ, you write:
+
+"You can store a pointer to inode data in struct inode, if you want,"
+
+Should you point out that if they indeed do that, they likely wouldn't
+be able to support more than 64 open inodes systemwide at any given
+point in time.
+
+(This seems like a rather strong limitation; do your current tests
+open more than 64 files?
+It would also point to an obvious way to make the projects harder by
+specifically disallowing that inode data be locked in memory during
+the entire time an inode is kept open.)
+
+ - Godmar
+
+From: Godmar Back <godmar@gmail.com>
 Subject: on caching in project 4
 To: Ben Pfaff <blp@cs.stanford.edu>
 Date: Mon, 9 Jan 2006 20:58:01 -0500
@@ -34,6 +57,13 @@ the same performance, which raises the suspicion that the test
 workload might not force any cache replacement, so the eviction
 strategy doesn't matter.)
 
+Godmar Back <godmar@gmail.com> writes:
+
+> in your sample solution to P4, dir_reopen does not take any locks when
+> changing a directory's open_cnt. This looks like a race condition to
+> me, considering that dir_reopen is called from execute_process without
+> any filesystem locks held.
+
 * Get rid of rox--causes more trouble than it's worth
 
 * Reconsider command line arg style--confuses everyone.
@@ -53,6 +83,8 @@ via Godmar Back:
 
 * page-linear, page-shuffle VM tests do not use enough memory to force
   eviction.  Should increase memory consumption.
+
+* Add FS persistence test(s).
 
 
 
