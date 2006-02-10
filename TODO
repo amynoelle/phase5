@@ -86,7 +86,8 @@ via Godmar Back:
 
 * Add FS persistence test(s).
 
-
+* lock_acquire(), lock_release() don't need additional intr_dis/enable
+  calls, because the semaphore protects lock->holder.
 
 
 
