@@ -1,5 +1,71 @@
 -*- text -*-
 
+From: "Waqar Mohsin" <wmohsin@gmail.com>
+Subject: 3 questions about switch_threads() in switch.S
+To: blp@cs.stanford.edu, joshwise@stanford.edu
+Date: Fri, 3 Mar 2006 17:09:21 -0800
+
+QUESTION 1
+ 
+In the section
+ 
+  # Save current stack pointer to old thread's stack, if any.
+  movl SWITCH_CUR(%esp), %eax
+  test %eax, %eax
+  jz 1f
+  movl %esp, (%eax,%edx,1)
+1:
+
+  # Restore stack pointer from new thread's stack.
+  movl SWITCH_NEXT(%esp), %ecx
+  movl (%ecx,%edx,1), %esp
+
+why are we saving the current stack pointer only if the "cur" thread pointer
+is non-NULL ? Isn't it gauranteed to be non-NULL because switch_threads() is
+only called form schedule(), where we have
+
+  struct thread *cur = running_thread ();
+
+which should always be non-NULL (given the way kernel pool is laid out).
+
+QUESTION 2
+
+  # This stack frame must match the one set up by thread_create().
+  pushl %ebx
+  pushl %ebp
+  pushl %esi
+  pushl %edi
+
+I find the comment confusing. thread_create() is a special case: the set of
+registers popped from switch_threads stack frame for a newly created thread
+are all zero, so their order shouldn't dictate the order above.
+
+I think all that matters is that the order of pops at the end of
+switch_threads() is the opposite of the pushes at the beginning (as shown
+above).
+
+QUESTION 3
+
+Is it true that struct switch_threads_frame does NOT strictly require
+
+    struct thread *cur;         /* 20: switch_threads()'s CUR argument. */
+    struct thread *next;        /* 24: switch_threads()'s NEXT argument. */
+at the end ?
+
+When a newly created thread's stack pointer is installed in switch_threads(),
+all we do is pop the saved registers and return to switch_entry() which pops
+off and discards the above two simulated (and not used) arguments to
+switch_threads().
+
+If we remove these two from struct switch_threads_frame and don't do a
+
+  # Discard switch_threads() arguments.
+  addl $8, %esp
+in switch_entry(), things should still work. Am I right ?
+
+Thanks
+Waqar
+
 From: "Godmar Back" <godmar@gmail.com>
 Subject: thread_yield in irq handler
 To: "Ben Pfaff" <blp@cs.stanford.edu>
