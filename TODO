@@ -1,5 +1,73 @@
 -*- text -*-
 
+From: "Godmar Back" <godmar@gmail.com>
+Subject: priority donation tests
+To: "Ben Pfaff" <blp@cs.stanford.edu>
+Date: Fri, 3 Mar 2006 11:02:08 -0500
+
+Ben,
+
+it seems the priority donation tests are somewhat incomplete and allow
+incorrect implementations to pass with a perfect score.
+
+We are seeing the following wrong implementations pass all tests:
+
+- Implementations that assume locks are released in the opposite order
+in which they're acquired. The students implement this by
+popping/pushing on the donation list.
+
+- Implementations that assume that the priority of a thread waiting on
+a semaphore or condition variable cannot change between when the
+thread was blocked and when it is unblocked. The students implement
+this by doing an insert into an ordered list on block, rather than
+picking the maximum thread on unblock.
+
+Neither of these two cases is detected; do you currently check for
+these mistakes manually?
+
+I wrote a test that checks for the first case; it is here:
+http://people.cs.vt.edu/~gback/pintos/priority-donate-multiple-2.patch
+
+[...]
+
+I also wrote a test case for the second scenario:
+http://people.cs.vt.edu/~gback/pintos/priority-donate-sema.c
+http://people.cs.vt.edu/~gback/pintos/priority-donate-sema.ck
+
+I put the other tests up here:
+http://people.cs.vt.edu/~gback/pintos/priority-donate-multiple2.c
+http://people.cs.vt.edu/~gback/pintos/priority-donate-multiple2.ck
+
+From: "Godmar Back" <godmar@gmail.com>
+Subject: multiple threads waking up at same clock tick
+To: "Ben Pfaff" <blp@cs.stanford.edu>
+Date: Wed, 1 Mar 2006 08:14:47 -0500
+
+Greg Benson points out another potential TODO item for P1.
+
+----
+One thing I recall:
+
+The alarm tests do not test to see if multiple threads are woken up if
+their timers have expired.  That is, students can write a solution
+that just wakes up the first thread on the sleep queue rather than
+check for additional threads.  Of course, the next thread will be
+woken up on the next tick.  Also, this might be hard to test.
+
+---
+Way to test this: (from Godmar Back)
+
+Thread A with high priority spins until 'ticks' changes, then calls to
+timer_sleep(X), Thread B with lower priority is then resumed, calls
+set_priority to make its priority equal to that of thread A, then
+calls timer_sleep(X), all of that before the next clock interrupt
+arrives.
+
+On wakeup, each thread records wake-up time and calls yield
+immediately, forcing the scheduler to switch to the other
+equal-priority thread. Both wake-up times must be the same (and match
+the planned wake-up time.)
+
 From: "Waqar Mohsin" <wmohsin@gmail.com>
 Subject: 3 questions about switch_threads() in switch.S
 To: blp@cs.stanford.edu, joshwise@stanford.edu
