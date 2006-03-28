@@ -1,5 +1,7 @@
 -*- text -*-
 
+* Bochs is not fully reproducible.
+
 Godmar says:
 
 - In Project 2, we're missing tests that pass arguments to system calls
@@ -27,7 +29,6 @@ could engage in a variety of activities and notice leaks by checking
 the kernel memory statistics.
 
 ---
-
 
 From: "Godmar Back" <godmar@gmail.com>
 Subject: priority donation tests
