@@ -2686,7 +2686,7 @@ diff -u src/userprog/process.c~ src/userprog/process.c
 -        *esp = PHYS_BASE;
 -      else
 -        palloc_free_page (kpage);
-+      char *uarg = upage + (karg - (char *) kpage);
++      void *uarg = upage + (karg - (char *) kpage);
 +      if (push (kpage, &ofs, &uarg, sizeof uarg) == NULL)
 +        return false;
 +      argc++;

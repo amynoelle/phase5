@@ -765,7 +765,7 @@ diff -u src/userprog/process.c~ src/userprog/process.c
 +  for (karg = strtok_r (cmd_line_copy, " ", &saveptr); karg != NULL;
 +       karg = strtok_r (NULL, " ", &saveptr))
 +    {
-+      char *uarg = upage + (karg - (char *) kpage);
++      void *uarg = upage + (karg - (char *) kpage);
 +      if (push (kpage, &ofs, &uarg, sizeof uarg) == NULL)
 +        return false;
 +      argc++;
