@@ -104,38 +104,6 @@ The bounds on how quickly a thread would need to be able to return after
 sleep appear too tight.  Need another idea.
 
 From: "Godmar Back" <godmar@gmail.com>
-Subject: thread_yield in irq handler
-To: "Ben Pfaff" <blp@cs.stanford.edu>
-Date: Wed, 22 Feb 2006 22:18:50 -0500
-
-Ben,
-
-you write in your Tour of Pintos:
-
-"Second, an interrupt handler must not call any function that can
-sleep, which rules out thread_yield(), lock_acquire(), and many
-others. This is because external interrupts use space on the stack of
-the kernel thread that was running at the time the interrupt occurred.
-If the interrupt handler tried to sleep and that thread resumed, then
-the two uses of the single stack would interfere, which cannot be
-allowed."
-
-Is the last sentence really true?
-
-I thought the reason that you couldn't sleep is that you would put
-effectively a random thread/process to sleep, but I don't think it
-would cause problems with the kernel stack.  After all, it doesn't
-cause this problem if you call thread_yield at the end of
-intr_handler(), so why would it cause this problem earlier.
-
-As for thread_yield(), my understanding is that the reason it's called
-at the end is to ensure it's done after the interrupt is acknowledged,
-which you can't do until the end because Pintos doesn't handle nested
-interrupts.
-
- - Godmar
-
-From: "Godmar Back" <godmar@gmail.com>
 
 For reasons I don't currently understand, some of our students seem
 hesitant to include each thread in a second "all-threads" list and are
