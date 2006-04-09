@@ -221,16 +221,6 @@ via Godmar Back:
 
 * Add FS persistence test(s).
 
-* lock_acquire(), lock_release() don't need additional intr_dis/enable
-  calls, because the semaphore protects lock->holder.
-  [ Think this over: is this really true when priority donation is 
-    implemented?  intr_dis/enable prevents the race with thread_set_priority. 
-    Leaving it there could help the students getting the correct synchronization
-    right.
-  ]
-
-
-
 * process_death test needs improvement
 
 * Internal tests.
