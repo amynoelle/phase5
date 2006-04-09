@@ -1,6 +1,7 @@
+Index: src/Makefile.build
 diff -u src/Makefile.build~ src/Makefile.build
---- src/Makefile.build~ 2005-06-02 17:24:02.000000000 -0700
-+++ src/Makefile.build 2005-06-08 14:10:54.000000000 -0700
+--- src/Makefile.build~ 2005-06-18 20:20:47.000000000 -0700
++++ src/Makefile.build 2006-04-08 18:52:50.000000000 -0700
 @@ -53,7 +53,9 @@ userprog_SRC += userprog/gdt.c		# GDT in
  userprog_SRC += userprog/tss.c		# TSS management.
  
@@ -12,9 +13,10 @@ diff -u src/Makefile.build~ src/Makefile.build
  
  # Filesystem code.
  filesys_SRC  = filesys/filesys.c	# Filesystem core.
+Index: src/devices/timer.c
 diff -u src/devices/timer.c~ src/devices/timer.c
---- src/devices/timer.c~ 2005-05-24 15:52:43.000000000 -0700
-+++ src/devices/timer.c 2005-06-08 14:10:54.000000000 -0700
+--- src/devices/timer.c~ 2005-07-06 13:45:36.000000000 -0700
++++ src/devices/timer.c 2006-04-08 18:52:50.000000000 -0700
 @@ -23,6 +23,9 @@ static volatile int64_t ticks;
     Initialized by timer_calibrate(). */
  static unsigned loops_per_tick;
@@ -91,9 +93,10 @@ diff -u src/devices/timer.c~ src/devices/timer.c
  }
  
  /* Returns true if LOOPS iterations waits for more than one timer
+Index: src/threads/init.c
 diff -u src/threads/init.c~ src/threads/init.c
---- src/threads/init.c~ 2005-06-02 15:43:44.000000000 -0700
-+++ src/threads/init.c 2005-06-08 14:10:54.000000000 -0700
+--- src/threads/init.c~ 2006-01-29 13:32:55.000000000 -0800
++++ src/threads/init.c 2006-04-08 18:52:50.000000000 -0700
 @@ -33,6 +33,8 @@
  #include "filesys/filesys.h"
  #include "filesys/fsutil.h"
@@ -103,7 +106,7 @@ diff -u src/threads/init.c~ src/threads/init.c
  
  /* Amount of physical memory, in 4 kB pages. */
  size_t ram_pages;
-@@ -131,6 +133,9 @@ main (void)
+@@ -124,6 +126,9 @@ main (void)
    filesys_init (format_filesys);
  #endif
  
@@ -113,10 +116,11 @@ diff -u src/threads/init.c~ src/threads/init.c
    printf ("Boot complete.\n");
    
    /* Run actions specified on kernel command line. */
+Index: src/threads/interrupt.c
 diff -u src/threads/interrupt.c~ src/threads/interrupt.c
---- src/threads/interrupt.c~ 2005-01-21 13:43:16.000000000 -0800
-+++ src/threads/interrupt.c 2005-06-08 14:10:54.000000000 -0700
-@@ -331,6 +331,8 @@ intr_handler (struct intr_frame *frame) 
+--- src/threads/interrupt.c~ 2006-01-29 13:32:55.000000000 -0800
++++ src/threads/interrupt.c 2006-04-08 18:52:50.000000000 -0700
+@@ -354,6 +354,8 @@ intr_handler (struct intr_frame *frame) 
        in_external_intr = true;
        yield_on_return = false;
      }
@@ -125,9 +129,10 @@ diff -u src/threads/interrupt.c~ src/threads/interrupt.c
  
    /* Invoke the interrupt's handler.
       If there is no handler, invoke the unexpected interrupt
+Index: src/threads/thread.c
 diff -u src/threads/thread.c~ src/threads/thread.c
---- src/threads/thread.c~ 2005-06-02 14:35:12.000000000 -0700
-+++ src/threads/thread.c 2005-06-08 14:10:54.000000000 -0700
+--- src/threads/thread.c~ 2006-04-08 12:09:39.000000000 -0700
++++ src/threads/thread.c 2006-04-08 18:52:50.000000000 -0700
 @@ -13,6 +13,7 @@
  #include "threads/synch.h"
  #ifdef USERPROG
@@ -157,7 +162,7 @@ diff -u src/threads/thread.c~ src/threads/thread.c
  }
  
  /* Starts preemptive thread scheduling by enabling interrupts.
-@@ -157,8 +158,8 @@ thread_create (const char *name, int pri
+@@ -159,8 +160,8 @@ thread_create (const char *name, int pri
      return TID_ERROR;
  
    /* Initialize thread. */
@@ -168,7 +173,7 @@ diff -u src/threads/thread.c~ src/threads/thread.c
  
    /* Stack frame for kernel_thread(). */
    kf = alloc_frame (t, sizeof *kf);
-@@ -251,16 +252,19 @@ thread_tid (void) 
+@@ -253,16 +254,19 @@ thread_tid (void) 
  void
  thread_exit (void) 
  {
@@ -190,7 +195,7 @@ diff -u src/threads/thread.c~ src/threads/thread.c
    schedule ();
    NOT_REACHED ();
  }
-@@ -389,17 +393,28 @@ is_thread (struct thread *t)
+@@ -406,17 +410,28 @@ is_thread (struct thread *t)
  /* Does basic initialization of T as a blocked thread named
     NAME. */
  static void
@@ -220,9 +225,10 @@ diff -u src/threads/thread.c~ src/threads/thread.c
    t->magic = THREAD_MAGIC;
  }
  
+Index: src/threads/thread.h
 diff -u src/threads/thread.h~ src/threads/thread.h
---- src/threads/thread.h~ 2005-06-02 14:32:36.000000000 -0700
-+++ src/threads/thread.h 2005-06-08 14:10:54.000000000 -0700
+--- src/threads/thread.h~ 2005-06-18 20:21:21.000000000 -0700
++++ src/threads/thread.h 2006-04-08 18:52:50.000000000 -0700
 @@ -2,8 +2,10 @@
  #define THREADS_THREAD_H
  
@@ -285,10 +291,11 @@ diff -u src/threads/thread.h~ src/threads/thread.h
 +
  void thread_init (void);
  void thread_start (void);
- void thread_tick (void);
+ 
+Index: src/userprog/exception.c
 diff -u src/userprog/exception.c~ src/userprog/exception.c
---- src/userprog/exception.c~ 2005-01-01 18:09:59.000000000 -0800
-+++ src/userprog/exception.c 2005-06-08 14:10:54.000000000 -0700
+--- src/userprog/exception.c~ 2006-01-29 13:32:56.000000000 -0800
++++ src/userprog/exception.c 2006-04-08 18:52:50.000000000 -0700
 @@ -4,6 +4,7 @@
  #include "userprog/gdt.h"
  #include "threads/interrupt.h"
@@ -297,7 +304,7 @@ diff -u src/userprog/exception.c~ src/userprog/exception.c
  
  /* Number of page faults processed. */
  static long long page_fault_cnt;
-@@ -150,9 +151,14 @@ page_fault (struct intr_frame *f) 
+@@ -148,9 +149,14 @@ page_fault (struct intr_frame *f) 
    write = (f->error_code & PF_W) != 0;
    user = (f->error_code & PF_U) != 0;
  
@@ -315,10 +322,11 @@ diff -u src/userprog/exception.c~ src/userprog/exception.c
    printf ("Page fault at %p: %s error %s page in %s context.\n",
            fault_addr,
            not_present ? "not present" : "rights violation",
+Index: src/userprog/pagedir.c
 diff -u src/userprog/pagedir.c~ src/userprog/pagedir.c
---- src/userprog/pagedir.c~ 2005-05-20 15:44:13.000000000 -0700
-+++ src/userprog/pagedir.c 2005-06-08 14:10:54.000000000 -0700
-@@ -34,15 +34,7 @@ pagedir_destroy (uint32_t *pd) 
+--- src/userprog/pagedir.c~ 2006-01-29 13:32:56.000000000 -0800
++++ src/userprog/pagedir.c 2006-04-08 18:52:50.000000000 -0700
+@@ -35,15 +35,7 @@ pagedir_destroy (uint32_t *pd) 
    ASSERT (pd != base_page_dir);
    for (pde = pd; pde < pd + pd_no (PHYS_BASE); pde++)
      if (*pde & PG_P) 
@@ -335,10 +343,11 @@ diff -u src/userprog/pagedir.c~ src/userprog/pagedir.c
    palloc_free_page (pd);
  }
  
+Index: src/userprog/process.c
 diff -u src/userprog/process.c~ src/userprog/process.c
---- src/userprog/process.c~ 2005-05-26 13:19:48.000000000 -0700
-+++ src/userprog/process.c 2005-06-08 14:13:25.000000000 -0700
-@@ -14,11 +14,25 @@
+--- src/userprog/process.c~ 2006-04-08 19:37:00.000000000 -0700
++++ src/userprog/process.c 2006-04-08 19:35:29.000000000 -0700
+@@ -15,11 +15,25 @@
  #include "threads/init.h"
  #include "threads/interrupt.h"
  #include "threads/mmu.h"
@@ -365,7 +374,7 @@ diff -u src/userprog/process.c~ src/userprog/process.c
  
  /* Starts a new thread running a user program loaded from
     FILENAME.  The new thread may be scheduled (and may even exit)
-@@ -27,29 +41,37 @@ static bool load (const char *cmdline, v
+@@ -28,29 +42,37 @@ static bool load (const char *cmdline, v
  tid_t
  process_execute (const char *filename) 
  {
@@ -415,15 +424,13 @@ diff -u src/userprog/process.c~ src/userprog/process.c
    struct intr_frame if_;
    bool success;
  
-@@ -58,10 +80,28 @@ execute_thread (void *filename_)
+@@ -59,10 +81,28 @@ execute_thread (void *filename_)
    if_.gs = if_.fs = if_.es = if_.ds = if_.ss = SEL_UDSEG;
    if_.cs = SEL_UCSEG;
    if_.eflags = FLAG_IF | FLAG_MBS;
 -  success = load (filename, &if_.eip, &if_.esp);
 +  success = load (exec->filename, &if_.eip, &if_.esp);
- 
--  /* If load failed, quit. */
--  palloc_free_page (filename);
++
 +  /* Allocate wait_status. */
 +  if (success)
 +    {
@@ -431,7 +438,9 @@ diff -u src/userprog/process.c~ src/userprog/process.c
 +        = malloc (sizeof *exec->wait_status);
 +      success = exec->wait_status != NULL; 
 +    }
-+
+ 
+-  /* If load failed, quit. */
+-  palloc_free_page (filename);
 +  /* Initialize wait_status. */
 +  if (success) 
 +    {
@@ -447,7 +456,7 @@ diff -u src/userprog/process.c~ src/userprog/process.c
    if (!success) 
      thread_exit ();
  
-@@ -75,18 +115,47 @@ execute_thread (void *filename_)
+@@ -76,18 +116,47 @@ execute_thread (void *filename_)
    NOT_REACHED ();
  }
  
@@ -500,7 +509,7 @@ diff -u src/userprog/process.c~ src/userprog/process.c
    return -1;
  }
  
-@@ -95,8 +164,35 @@ void
+@@ -96,8 +165,35 @@ void
  process_exit (void)
  {
    struct thread *cur = thread_current ();
@@ -536,16 +545,16 @@ diff -u src/userprog/process.c~ src/userprog/process.c
    /* Destroy the current process's page directory and switch back
       to the kernel-only page directory. */
    pd = cur->pagedir;
-@@ -193,7 +289,7 @@ struct Elf32_Phdr
+@@ -194,7 +290,7 @@ struct Elf32_Phdr
+ #define PF_W 2          /* Writable. */
  #define PF_R 4          /* Readable. */
  
- static bool load_segment (struct file *, const struct Elf32_Phdr *);
 -static bool setup_stack (void **esp);
 +static bool setup_stack (const char *cmd_line, void **esp);
- 
- /* Loads an ELF executable from FILENAME into the current thread.
-    Stores the executable's entry point into *EIP
-@@ -209,13 +305,15 @@ static bool setup_stack (void **esp);
+ static bool validate_segment (const struct Elf32_Phdr *, struct file *);
+ static bool load_segment (struct file *file, off_t ofs, uint8_t *upage,
+                           uint32_t read_bytes, uint32_t zero_bytes,
+@@ -205,13 +301,15 @@ static bool load_segment (struct file *f
     and its initial stack pointer into *ESP.
     Returns true if successful, false otherwise. */
  bool
@@ -562,7 +571,7 @@ diff -u src/userprog/process.c~ src/userprog/process.c
    int i;
  
    /* Allocate and activate page directory. */
-@@ -224,13 +322,28 @@ load (const char *filename, void (**eip)
+@@ -220,13 +318,28 @@ load (const char *filename, void (**eip)
      goto done;
    process_activate ();
  
@@ -592,7 +601,7 @@ diff -u src/userprog/process.c~ src/userprog/process.c
  
    /* Read and verify executable header. */
    if (file_read (file, &ehdr, sizeof ehdr) != sizeof ehdr
-@@ -284,7 +397,7 @@ load (const char *filename, void (**eip)
+@@ -301,7 +414,7 @@ load (const char *filename, void (**eip)
      }
  
    /* Set up stack. */
@@ -601,7 +610,7 @@ diff -u src/userprog/process.c~ src/userprog/process.c
      goto done;
  
    /* Start address. */
-@@ -294,14 +407,11 @@ load (const char *filename, void (**eip)
+@@ -311,14 +424,11 @@ load (const char *filename, void (**eip)
  
   done:
    /* We arrive here whether the load is successful or not. */
@@ -611,103 +620,73 @@ diff -u src/userprog/process.c~ src/userprog/process.c
  
  /* load() helpers. */
  
--static bool install_page (void *upage, void *kpage);
+-static bool install_page (void *upage, void *kpage, bool writable);
 -
- /* Loads the segment described by PHDR from FILE into user
-    address space.  Return true if successful, false otherwise. */
+ /* Checks whether PHDR describes a valid, loadable segment in
+    FILE and returns true if so, false otherwise. */
  static bool
-@@ -309,6 +419,7 @@ load_segment (struct file *file, const s
- {
-   void *start, *end;  /* Page-rounded segment start and end. */
-   uint8_t *upage;     /* Iterator from start to end. */
-+  off_t file_offset;  /* Offset into file. */
-   off_t filesz_left;  /* Bytes left of file data (as opposed to
-                          zero-initialized bytes). */
+@@ -387,79 +497,127 @@ load_segment (struct file *file, off_t o
+   ASSERT (pg_ofs (upage) == 0);
+   ASSERT (ofs % PGSIZE == 0);
  
-@@ -316,7 +427,7 @@ load_segment (struct file *file, const s
-      commented out.  You'll want to use it when implementing VM
-      to decide whether to page the segment from its executable or
-      from swap. */
--  //bool read_only = (phdr->p_flags & PF_W) == 0;
-+  bool read_only = (phdr->p_flags & PF_W) == 0;
- 
-   ASSERT (file != NULL);
-   ASSERT (phdr != NULL);
-@@ -360,73 +471,129 @@ load_segment (struct file *file, const s
-       return false; 
-     }
- 
--  /* Load the segment page-by-page into memory. */
-+  /* Add the segment page-by-page to the hash table. */
-   filesz_left = phdr->p_filesz + (phdr->p_vaddr & PGMASK);
--  file_seek (file, ROUND_DOWN (phdr->p_offset, PGSIZE));
-+  file_offset = ROUND_DOWN (phdr->p_offset, PGSIZE);
-   for (upage = start; upage < (uint8_t *) end; upage += PGSIZE) 
+-  file_seek (file, ofs);
+   while (read_bytes > 0 || zero_bytes > 0) 
      {
--      /* We want to read min(PGSIZE, filesz_left) bytes from the
--         file into the page and zero the rest. */
--      size_t read_bytes = filesz_left >= PGSIZE ? PGSIZE : filesz_left;
--      size_t zero_bytes = PGSIZE - read_bytes;
+-      /* Calculate how to fill this page.
+-         We will read PAGE_READ_BYTES bytes from FILE
+-         and zero the final PAGE_ZERO_BYTES bytes. */
+       size_t page_read_bytes = read_bytes < PGSIZE ? read_bytes : PGSIZE;
+       size_t page_zero_bytes = PGSIZE - page_read_bytes;
+-
+-      /* Get a page of memory. */
 -      uint8_t *kpage = palloc_get_page (PAL_USER);
 -      if (kpage == NULL)
-+      struct page *p = page_allocate (upage, read_only);
++      struct page *p = page_allocate (upage, !writable);
 +      if (p == NULL)
          return false;
- 
--      /* Do the reading and zeroing. */
--      if (file_read (file, kpage, read_bytes) != (int) read_bytes) 
+-
+-      /* Load this page. */
+-      if (file_read (file, kpage, page_read_bytes) != (int) page_read_bytes)
 -        {
 -          palloc_free_page (kpage);
 -          return false; 
 -        }
--      memset (kpage + read_bytes, 0, zero_bytes);
--      filesz_left -= read_bytes;
+-      memset (kpage + page_read_bytes, 0, page_zero_bytes);
 -
 -      /* Add the page to the process's address space. */
--      if (!install_page (upage, kpage)) 
-+      if (filesz_left > 0) 
+-      if (!install_page (upage, kpage, writable)) 
++      if (page_read_bytes > 0) 
          {
 -          palloc_free_page (kpage);
 -          return false; 
-+          size_t file_bytes = filesz_left >= PGSIZE ? PGSIZE : filesz_left;
 +          p->file = file;
-+          p->file_offset = file_offset;
-+          p->file_bytes = file_bytes;
-+          filesz_left -= file_bytes;
-+          file_offset += file_bytes;
++          p->file_offset = ofs;
++          p->file_bytes = page_read_bytes;
          }
+-
+-      /* Advance. */
+       read_bytes -= page_read_bytes;
+       zero_bytes -= page_zero_bytes;
++      ofs += page_read_bytes;
+       upage += PGSIZE;
      }
- 
    return true;
  }
  
 -/* Create a minimal stack by mapping a zeroed page at the top of
 -   user virtual memory. */
--static bool
--setup_stack (void **esp) 
 +/* Reverse the order of the ARGC pointers to char in ARGV. */
 +static void
 +reverse (int argc, char **argv) 
- {
--  uint8_t *kpage;
--  bool success = false;
--
--  kpage = palloc_get_page (PAL_USER | PAL_ZERO);
--  if (kpage != NULL) 
++{
 +  for (; argc > 1; argc -= 2, argv++) 
-     {
--      success = install_page (((uint8_t *) PHYS_BASE) - PGSIZE, kpage);
--      if (success)
--        *esp = PHYS_BASE;
--      else
--        palloc_free_page (kpage);
++    {
 +      char *tmp = argv[0];
 +      argv[0] = argv[argc - 1];
 +      argv[argc - 1] = tmp;
-     }
++    }
 +}
 + 
--  return success;
 +/* Pushes the SIZE bytes in BUF onto the stack in KPAGE, whose
 +   page-relative stack pointer is *OFS, and then adjusts *OFS
 +   appropriately.  The bytes pushed are rounded to a 32-bit
@@ -725,25 +704,19 @@ diff -u src/userprog/process.c~ src/userprog/process.c
 +  *ofs -= padsize;
 +  memcpy (kpage + *ofs + (padsize - size), buf, size);
 +  return kpage + *ofs + (padsize - size);
- }
- 
--/* Adds a mapping from user virtual address UPAGE to kernel
--   virtual address KPAGE to the page table.
--   UPAGE must not already be mapped.
--   KPAGE should probably be a page obtained from the user pool
--   with palloc_get_page().
--   Returns true on success, false if UPAGE is already mapped or
--   if memory allocation fails. */
++}
++
 +/* Sets up command line arguments in KPAGE, which will be mapped
 +   to UPAGE in user space.  The command line arguments are taken
 +   from CMD_LINE, separated by spaces.  Sets *ESP to the initial
 +   stack pointer for the process. */
  static bool
--install_page (void *upage, void *kpage)
+-setup_stack (void **esp) 
 +init_cmd_line (uint8_t *kpage, uint8_t *upage, const char *cmd_line,
 +               void **esp) 
  {
--  struct thread *t = thread_current ();
+-  uint8_t *kpage;
+-  bool success = false;
 +  size_t ofs = PGSIZE;
 +  char *const null = NULL;
 +  char *cmd_line_copy;
@@ -758,18 +731,26 @@ diff -u src/userprog/process.c~ src/userprog/process.c
 +
 +  if (push (kpage, &ofs, &null, sizeof null) == NULL)
 +    return false;
-+
+ 
+-  kpage = palloc_get_page (PAL_USER | PAL_ZERO);
+-  if (kpage != NULL) 
 +  /* Parse command line into arguments
 +     and push them in reverse order. */
 +  argc = 0;
 +  for (karg = strtok_r (cmd_line_copy, " ", &saveptr); karg != NULL;
 +       karg = strtok_r (NULL, " ", &saveptr))
-+    {
+     {
+-      success = install_page (((uint8_t *) PHYS_BASE) - PGSIZE, kpage, true);
+-      if (success)
+-        *esp = PHYS_BASE;
+-      else
+-        palloc_free_page (kpage);
 +      void *uarg = upage + (karg - (char *) kpage);
 +      if (push (kpage, &ofs, &uarg, sizeof uarg) == NULL)
 +        return false;
 +      argc++;
-+    }
+     }
+-  return success;
 +
 +  /* Reverse the order of the command line arguments. */
 +  argv = (char **) (upage + ofs);
@@ -784,18 +765,30 @@ diff -u src/userprog/process.c~ src/userprog/process.c
 +  /* Set initial stack pointer. */
 +  *esp = upage + ofs;
 +  return true;
-+}
+ }
  
--  /* Verify that there's not already a page at that virtual
--     address, then map our page there. */
--  return (pagedir_get_page (t->pagedir, upage) == NULL
--          && pagedir_set_page (t->pagedir, upage, kpage, true));
+-/* Adds a mapping from user virtual address UPAGE to kernel
+-   virtual address KPAGE to the page table.
+-   If WRITABLE is true, the user process may modify the page;
+-   otherwise, it is read-only.
+-   UPAGE must not already be mapped.
+-   KPAGE should probably be a page obtained from the user pool
+-   with palloc_get_page().
+-   Returns true on success, false if UPAGE is already mapped or
+-   if memory allocation fails. */
 +/* Create a minimal stack for T by mapping a page at the
 +   top of user virtual memory.  Fills in the page using CMD_LINE
 +   and sets *ESP to the stack pointer. */
-+static bool
+ static bool
+-install_page (void *upage, void *kpage, bool writable)
 +setup_stack (const char *cmd_line, void **esp) 
-+{
+ {
+-  struct thread *t = thread_current ();
+-
+-  /* Verify that there's not already a page at that virtual
+-     address, then map our page there. */
+-  return (pagedir_get_page (t->pagedir, upage) == NULL
+-          && pagedir_set_page (t->pagedir, upage, kpage, writable));
 +  struct page *page = page_allocate (((uint8_t *) PHYS_BASE) - PGSIZE, false);
 +  if (page != NULL) 
 +    {
@@ -812,9 +805,10 @@ diff -u src/userprog/process.c~ src/userprog/process.c
 +    }
 +  return false;
  }
+Index: src/userprog/syscall.c
 diff -u src/userprog/syscall.c~ src/userprog/syscall.c
---- src/userprog/syscall.c~ 2004-09-26 14:15:17.000000000 -0700
-+++ src/userprog/syscall.c 2005-06-08 14:10:54.000000000 -0700
+--- src/userprog/syscall.c~ 2005-06-18 20:21:21.000000000 -0700
++++ src/userprog/syscall.c 2006-04-08 19:36:04.000000000 -0700
 @@ -1,20 +1,557 @@
  #include "userprog/syscall.h"
  #include <stdio.h>
@@ -990,8 +984,7 @@ diff -u src/userprog/syscall.c~ src/userprog/syscall.c
 +/* Halt system call. */
 +static int
 +sys_halt (void)
- {
--  printf ("system call!\n");
++{
 +  power_off ();
 +}
 + 
@@ -1000,7 +993,7 @@ diff -u src/userprog/syscall.c~ src/userprog/syscall.c
 +sys_exit (int exit_code) 
 +{
 +  thread_current ()->exit_code = exit_code;
-   thread_exit ();
++  thread_exit ();
 +  NOT_REACHED ();
 +}
 + 
@@ -1117,7 +1110,8 @@ diff -u src/userprog/syscall.c~ src/userprog/syscall.c
 +/* Read system call. */
 +static int
 +sys_read (int handle, void *udst_, unsigned size) 
-+{
+ {
+-  printf ("system call!\n");
 +  uint8_t *udst = udst_;
 +  struct file_descriptor *fd;
 +  int bytes_read = 0;
@@ -1199,7 +1193,7 @@ diff -u src/userprog/syscall.c~ src/userprog/syscall.c
 +      /* Do the write. */
 +      if (handle == STDOUT_FILENO)
 +        {
-+          putbuf (usrc, write_amt);
++          putbuf ((char *) usrc, write_amt);
 +          retval = write_amt;
 +        }
 +      else
@@ -1283,8 +1277,8 @@ diff -u src/userprog/syscall.c~ src/userprog/syscall.c
 +        return m;
 +    }
 + 
-+  thread_exit ();
-+}
+   thread_exit ();
+ }
 +
 +/* Remove mapping M from the virtual address space,
 +   writing back any pages that have changed. */
@@ -1376,10 +1370,11 @@ diff -u src/userprog/syscall.c~ src/userprog/syscall.c
 +      next = list_next (e);
 +      unmap (m);
 +    }
- }
++}
+Index: src/userprog/syscall.h
 diff -u src/userprog/syscall.h~ src/userprog/syscall.h
 --- src/userprog/syscall.h~ 2004-09-05 22:38:45.000000000 -0700
-+++ src/userprog/syscall.h 2005-06-08 14:10:54.000000000 -0700
++++ src/userprog/syscall.h 2006-04-08 18:52:50.000000000 -0700
 @@ -2,5 +2,6 @@
  #define USERPROG_SYSCALL_H
  
@@ -1387,9 +1382,10 @@ diff -u src/userprog/syscall.h~ src/userprog/syscall.h
 +void syscall_exit (void);
  
  #endif /* userprog/syscall.h */
+Index: src/vm/frame.c
 diff -u src/vm/frame.c~ src/vm/frame.c
 --- src/vm/frame.c~ 1969-12-31 16:00:00.000000000 -0800
-+++ src/vm/frame.c 2005-06-08 14:10:54.000000000 -0700
++++ src/vm/frame.c 2006-04-08 18:52:50.000000000 -0700
 @@ -0,0 +1,162 @@
 +#include "vm/frame.h"
 +#include <stdio.h>
@@ -1553,9 +1549,10 @@ diff -u src/vm/frame.c~ src/vm/frame.c
 +  ASSERT (lock_held_by_current_thread (&f->lock));
 +  lock_release (&f->lock);
 +}
+Index: src/vm/frame.h
 diff -u src/vm/frame.h~ src/vm/frame.h
 --- src/vm/frame.h~ 1969-12-31 16:00:00.000000000 -0800
-+++ src/vm/frame.h 2005-06-08 14:10:54.000000000 -0700
++++ src/vm/frame.h 2006-04-08 18:52:50.000000000 -0700
 @@ -0,0 +1,23 @@
 +#ifndef VM_FRAME_H
 +#define VM_FRAME_H
@@ -1580,9 +1577,10 @@ diff -u src/vm/frame.h~ src/vm/frame.h
 +void frame_unlock (struct frame *);
 +
 +#endif /* vm/frame.h */
+Index: src/vm/page.c
 diff -u src/vm/page.c~ src/vm/page.c
 --- src/vm/page.c~ 1969-12-31 16:00:00.000000000 -0800
-+++ src/vm/page.c 2005-06-08 14:10:54.000000000 -0700
++++ src/vm/page.c 2006-04-08 18:52:50.000000000 -0700
 @@ -0,0 +1,293 @@
 +#include "vm/page.h"
 +#include <stdio.h>
@@ -1877,9 +1875,10 @@ diff -u src/vm/page.c~ src/vm/page.c
 +  ASSERT (p != NULL);
 +  frame_unlock (p->frame);
 +}
+Index: src/vm/page.h
 diff -u src/vm/page.h~ src/vm/page.h
 --- src/vm/page.h~ 1969-12-31 16:00:00.000000000 -0800
-+++ src/vm/page.h 2005-06-08 14:10:54.000000000 -0700
++++ src/vm/page.h 2006-04-08 18:52:50.000000000 -0700
 @@ -0,0 +1,50 @@
 +#ifndef VM_PAGE_H
 +#define VM_PAGE_H
@@ -1931,9 +1930,10 @@ diff -u src/vm/page.h~ src/vm/page.h
 +hash_less_func page_less;
 +
 +#endif /* vm/page.h */
+Index: src/vm/swap.c
 diff -u src/vm/swap.c~ src/vm/swap.c
 --- src/vm/swap.c~ 1969-12-31 16:00:00.000000000 -0800
-+++ src/vm/swap.c 2005-06-08 14:10:54.000000000 -0700
++++ src/vm/swap.c 2006-04-08 18:52:50.000000000 -0700
 @@ -0,0 +1,85 @@
 +#include "vm/swap.h"
 +#include <bitmap.h>
@@ -2020,9 +2020,10 @@ diff -u src/vm/swap.c~ src/vm/swap.c
 +
 +  return true;
 +}
+Index: src/vm/swap.h
 diff -u src/vm/swap.h~ src/vm/swap.h
 --- src/vm/swap.h~ 1969-12-31 16:00:00.000000000 -0800
-+++ src/vm/swap.h 2005-06-08 14:10:54.000000000 -0700
++++ src/vm/swap.h 2006-04-08 18:52:50.000000000 -0700
 @@ -0,0 +1,11 @@
 +#ifndef VM_SWAP_H
 +#define VM_SWAP_H 1
