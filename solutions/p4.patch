@@ -1,6 +1,7 @@
+Index: src/Makefile.build
 diff -u src/Makefile.build~ src/Makefile.build
---- src/Makefile.build~ 2005-06-16 21:50:20.000000000 -0700
-+++ src/Makefile.build 2005-06-16 15:09:31.000000000 -0700
+--- src/Makefile.build~ 2005-06-18 20:20:47.000000000 -0700
++++ src/Makefile.build 2006-04-08 19:57:07.000000000 -0700
 @@ -53,7 +53,9 @@ userprog_SRC += userprog/gdt.c		# GDT in
  userprog_SRC += userprog/tss.c		# TSS management.
  
@@ -20,9 +21,10 @@ diff -u src/Makefile.build~ src/Makefile.build
  
  SOURCES = $(foreach dir,$(KERNEL_SUBDIRS),$($(dir)_SRC))
  OBJECTS = $(patsubst %.c,%.o,$(patsubst %.S,%.o,$(SOURCES)))
+Index: src/devices/timer.c
 diff -u src/devices/timer.c~ src/devices/timer.c
---- src/devices/timer.c~ 2005-06-15 15:21:01.000000000 -0700
-+++ src/devices/timer.c 2005-06-16 15:09:31.000000000 -0700
+--- src/devices/timer.c~ 2005-07-06 13:45:36.000000000 -0700
++++ src/devices/timer.c 2006-04-08 19:57:07.000000000 -0700
 @@ -23,6 +23,9 @@ static volatile int64_t ticks;
     Initialized by timer_calibrate(). */
  static unsigned loops_per_tick;
@@ -99,10 +101,11 @@ diff -u src/devices/timer.c~ src/devices/timer.c
  }
  
  /* Returns true if LOOPS iterations waits for more than one timer
+Index: src/filesys/Make.vars
 diff -u src/filesys/Make.vars~ src/filesys/Make.vars
---- src/filesys/Make.vars~ 2005-05-24 14:46:45.000000000 -0700
-+++ src/filesys/Make.vars 2005-06-16 15:09:31.000000000 -0700
-@@ -6,7 +6,7 @@ KERNEL_SUBDIRS = threads devices lib lib
+--- src/filesys/Make.vars~ 2005-06-20 13:24:21.000000000 -0700
++++ src/filesys/Make.vars 2006-04-08 19:57:07.000000000 -0700
+@@ -6,7 +6,7 @@ TEST_SUBDIRS = tests/userprog tests/file
  GRADING_FILE = $(SRCDIR)/tests/filesys/Grading.no-vm
  
  # Uncomment the lines below to enable VM.
@@ -114,9 +117,10 @@ diff -u src/filesys/Make.vars~ src/filesys/Make.vars
 +KERNEL_SUBDIRS += vm
 +TEST_SUBDIRS += tests/vm
 +GRADING_FILE = $(SRCDIR)/tests/filesys/Grading.with-vm
+Index: src/filesys/cache.c
 diff -u src/filesys/cache.c~ src/filesys/cache.c
 --- src/filesys/cache.c~ 1969-12-31 16:00:00.000000000 -0800
-+++ src/filesys/cache.c 2005-06-16 15:09:31.000000000 -0700
++++ src/filesys/cache.c 2006-04-08 19:57:07.000000000 -0700
 @@ -0,0 +1,473 @@
 +#include "filesys/cache.h"
 +#include <debug.h>
@@ -591,9 +595,10 @@ diff -u src/filesys/cache.c~ src/filesys/cache.c
 +      free (ra_block);
 +    }
 +}
+Index: src/filesys/cache.h
 diff -u src/filesys/cache.h~ src/filesys/cache.h
 --- src/filesys/cache.h~ 1969-12-31 16:00:00.000000000 -0800
-+++ src/filesys/cache.h 2005-06-16 15:09:31.000000000 -0700
++++ src/filesys/cache.h 2006-04-08 19:57:07.000000000 -0700
 @@ -0,0 +1,23 @@
 +#ifndef FILESYS_CACHE_H
 +#define FILESYS_CACHE_H
@@ -618,9 +623,10 @@ diff -u src/filesys/cache.h~ src/filesys/cache.h
 +void cache_readahead (disk_sector_t);
 +
 +#endif /* filesys/cache.h */
+Index: src/filesys/directory.c
 diff -u src/filesys/directory.c~ src/filesys/directory.c
---- src/filesys/directory.c~ 2005-06-16 21:50:20.000000000 -0700
-+++ src/filesys/directory.c 2005-06-16 21:09:01.000000000 -0700
+--- src/filesys/directory.c~ 2005-06-18 20:20:48.000000000 -0700
++++ src/filesys/directory.c 2006-04-08 19:57:07.000000000 -0700
 @@ -3,12 +3,17 @@
  #include <string.h>
  #include <list.h>
@@ -830,9 +836,10 @@ diff -u src/filesys/directory.c~ src/filesys/directory.c
        printf ("%s\n", e.name);
 +  lock_release ((struct lock *) &dir->dir_lock);
  }
+Index: src/filesys/directory.h
 diff -u src/filesys/directory.h~ src/filesys/directory.h
---- src/filesys/directory.h~ 2005-06-16 21:50:20.000000000 -0700
-+++ src/filesys/directory.h 2005-06-16 15:09:31.000000000 -0700
+--- src/filesys/directory.h~ 2005-06-18 20:20:48.000000000 -0700
++++ src/filesys/directory.h 2006-04-08 19:57:07.000000000 -0700
 @@ -13,9 +13,10 @@
  
  struct inode;
@@ -845,9 +852,10 @@ diff -u src/filesys/directory.h~ src/filesys/directory.h
  void dir_close (struct dir *);
  bool dir_lookup (const struct dir *, const char *name, struct inode **);
  bool dir_add (struct dir *, const char *name, disk_sector_t);
+Index: src/filesys/file.c
 diff -u src/filesys/file.c~ src/filesys/file.c
---- src/filesys/file.c~ 2005-06-16 21:50:20.000000000 -0700
-+++ src/filesys/file.c 2005-06-16 21:02:34.000000000 -0700
+--- src/filesys/file.c~ 2005-06-18 20:20:48.000000000 -0700
++++ src/filesys/file.c 2006-04-08 19:57:07.000000000 -0700
 @@ -1,6 +1,8 @@
  #include "filesys/file.h"
  #include <debug.h>
@@ -866,9 +874,10 @@ diff -u src/filesys/file.c~ src/filesys/file.c
      {
        file->inode = inode;
        file->pos = 0;
+Index: src/filesys/filesys.c
 diff -u src/filesys/filesys.c~ src/filesys/filesys.c
---- src/filesys/filesys.c~ 2005-06-16 21:50:20.000000000 -0700
-+++ src/filesys/filesys.c 2005-06-16 21:03:07.000000000 -0700
+--- src/filesys/filesys.c~ 2005-06-18 20:20:48.000000000 -0700
++++ src/filesys/filesys.c 2006-04-08 19:57:07.000000000 -0700
 @@ -2,11 +2,13 @@
  #include <debug.h>
  #include <stdio.h>
@@ -883,7 +892,7 @@ diff -u src/filesys/filesys.c~ src/filesys/filesys.c
  
  /* The disk that contains the filesystem. */
  struct disk *filesys_disk;
-@@ -23,6 +24,8 @@ filesys_init (bool format) 
+@@ -23,6 +25,8 @@ filesys_init (bool format) 
      PANIC ("hd0:1 (hdb) not present, filesystem initialization failed");
  
    inode_init ();
@@ -892,7 +901,7 @@ diff -u src/filesys/filesys.c~ src/filesys/filesys.c
    free_map_init ();
  
    if (format) 
-@@ -37,6 +40,103 @@ void
+@@ -37,6 +41,103 @@ void
  filesys_done (void) 
  {
    free_map_close ();
@@ -996,7 +1005,7 @@ diff -u src/filesys/filesys.c~ src/filesys/filesys.c
  }
  
  /* Creates a file named NAME with the given INITIAL_SIZE.
-@@ -44,16 +144,17 @@ filesys_done (void) 
+@@ -44,16 +145,17 @@ filesys_done (void) 
     Fails if a file named NAME already exists,
     or if internal memory allocation fails. */
  bool
@@ -1021,7 +1030,7 @@ diff -u src/filesys/filesys.c~ src/filesys/filesys.c
    dir_close (dir);
  
    return success;
-@@ -64,17 +165,18 @@ filesys_create (const char *name, off_t 
+@@ -64,17 +166,18 @@ filesys_create (const char *name, off_t 
     otherwise.
     Fails if no file named NAME exists,
     or if an internal memory allocation fails. */
@@ -1044,7 +1053,7 @@ diff -u src/filesys/filesys.c~ src/filesys/filesys.c
  }
  
  /* Deletes the file named NAME.
-@@ -85,13 +187,54 @@ bool
+@@ -85,13 +188,54 @@ bool
  filesys_remove (const char *name) 
  {
    struct dir *dir = NULL;
@@ -1101,7 +1110,7 @@ diff -u src/filesys/filesys.c~ src/filesys/filesys.c
  /* Prints a list of files in the filesystem to the system
     console.
     Returns true if successful, false on failure,
-@@ -99,13 +242,9 @@ filesys_remove (const char *name) 
+@@ -99,13 +243,9 @@ filesys_remove (const char *name) 
  bool
  filesys_list (void) 
  {
@@ -1117,7 +1126,7 @@ diff -u src/filesys/filesys.c~ src/filesys/filesys.c
  }
  
  static void must_succeed_function (int, bool) NO_INLINE;
-@@ -128,8 +267,8 @@ filesys_self_test (void)
+@@ -128,8 +268,8 @@ filesys_self_test (void)
      {
        /* Create file and check that it contains zeros
           throughout the created length. */
@@ -1128,7 +1137,7 @@ diff -u src/filesys/filesys.c~ src/filesys/filesys.c
        MUST_SUCCEED (file_read (file, s2, sizeof s2) == sizeof s2);
        MUST_SUCCEED (memcmp (s2, zeros, sizeof s) == 0);
        MUST_SUCCEED (file_tell (file) == sizeof s);
-@@ -137,7 +276,7 @@ filesys_self_test (void)
+@@ -137,7 +277,7 @@ filesys_self_test (void)
        file_close (file);
  
        /* Reopen file and write to it. */
@@ -1137,7 +1146,7 @@ diff -u src/filesys/filesys.c~ src/filesys/filesys.c
        MUST_SUCCEED (file_write (file, s, sizeof s) == sizeof s);
        MUST_SUCCEED (file_tell (file) == sizeof s);
        MUST_SUCCEED (file_length (file) == sizeof s);
-@@ -145,7 +284,7 @@ filesys_self_test (void)
+@@ -145,7 +285,7 @@ filesys_self_test (void)
  
        /* Reopen file and verify that it reads back correctly.
           Delete file while open to check proper semantics. */
@@ -1146,7 +1155,7 @@ diff -u src/filesys/filesys.c~ src/filesys/filesys.c
        MUST_SUCCEED (filesys_remove ("foo"));
        MUST_SUCCEED (filesys_open ("foo") == NULL);
        MUST_SUCCEED (file_read (file, s2, sizeof s) == sizeof s);
-@@ -172,9 +311,13 @@ static void
+@@ -172,9 +312,13 @@ static void
  do_format (void)
  {
    printf ("Formatting filesystem...");
@@ -1162,9 +1171,10 @@ diff -u src/filesys/filesys.c~ src/filesys/filesys.c
 +
    printf ("done.\n");
  }
+Index: src/filesys/filesys.h
 diff -u src/filesys/filesys.h~ src/filesys/filesys.h
---- src/filesys/filesys.h~ 2005-06-16 21:50:20.000000000 -0700
-+++ src/filesys/filesys.h 2005-06-16 20:55:14.000000000 -0700
+--- src/filesys/filesys.h~ 2005-06-18 20:20:48.000000000 -0700
++++ src/filesys/filesys.h 2006-04-08 19:57:07.000000000 -0700
 @@ -3,6 +3,7 @@
  
  #include <stdbool.h>
@@ -1184,9 +1194,10 @@ diff -u src/filesys/filesys.h~ src/filesys/filesys.h
  bool filesys_remove (const char *name);
  bool filesys_chdir (const char *name);
  bool filesys_list (void);
+Index: src/filesys/free-map.c
 diff -u src/filesys/free-map.c~ src/filesys/free-map.c
---- src/filesys/free-map.c~ 2005-06-16 21:50:20.000000000 -0700
-+++ src/filesys/free-map.c 2005-06-16 20:57:13.000000000 -0700
+--- src/filesys/free-map.c~ 2005-06-18 20:20:48.000000000 -0700
++++ src/filesys/free-map.c 2006-04-08 19:57:07.000000000 -0700
 @@ -3,15 +3,18 @@
  #include <debug.h>
  #include "filesys/file.h"
@@ -1282,9 +1293,10 @@ diff -u src/filesys/free-map.c~ src/filesys/free-map.c
      PANIC ("can't write free map");
 +  file_close (free_map_file);
  }
+Index: src/filesys/free-map.h
 diff -u src/filesys/free-map.h~ src/filesys/free-map.h
---- src/filesys/free-map.h~ 2005-06-16 21:50:20.000000000 -0700
-+++ src/filesys/free-map.h 2005-06-16 20:48:04.000000000 -0700
+--- src/filesys/free-map.h~ 2005-06-18 20:20:48.000000000 -0700
++++ src/filesys/free-map.h 2006-04-08 19:57:07.000000000 -0700
 @@ -11,7 +11,7 @@ void free_map_create (void);
  void free_map_open (void);
  void free_map_close (void);
@@ -1295,9 +1307,10 @@ diff -u src/filesys/free-map.h~ src/filesys/free-map.h
 +void free_map_release (disk_sector_t);
  
  #endif /* filesys/free-map.h */
+Index: src/filesys/fsutil.c
 diff -u src/filesys/fsutil.c~ src/filesys/fsutil.c
---- src/filesys/fsutil.c~ 2005-06-16 21:50:20.000000000 -0700
-+++ src/filesys/fsutil.c 2005-06-16 20:55:13.000000000 -0700
+--- src/filesys/fsutil.c~ 2005-06-18 20:20:48.000000000 -0700
++++ src/filesys/fsutil.c 2006-04-08 19:57:07.000000000 -0700
 @@ -30,7 +30,7 @@ fsutil_cat (char **argv)
    char *buffer;
  
@@ -1328,9 +1341,10 @@ diff -u src/filesys/fsutil.c~ src/filesys/fsutil.c
    if (src == NULL)
      PANIC ("%s: open failed", filename);
    size = file_length (src);
+Index: src/filesys/inode.c
 diff -u src/filesys/inode.c~ src/filesys/inode.c
---- src/filesys/inode.c~ 2005-06-16 21:50:20.000000000 -0700
-+++ src/filesys/inode.c 2005-06-16 21:11:24.000000000 -0700
+--- src/filesys/inode.c~ 2006-04-08 12:09:33.000000000 -0700
++++ src/filesys/inode.c 2006-04-08 20:03:00.000000000 -0700
 @@ -1,26 +1,41 @@
  #include "filesys/inode.h"
 +#include <bitmap.h>
@@ -1376,7 +1390,7 @@ diff -u src/filesys/inode.c~ src/filesys/inode.c
     bytes long. */
  static inline size_t
  bytes_to_sectors (off_t size)
-@@ -35,33 +49,29 @@ struct inode 
+@@ -35,33 +50,29 @@ struct inode 
      disk_sector_t sector;               /* Sector number of disk location. */
      int open_cnt;                       /* Number of openers. */
      bool removed;                       /* True if deleted, false otherwise. */
@@ -1421,7 +1435,7 @@ diff -u src/filesys/inode.c~ src/filesys/inode.c
  }
  
  /* Initializes an inode with LENGTH bytes of data and
-@@ -70,35 +80,32 @@ inode_init (void) 
+@@ -70,38 +81,35 @@ inode_init (void) 
     Returns true if successful.
     Returns false if memory or disk allocation fails. */
  bool
@@ -1435,8 +1449,11 @@ diff -u src/filesys/inode.c~ src/filesys/inode.c
 +  bool success;
  
    ASSERT (length >= 0);
-+
+ 
 +  block = cache_lock (sector, EXCLUSIVE);
++
+   /* If this assertion fails, the inode structure is not exactly
+      one sector in size, and you should fix that. */
    ASSERT (sizeof *disk_inode == DISK_SECTOR_SIZE);
 +  disk_inode = cache_zero (block);
 +  disk_inode->type = type;
@@ -1476,7 +1493,7 @@ diff -u src/filesys/inode.c~ src/filesys/inode.c
    return success;
  }
  
-@@ -112,6 +119,7 @@ inode_open (disk_sector_t sector) 
+@@ -115,6 +123,7 @@ inode_open (disk_sector_t sector) 
    struct inode *inode;
  
    /* Check whether this inode is already open. */
@@ -1484,7 +1501,7 @@ diff -u src/filesys/inode.c~ src/filesys/inode.c
    for (e = list_begin (&open_inodes); e != list_end (&open_inodes);
         e = list_next (e)) 
      {
-@@ -119,22 +127,26 @@ inode_open (disk_sector_t sector) 
+@@ -122,22 +131,26 @@ inode_open (disk_sector_t sector) 
        if (inode->sector == sector) 
          {
            inode_reopen (inode);
@@ -1514,7 +1531,7 @@ diff -u src/filesys/inode.c~ src/filesys/inode.c
    return inode;
  }
  
-@@ -147,6 +159,17 @@ inode_reopen (struct inode *inode) 
+@@ -150,6 +163,17 @@ inode_reopen (struct inode *inode) 
    return inode;
  }
  
@@ -1532,7 +1549,7 @@ diff -u src/filesys/inode.c~ src/filesys/inode.c
  /* Closes INODE and writes it to disk.
     If this was the last reference to INODE, frees its memory.
     If INODE was also a removed inode, frees its blocks. */
-@@ -158,21 +181,60 @@ inode_close (struct inode *inode) 
+@@ -161,21 +185,60 @@ inode_close (struct inode *inode) 
      return;
  
    /* Release resources if this was the last opener. */
@@ -1598,7 +1615,7 @@ diff -u src/filesys/inode.c~ src/filesys/inode.c
  }
  
  /* Marks INODE to be deleted when it is closed by the last caller who
-@@ -181,6 +245,156 @@ inode_remove (struct inode *inode) 
+@@ -187,6 +250,156 @@ inode_remove (struct inode *inode) 
    inode->removed = true;
  }
  
@@ -1755,7 +1772,7 @@ diff -u src/filesys/inode.c~ src/filesys/inode.c
  /* Reads SIZE bytes from INODE into BUFFER, starting at position OFFSET.
     Returns the number of bytes actually read, which may be less
     than SIZE if an error occurs or end of file is reached. */
-@@ -189,13 +403,12 @@ inode_read_at (struct inode *inode, void
+@@ -195,13 +408,12 @@ inode_read_at (struct inode *inode, void
  {
    uint8_t *buffer = buffer_;
    off_t bytes_read = 0;
@@ -1771,7 +1788,7 @@ diff -u src/filesys/inode.c~ src/filesys/inode.c
  
        /* Bytes left in inode, bytes left in sector, lesser of the two. */
        off_t inode_left = inode_length (inode) - offset;
-@@ -204,26 +417,16 @@ inode_read_at (struct inode *inode, void
+@@ -210,26 +422,16 @@ inode_read_at (struct inode *inode, void
  
        /* Number of bytes to actually copy out of this sector. */
        int chunk_size = size < min_left ? size : min_left;
@@ -1804,7 +1821,7 @@ diff -u src/filesys/inode.c~ src/filesys/inode.c
          }
        
        /* Advance. */
-@@ -231,75 +434,84 @@ inode_read_at (struct inode *inode, void
+@@ -237,75 +439,84 @@ inode_read_at (struct inode *inode, void
        offset += chunk_size;
        bytes_read += chunk_size;
      }
@@ -1860,7 +1877,7 @@ diff -u src/filesys/inode.c~ src/filesys/inode.c
    while (size > 0) 
      {
 -      /* Sector to write, starting byte offset within sector. */
--      off_t sector_idx = byte_to_sector (inode, offset);
+-      disk_sector_t sector_idx = byte_to_sector (inode, offset);
 +      /* Sector to write, starting byte offset within sector, sector data. */
        int sector_ofs = offset % DISK_SECTOR_SIZE;
 +      struct cache_block *block;
@@ -1926,7 +1943,7 @@ diff -u src/filesys/inode.c~ src/filesys/inode.c
  
    return bytes_written;
  }
-@@ -309,8 +521,12 @@ inode_write_at (struct inode *inode, con
+@@ -315,8 +526,12 @@ inode_write_at (struct inode *inode, con
  void
  inode_deny_write (struct inode *inode) 
  {
@@ -1940,7 +1957,7 @@ diff -u src/filesys/inode.c~ src/filesys/inode.c
  }
  
  /* Re-enables writes to INODE.
-@@ -319,14 +535,33 @@ inode_deny_write (struct inode *inode) 
+@@ -325,14 +540,33 @@ inode_deny_write (struct inode *inode) 
  void
  inode_allow_write (struct inode *inode) 
  {
@@ -1975,9 +1992,10 @@ diff -u src/filesys/inode.c~ src/filesys/inode.c
 +
 +  return open_cnt;
  }
+Index: src/filesys/inode.h
 diff -u src/filesys/inode.h~ src/filesys/inode.h
---- src/filesys/inode.h~ 2005-06-16 21:50:20.000000000 -0700
-+++ src/filesys/inode.h 2005-06-16 20:53:47.000000000 -0700
+--- src/filesys/inode.h~ 2005-06-18 20:20:48.000000000 -0700
++++ src/filesys/inode.h 2006-04-08 19:57:07.000000000 -0700
 @@ -7,10 +7,18 @@
  
  struct bitmap;
@@ -2005,10 +2023,10 @@ diff -u src/filesys/inode.h~ src/filesys/inode.h
 +int inode_open_cnt (const struct inode *);
  
  #endif /* filesys/inode.h */
-diff -u src/lib/kernel/bitmap.h~ src/lib/kernel/bitmap.h
+Index: src/threads/init.c
 diff -u src/threads/init.c~ src/threads/init.c
---- src/threads/init.c~ 2005-06-14 14:04:06.000000000 -0700
-+++ src/threads/init.c 2005-06-16 15:09:31.000000000 -0700
+--- src/threads/init.c~ 2006-01-29 13:32:55.000000000 -0800
++++ src/threads/init.c 2006-04-08 19:57:07.000000000 -0700
 @@ -33,6 +33,8 @@
  #include "filesys/filesys.h"
  #include "filesys/fsutil.h"
@@ -2018,7 +2036,7 @@ diff -u src/threads/init.c~ src/threads/init.c
  
  /* Amount of physical memory, in 4 kB pages. */
  size_t ram_pages;
-@@ -131,6 +133,9 @@ main (void)
+@@ -124,6 +126,9 @@ main (void)
    filesys_init (format_filesys);
  #endif
  
@@ -2028,10 +2046,11 @@ diff -u src/threads/init.c~ src/threads/init.c
    printf ("Boot complete.\n");
    
    /* Run actions specified on kernel command line. */
+Index: src/threads/interrupt.c
 diff -u src/threads/interrupt.c~ src/threads/interrupt.c
---- src/threads/interrupt.c~ 2005-06-15 15:22:43.000000000 -0700
-+++ src/threads/interrupt.c 2005-06-16 15:09:31.000000000 -0700
-@@ -343,6 +343,8 @@ intr_handler (struct intr_frame *frame) 
+--- src/threads/interrupt.c~ 2006-01-29 13:32:55.000000000 -0800
++++ src/threads/interrupt.c 2006-04-08 19:57:07.000000000 -0700
+@@ -354,6 +354,8 @@ intr_handler (struct intr_frame *frame) 
        in_external_intr = true;
        yield_on_return = false;
      }
@@ -2040,9 +2059,10 @@ diff -u src/threads/interrupt.c~ src/threads/interrupt.c
  
    /* Invoke the interrupt's handler.
       If there is no handler, invoke the unexpected interrupt
+Index: src/threads/thread.c
 diff -u src/threads/thread.c~ src/threads/thread.c
---- src/threads/thread.c~ 2005-06-15 14:41:47.000000000 -0700
-+++ src/threads/thread.c 2005-06-16 15:09:31.000000000 -0700
+--- src/threads/thread.c~ 2006-04-08 12:09:39.000000000 -0700
++++ src/threads/thread.c 2006-04-08 19:57:07.000000000 -0700
 @@ -13,6 +13,7 @@
  #include "threads/synch.h"
  #ifdef USERPROG
@@ -2072,7 +2092,7 @@ diff -u src/threads/thread.c~ src/threads/thread.c
  }
  
  /* Starts preemptive thread scheduling by enabling interrupts.
-@@ -158,8 +159,8 @@ thread_create (const char *name, int pri
+@@ -159,8 +160,8 @@ thread_create (const char *name, int pri
      return TID_ERROR;
  
    /* Initialize thread. */
@@ -2083,7 +2103,7 @@ diff -u src/threads/thread.c~ src/threads/thread.c
  
    /* Stack frame for kernel_thread(). */
    kf = alloc_frame (t, sizeof *kf);
-@@ -252,16 +253,19 @@ thread_tid (void) 
+@@ -253,16 +254,19 @@ thread_tid (void) 
  void
  thread_exit (void) 
  {
@@ -2105,7 +2125,7 @@ diff -u src/threads/thread.c~ src/threads/thread.c
    schedule ();
    NOT_REACHED ();
  }
-@@ -390,17 +394,29 @@ is_thread (struct thread *t)
+@@ -406,17 +410,29 @@ is_thread (struct thread *t)
  /* Does basic initialization of T as a blocked thread named
     NAME. */
  static void
@@ -2136,9 +2156,10 @@ diff -u src/threads/thread.c~ src/threads/thread.c
    t->magic = THREAD_MAGIC;
  }
  
+Index: src/threads/thread.h
 diff -u src/threads/thread.h~ src/threads/thread.h
---- src/threads/thread.h~ 2005-06-15 14:49:06.000000000 -0700
-+++ src/threads/thread.h 2005-06-16 15:09:31.000000000 -0700
+--- src/threads/thread.h~ 2005-06-18 20:21:21.000000000 -0700
++++ src/threads/thread.h 2006-04-08 19:57:07.000000000 -0700
 @@ -2,8 +2,10 @@
  #define THREADS_THREAD_H
  
@@ -2203,9 +2224,10 @@ diff -u src/threads/thread.h~ src/threads/thread.h
  void thread_init (void);
  void thread_start (void);
  
+Index: src/userprog/exception.c
 diff -u src/userprog/exception.c~ src/userprog/exception.c
---- src/userprog/exception.c~ 2005-06-15 15:14:10.000000000 -0700
-+++ src/userprog/exception.c 2005-06-16 15:09:31.000000000 -0700
+--- src/userprog/exception.c~ 2006-01-29 13:32:56.000000000 -0800
++++ src/userprog/exception.c 2006-04-08 19:57:07.000000000 -0700
 @@ -4,6 +4,7 @@
  #include "userprog/gdt.h"
  #include "threads/interrupt.h"
@@ -2214,7 +2236,7 @@ diff -u src/userprog/exception.c~ src/userprog/exception.c
  
  /* Number of page faults processed. */
  static long long page_fault_cnt;
-@@ -153,9 +154,14 @@ page_fault (struct intr_frame *f) 
+@@ -148,9 +149,14 @@ page_fault (struct intr_frame *f) 
    write = (f->error_code & PF_W) != 0;
    user = (f->error_code & PF_U) != 0;
  
@@ -2232,9 +2254,10 @@ diff -u src/userprog/exception.c~ src/userprog/exception.c
    printf ("Page fault at %p: %s error %s page in %s context.\n",
            fault_addr,
            not_present ? "not present" : "rights violation",
+Index: src/userprog/pagedir.c
 diff -u src/userprog/pagedir.c~ src/userprog/pagedir.c
---- src/userprog/pagedir.c~ 2005-06-14 13:16:22.000000000 -0700
-+++ src/userprog/pagedir.c 2005-06-16 15:09:31.000000000 -0700
+--- src/userprog/pagedir.c~ 2006-01-29 13:32:56.000000000 -0800
++++ src/userprog/pagedir.c 2006-04-08 19:57:07.000000000 -0700
 @@ -35,15 +35,7 @@ pagedir_destroy (uint32_t *pd) 
    ASSERT (pd != base_page_dir);
    for (pde = pd; pde < pd + pd_no (PHYS_BASE); pde++)
@@ -2252,10 +2275,11 @@ diff -u src/userprog/pagedir.c~ src/userprog/pagedir.c
    palloc_free_page (pd);
  }
  
+Index: src/userprog/process.c
 diff -u src/userprog/process.c~ src/userprog/process.c
---- src/userprog/process.c~ 2005-06-14 13:09:39.000000000 -0700
-+++ src/userprog/process.c 2005-06-16 15:09:31.000000000 -0700
-@@ -14,11 +14,26 @@
+--- src/userprog/process.c~ 2006-04-08 19:37:00.000000000 -0700
++++ src/userprog/process.c 2006-04-08 20:00:47.000000000 -0700
+@@ -15,11 +15,26 @@
  #include "threads/init.h"
  #include "threads/interrupt.h"
  #include "threads/mmu.h"
@@ -2380,7 +2404,7 @@ diff -u src/userprog/process.c~ src/userprog/process.c
    if (!success) 
      thread_exit ();
  
-@@ -75,18 +131,47 @@ execute_thread (void *filename_)
+@@ -76,18 +116,47 @@ execute_thread (void *filename_)
    NOT_REACHED ();
  }
  
@@ -2433,7 +2457,7 @@ diff -u src/userprog/process.c~ src/userprog/process.c
    return -1;
  }
  
-@@ -95,8 +180,35 @@ void
+@@ -96,8 +165,35 @@ void
  process_exit (void)
  {
    struct thread *cur = thread_current ();
@@ -2462,22 +2486,23 @@ diff -u src/userprog/process.c~ src/userprog/process.c
 +
 +  /* Destroy the page hash table. */
 +  page_exit ();
-+
++  
 +  /* Close executable (and allow writes). */
 +  file_close (cur->bin_file);
-+  
++
    /* Destroy the current process's page directory and switch back
       to the kernel-only page directory. */
    pd = cur->pagedir;
-@@ -194,20 +306,22 @@ struct Elf32_Phdr
+@@ -194,7 +290,7 @@ struct Elf32_Phdr
+ #define PF_W 2          /* Writable. */
  #define PF_R 4          /* Readable. */
  
- static bool load_segment (struct file *, const struct Elf32_Phdr *);
 -static bool setup_stack (void **esp);
 +static bool setup_stack (const char *cmd_line, void **esp);
- 
- /* Loads an ELF executable from FILENAME into the current thread.
-    Stores the executable's entry point into *EIP
+ static bool validate_segment (const struct Elf32_Phdr *, struct file *);
+ static bool load_segment (struct file *file, off_t ofs, uint8_t *upage,
+                           uint32_t read_bytes, uint32_t zero_bytes,
+@@ -205,13 +301,15 @@ static bool load_segment (struct file *f
     and its initial stack pointer into *ESP.
     Returns true if successful, false otherwise. */
  bool
@@ -2494,7 +2519,7 @@ diff -u src/userprog/process.c~ src/userprog/process.c
    int i;
  
    /* Allocate and activate page directory. */
-@@ -216,13 +330,28 @@ load (const char *filename, void (**eip)
+@@ -220,13 +318,28 @@ load (const char *filename, void (**eip)
      goto done;
    process_activate ();
  
@@ -2533,84 +2558,66 @@ diff -u src/userprog/process.c~ src/userprog/process.c
      goto done;
  
    /* Start address. */
-@@ -280,15 +409,11 @@ load (const char *filename, void (**eip)
-   success = true;
+@@ -311,14 +424,11 @@ load (const char *filename, void (**eip)
  
   done:
--  /* We arrive here whether the load is successful or not. */
+   /* We arrive here whether the load is successful or not. */
 -  file_close (file);
    return success;
  }
  
  /* load() helpers. */
  
--static bool install_page (void *upage, void *kpage);
+-static bool install_page (void *upage, void *kpage, bool writable);
 -
- /* Loads the segment described by PHDR from FILE into user
-    address space.  Return true if successful, false otherwise. */
+ /* Checks whether PHDR describes a valid, loadable segment in
+    FILE and returns true if so, false otherwise. */
  static bool
-@@ -296,6 +421,7 @@ load_segment (struct file *file, const s
- {
-   void *start, *end;  /* Page-rounded segment start and end. */
-   uint8_t *upage;     /* Iterator from start to end. */
-+  off_t file_offset;  /* Offset into file. */
-   off_t filesz_left;  /* Bytes left of file data (as opposed to
-                          zero-initialized bytes). */
+@@ -387,79 +497,127 @@ load_segment (struct file *file, off_t o
+   ASSERT (pg_ofs (upage) == 0);
+   ASSERT (ofs % PGSIZE == 0);
  
-@@ -303,7 +429,7 @@ load_segment (struct file *file, const s
-      commented out.  You'll want to use it when implementing VM
-      to decide whether to page the segment from its executable or
-      from swap. */
--  //bool read_only = (phdr->p_flags & PF_W) == 0;
-+  bool read_only = (phdr->p_flags & PF_W) == 0;
- 
-   ASSERT (file != NULL);
-   ASSERT (phdr != NULL);
-@@ -332,73 +458,129 @@ load_segment (struct file *file, const s
-       || start == 0)
-     return false; 
- 
--  /* Load the segment page-by-page into memory. */
-+  /* Add the segment page-by-page to the hash table. */
-   filesz_left = phdr->p_filesz + (phdr->p_vaddr & PGMASK);
--  file_seek (file, ROUND_DOWN (phdr->p_offset, PGSIZE));
-+  file_offset = ROUND_DOWN (phdr->p_offset, PGSIZE);
-   for (upage = start; upage < (uint8_t *) end; upage += PGSIZE) 
+-  file_seek (file, ofs);
+   while (read_bytes > 0 || zero_bytes > 0) 
      {
--      /* We want to read min(PGSIZE, filesz_left) bytes from the
--         file into the page and zero the rest. */
--      size_t read_bytes = filesz_left >= PGSIZE ? PGSIZE : filesz_left;
--      size_t zero_bytes = PGSIZE - read_bytes;
+-      /* Calculate how to fill this page.
+-         We will read PAGE_READ_BYTES bytes from FILE
+-         and zero the final PAGE_ZERO_BYTES bytes. */
+       size_t page_read_bytes = read_bytes < PGSIZE ? read_bytes : PGSIZE;
+       size_t page_zero_bytes = PGSIZE - page_read_bytes;
+-
+-      /* Get a page of memory. */
 -      uint8_t *kpage = palloc_get_page (PAL_USER);
 -      if (kpage == NULL)
-+      struct page *p = page_allocate (upage, read_only);
++      struct page *p = page_allocate (upage, !writable);
 +      if (p == NULL)
          return false;
- 
--      /* Do the reading and zeroing. */
--      if (file_read (file, kpage, read_bytes) != (int) read_bytes) 
-+      if (filesz_left > 0) 
-         {
--          palloc_free_page (kpage);
--          return false; 
--        }
--      memset (kpage + read_bytes, 0, zero_bytes);
--      filesz_left -= read_bytes;
 -
--      /* Add the page to the process's address space. */
--      if (!install_page (upage, kpage)) 
+-      /* Load this page. */
+-      if (file_read (file, kpage, page_read_bytes) != (int) page_read_bytes)
 -        {
 -          palloc_free_page (kpage);
 -          return false; 
-+          size_t file_bytes = filesz_left >= PGSIZE ? PGSIZE : filesz_left;
+-        }
+-      memset (kpage + page_read_bytes, 0, page_zero_bytes);
+-
+-      /* Add the page to the process's address space. */
+-      if (!install_page (upage, kpage, writable)) 
++      if (page_read_bytes > 0) 
+         {
+-          palloc_free_page (kpage);
+-          return false; 
 +          p->file = file;
-+          p->file_offset = file_offset;
-+          p->file_bytes = file_bytes;
-+          filesz_left -= file_bytes;
-+          file_offset += file_bytes;
++          p->file_offset = ofs;
++          p->file_bytes = page_read_bytes;
          }
+-
+-      /* Advance. */
+       read_bytes -= page_read_bytes;
+       zero_bytes -= page_zero_bytes;
++      ofs += page_read_bytes;
+       upage += PGSIZE;
      }
- 
    return true;
  }
  
@@ -2681,7 +2688,7 @@ diff -u src/userprog/process.c~ src/userprog/process.c
 +  for (karg = strtok_r (cmd_line_copy, " ", &saveptr); karg != NULL;
 +       karg = strtok_r (NULL, " ", &saveptr))
      {
--      success = install_page (((uint8_t *) PHYS_BASE) - PGSIZE, kpage);
+-      success = install_page (((uint8_t *) PHYS_BASE) - PGSIZE, kpage, true);
 -      if (success)
 -        *esp = PHYS_BASE;
 -      else
@@ -2710,6 +2717,8 @@ diff -u src/userprog/process.c~ src/userprog/process.c
  
 -/* Adds a mapping from user virtual address UPAGE to kernel
 -   virtual address KPAGE to the page table.
+-   If WRITABLE is true, the user process may modify the page;
+-   otherwise, it is read-only.
 -   UPAGE must not already be mapped.
 -   KPAGE should probably be a page obtained from the user pool
 -   with palloc_get_page().
@@ -2719,7 +2728,7 @@ diff -u src/userprog/process.c~ src/userprog/process.c
 +   top of user virtual memory.  Fills in the page using CMD_LINE
 +   and sets *ESP to the stack pointer. */
  static bool
--install_page (void *upage, void *kpage)
+-install_page (void *upage, void *kpage, bool writable)
 +setup_stack (const char *cmd_line, void **esp) 
  {
 -  struct thread *t = thread_current ();
@@ -2727,7 +2736,7 @@ diff -u src/userprog/process.c~ src/userprog/process.c
 -  /* Verify that there's not already a page at that virtual
 -     address, then map our page there. */
 -  return (pagedir_get_page (t->pagedir, upage) == NULL
--          && pagedir_set_page (t->pagedir, upage, kpage, true));
+-          && pagedir_set_page (t->pagedir, upage, kpage, writable));
 +  struct page *page = page_allocate (((uint8_t *) PHYS_BASE) - PGSIZE, false);
 +  if (page != NULL) 
 +    {
@@ -2744,9 +2753,10 @@ diff -u src/userprog/process.c~ src/userprog/process.c
 +    }
 +  return false;
  }
+Index: src/userprog/syscall.c
 diff -u src/userprog/syscall.c~ src/userprog/syscall.c
---- src/userprog/syscall.c~ 2005-06-16 14:56:52.000000000 -0700
-+++ src/userprog/syscall.c 2005-06-16 15:09:31.000000000 -0700
+--- src/userprog/syscall.c~ 2005-06-18 20:21:21.000000000 -0700
++++ src/userprog/syscall.c 2006-04-08 20:01:17.000000000 -0700
 @@ -1,20 +1,594 @@
  #include "userprog/syscall.h"
  #include <stdio.h>
@@ -3137,7 +3147,7 @@ diff -u src/userprog/syscall.c~ src/userprog/syscall.c
 +      /* Do the write. */
 +      if (handle == STDOUT_FILENO)
 +        {
-+          putbuf (usrc, write_amt);
++          putbuf ((char *) usrc, write_amt);
 +          retval = write_amt;
 +        }
 +      else
@@ -3346,9 +3356,10 @@ diff -u src/userprog/syscall.c~ src/userprog/syscall.c
 +
 +  dir_close (cur->wd);
 +}
+Index: src/userprog/syscall.h
 diff -u src/userprog/syscall.h~ src/userprog/syscall.h
 --- src/userprog/syscall.h~ 2004-09-05 22:38:45.000000000 -0700
-+++ src/userprog/syscall.h 2005-06-16 15:09:31.000000000 -0700
++++ src/userprog/syscall.h 2006-04-08 19:57:08.000000000 -0700
 @@ -2,5 +2,6 @@
  #define USERPROG_SYSCALL_H
  
@@ -3356,9 +3367,10 @@ diff -u src/userprog/syscall.h~ src/userprog/syscall.h
 +void syscall_exit (void);
  
  #endif /* userprog/syscall.h */
+Index: src/vm/frame.c
 diff -u src/vm/frame.c~ src/vm/frame.c
 --- src/vm/frame.c~ 1969-12-31 16:00:00.000000000 -0800
-+++ src/vm/frame.c 2005-06-16 15:09:31.000000000 -0700
++++ src/vm/frame.c 2006-04-08 19:57:08.000000000 -0700
 @@ -0,0 +1,161 @@
 +#include "vm/frame.h"
 +#include <stdio.h>
@@ -3521,9 +3533,10 @@ diff -u src/vm/frame.c~ src/vm/frame.c
 +  ASSERT (lock_held_by_current_thread (&f->lock));
 +  lock_release (&f->lock);
 +}
+Index: src/vm/frame.h
 diff -u src/vm/frame.h~ src/vm/frame.h
 --- src/vm/frame.h~ 1969-12-31 16:00:00.000000000 -0800
-+++ src/vm/frame.h 2005-06-16 15:09:31.000000000 -0700
++++ src/vm/frame.h 2006-04-08 19:57:08.000000000 -0700
 @@ -0,0 +1,23 @@
 +#ifndef VM_FRAME_H
 +#define VM_FRAME_H
@@ -3548,9 +3561,10 @@ diff -u src/vm/frame.h~ src/vm/frame.h
 +void frame_unlock (struct frame *);
 +
 +#endif /* vm/frame.h */
+Index: src/vm/page.c
 diff -u src/vm/page.c~ src/vm/page.c
 --- src/vm/page.c~ 1969-12-31 16:00:00.000000000 -0800
-+++ src/vm/page.c 2005-06-16 15:09:31.000000000 -0700
++++ src/vm/page.c 2006-04-08 19:57:08.000000000 -0700
 @@ -0,0 +1,294 @@
 +#include "vm/page.h"
 +#include <stdio.h>
@@ -3846,9 +3860,10 @@ diff -u src/vm/page.c~ src/vm/page.c
 +  ASSERT (p != NULL);
 +  frame_unlock (p->frame);
 +}
+Index: src/vm/page.h
 diff -u src/vm/page.h~ src/vm/page.h
 --- src/vm/page.h~ 1969-12-31 16:00:00.000000000 -0800
-+++ src/vm/page.h 2005-06-16 15:09:31.000000000 -0700
++++ src/vm/page.h 2006-04-08 19:57:08.000000000 -0700
 @@ -0,0 +1,50 @@
 +#ifndef VM_PAGE_H
 +#define VM_PAGE_H
@@ -3900,9 +3915,10 @@ diff -u src/vm/page.h~ src/vm/page.h
 +hash_less_func page_less;
 +
 +#endif /* vm/page.h */
+Index: src/vm/swap.c
 diff -u src/vm/swap.c~ src/vm/swap.c
 --- src/vm/swap.c~ 1969-12-31 16:00:00.000000000 -0800
-+++ src/vm/swap.c 2005-06-16 15:09:31.000000000 -0700
++++ src/vm/swap.c 2006-04-08 19:57:08.000000000 -0700
 @@ -0,0 +1,85 @@
 +#include "vm/swap.h"
 +#include <bitmap.h>
@@ -3989,9 +4005,10 @@ diff -u src/vm/swap.c~ src/vm/swap.c
 +
 +  return true;
 +}
+Index: src/vm/swap.h
 diff -u src/vm/swap.h~ src/vm/swap.h
 --- src/vm/swap.h~ 1969-12-31 16:00:00.000000000 -0800
-+++ src/vm/swap.h 2005-06-16 15:09:31.000000000 -0700
++++ src/vm/swap.h 2006-04-08 19:57:08.000000000 -0700
 @@ -0,0 +1,11 @@
 +#ifndef VM_SWAP_H
 +#define VM_SWAP_H 1
