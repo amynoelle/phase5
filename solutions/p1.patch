@@ -333,7 +333,7 @@ diff -u src/threads/synch.c~ src/threads/synch.c
 +  const struct semaphore_elem *b
 +    = list_entry (b_, struct semaphore_elem, elem);
 +
-+  return a->thread->priority > b->thread->priority;
++  return a->thread->priority < b->thread->priority;
 +}
 +
  /* If any threads are waiting on COND (protected by LOCK), then
@@ -494,7 +494,7 @@ diff -u src/threads/thread.c~ src/threads/thread.c
 +
    /* Add to run queue. */
    thread_unblock (t);
-+  if (priority < thread_get_priority ())
++  if (priority > thread_get_priority ())
 +    thread_yield ();
  
    return tid;
@@ -513,7 +513,7 @@ diff -u src/threads/thread.c~ src/threads/thread.c
 +  const struct thread *a = list_entry (a_, struct thread, elem);
 +  const struct thread *b = list_entry (b_, struct thread, elem);
 +
-+  return a->priority > b->priority;
++  return a->priority < b->priority;
 +}
 +
  /* Transitions a blocked thread T to the ready-to-run state.
@@ -614,7 +614,7 @@ diff -u src/threads/thread.c~ src/threads/thread.c
 +  const struct thread *a = list_entry (a_, struct thread, donor_elem);
 +  const struct thread *b = list_entry (b_, struct thread, donor_elem);
 +
-+  return a->priority > b->priority;
++  return a->priority < b->priority;
 +}
 +
 +/* Recomputes T's priority in terms of its normal priority and
@@ -625,10 +625,10 @@ diff -u src/threads/thread.c~ src/threads/thread.c
 +{
 +  int old_priority = t->priority;
 +  int default_priority = t->normal_priority;
-+  int donation = PRI_MAX;
++  int donation = PRI_MIN;
 +  if (enable_mlfqs) 
 +    {
-+      default_priority = fix_round (t->recent_cpu) / 4 + t->nice * 2;
++      default_priority = PRI_MAX - fix_round (t->recent_cpu) / 4 - t->nice * 2;
 +      if (default_priority < PRI_MIN)
 +        default_priority = PRI_MIN;
 +      else if (default_priority > PRI_MAX)
@@ -637,8 +637,8 @@ diff -u src/threads/thread.c~ src/threads/thread.c
 +  if (!list_empty (&t->donors))
 +    donation = list_entry (list_max (&t->donors, donated_lower_priority, NULL),
 +                           struct thread, donor_elem)->priority;
-+  t->priority = donation < default_priority ? donation : default_priority;
-+  if (t->priority < old_priority && t->donee != NULL)
++  t->priority = donation > default_priority ? donation : default_priority;
++  if (t->priority > old_priority && t->donee != NULL)
 +    thread_recompute_priority (t->donee);
 +}
 +
@@ -654,7 +654,7 @@ diff -u src/threads/thread.c~ src/threads/thread.c
 +      struct thread *max = list_entry (list_max (&ready_list,
 +                                                 thread_lower_priority, NULL),
 +                                       struct thread, elem);
-+      if (max->priority < cur->priority)
++      if (max->priority > cur->priority)
 +        thread_yield (); 
 +    }
 +  intr_set_level (old_level);
