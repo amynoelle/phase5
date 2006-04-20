@@ -122,10 +122,10 @@ diff -u src/userprog/process.c~ src/userprog/process.c
 @@ -14,11 +14,23 @@
  #include "threads/init.h"
  #include "threads/interrupt.h"
- #include "threads/mmu.h"
 +#include "threads/malloc.h"
  #include "threads/palloc.h"
  #include "threads/thread.h"
+ #include "threads/vaddr.h"
  
  static thread_func execute_thread NO_RETURN;
 -static bool load (const char *cmdline, void (**eip) (void), void **esp);
@@ -504,9 +504,9 @@ diff -u src/userprog/syscall.c~ src/userprog/syscall.c
 +#include "threads/init.h"
  #include "threads/interrupt.h"
 +#include "threads/malloc.h"
-+#include "threads/mmu.h"
 +#include "threads/palloc.h"
  #include "threads/thread.h"
++#include "threads/vaddr.h"
 -
 + 
 + 

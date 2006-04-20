@@ -2261,13 +2261,13 @@ diff -u src/userprog/pagedir.c~ src/userprog/pagedir.c
 @@ -35,15 +35,7 @@ pagedir_destroy (uint32_t *pd) 
    ASSERT (pd != base_page_dir);
    for (pde = pd; pde < pd + pd_no (PHYS_BASE); pde++)
-     if (*pde & PG_P) 
+     if (*pde & PTE_P) 
 -      {
 -        uint32_t *pt = pde_get_pt (*pde);
 -        uint32_t *pte;
 -        
 -        for (pte = pt; pte < pt + PGSIZE / sizeof *pte; pte++)
--          if (*pte & PG_P) 
+-          if (*pte & PTE_P) 
 -            palloc_free_page (pte_get_page (*pte));
 -        palloc_free_page (pt);
 -      }
@@ -2282,10 +2282,10 @@ diff -u src/userprog/process.c~ src/userprog/process.c
 @@ -15,11 +15,26 @@
  #include "threads/init.h"
  #include "threads/interrupt.h"
- #include "threads/mmu.h"
 +#include "threads/malloc.h"
  #include "threads/palloc.h"
  #include "threads/thread.h"
+ #include "threads/vaddr.h"
 +#include "vm/page.h"
 +#include "vm/frame.h"
  
@@ -2771,9 +2771,9 @@ diff -u src/userprog/syscall.c~ src/userprog/syscall.c
 +#include "threads/init.h"
  #include "threads/interrupt.h"
 +#include "threads/malloc.h"
-+#include "threads/mmu.h"
 +#include "threads/palloc.h"
  #include "threads/thread.h"
++#include "threads/vaddr.h"
 -
 +#include "vm/page.h"
 + 
@@ -3378,9 +3378,9 @@ diff -u src/vm/frame.c~ src/vm/frame.c
 +#include "devices/timer.h"
 +#include "threads/init.h"
 +#include "threads/malloc.h"
-+#include "threads/mmu.h"
 +#include "threads/palloc.h"
 +#include "threads/synch.h"
++#include "threads/vaddr.h"
 +
 +static struct frame *frames;
 +static size_t frame_cnt;
@@ -3573,9 +3573,9 @@ diff -u src/vm/page.c~ src/vm/page.c
 +#include "vm/swap.h"
 +#include "filesys/file.h"
 +#include "threads/malloc.h"
-+#include "threads/mmu.h"
 +#include "threads/thread.h"
 +#include "userprog/pagedir.h"
++#include "threads/vaddr.h"
 +
 +/* Maximum size of process stack, in bytes. */
 +#define STACK_MAX (1024 * 1024)
@@ -3927,8 +3927,8 @@ diff -u src/vm/swap.c~ src/vm/swap.c
 +#include "vm/frame.h"
 +#include "vm/page.h"
 +#include "devices/disk.h"
-+#include "threads/mmu.h"
 +#include "threads/synch.h"
++#include "threads/vaddr.h"
 +
 +/* The swap disk. */
 +static struct disk *swap_disk;
