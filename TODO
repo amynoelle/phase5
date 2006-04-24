@@ -267,3 +267,66 @@ via Godmar Back:
     . opendir/readdir/closedir
 
     . everything needed for getcwd()
+
+To add partition support:
+
+- Find four partition types that are more or less unused and choose to
+  use them for Pintos.  (This is implemented.)
+
+- Bootloader reads partition tables of all BIOS devices to find the
+  first that has the "Pintos kernel" partition type.  (This is
+  implemented.)  Ideally the bootloader would make sure there is
+  exactly one such partition, but I didn't implement that yet.
+
+- Bootloader reads kernel into memory at 1 MB using BIOS calls.  (This
+  is implemented.)
+
+- Kernel arguments have to go into a separate sector because the
+  bootloader is otherwise too big to fit now?  (I don't recall if I
+  did anything about this.)
+
+- Kernel at boot also scans partition tables of all the disks it can
+  find to find the ones with the four Pintos partition types (perhaps
+  not all exist).  After that, it makes them available to the rest of
+  the kernel (and doesn't allow access to other devices, for safety).
+
+- "pintos" and "pintos-mkdisk" need to write a partition table to the
+  disks that they create.  "pintos-mkdisk" will need to take a new
+  parameter specifying the type.  (I might have partially implemented
+  this, don't remember.)
+
+- "pintos" should insist on finding a partition header on disks handed
+  to it, for safety.
+
+- Need some way for "pintos" to assemble multiple disks or partitions
+  into a single image that can be copied directly to a USB block
+  device.  (I don't know whether I came up with a good solution yet or
+  not, or whether I implemented any of it.)
+
+To add USB support:
+
+- Needs to be able to scan PCI bus for UHCI controller.  (I
+  implemented this partially.)
+
+- May want to be able to initialize USB controllers over CardBus
+  bridges.  I don't know whether this requires additional work or if
+  it's useful enough to warrant extra work.  (It's of special interest
+  for me because I have a laptop that only has USB via CardBus.)
+
+- There are many protocol layers involved: SCSI over USB-Mass Storage
+  over USB over UHCI over PCI.  (I may be forgetting one.)  I don't
+  know yet whether it's best to separate the layers or to merge (some
+  of) them.  I think that a simple and clean organization should be a
+  priority.
+
+- VMware can likely be used for testing because it can expose host USB
+  devices as guest USB devices.  This is safer and more convenient
+  than using real hardware for testing.
+
+- Should test with a variety of USB keychain devices because there
+  seems to be wide variation among them, especially in the SCSI
+  protocols they support.  Should try to use a "lowest-common
+  denominator" SCSI protocol if any such thing really exists.
+
+- Might want to add a feature whereby kernel arguments can be given
+  interactively, rather than passed on-disk.  Needs some though.
