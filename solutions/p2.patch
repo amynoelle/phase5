@@ -491,7 +491,7 @@ diff -u src/userprog/process.c~ src/userprog/process.c
 diff -u src/userprog/syscall.c~ src/userprog/syscall.c
 --- src/userprog/syscall.c~ 2004-09-26 14:15:17.000000000 -0700
 +++ src/userprog/syscall.c 2005-06-08 13:45:28.000000000 -0700
-@@ -1,20 +1,480 @@
+@@ -1,20 +1,482 @@
  #include "userprog/syscall.h"
  #include <stdio.h>
 +#include <string.h>
@@ -972,7 +972,9 @@ diff -u src/userprog/syscall.c~ src/userprog/syscall.c
 +      struct file_descriptor *fd;
 +      fd = list_entry (e, struct file_descriptor, elem);
 +      next = list_next (e);
++      lock_acquire (&fs_lock);
 +      file_close (fd->file);
++      lock_release (&fs_lock);
 +      free (fd);
 +    }
 +}
