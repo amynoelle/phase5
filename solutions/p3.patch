@@ -1,7 +1,7 @@
 Index: src/Makefile.build
 diff -u src/Makefile.build~ src/Makefile.build
 --- src/Makefile.build~ 2005-06-18 20:20:47.000000000 -0700
-+++ src/Makefile.build 2006-04-08 18:52:50.000000000 -0700
++++ src/Makefile.build 2006-05-16 13:44:56.000000000 -0700
 @@ -53,7 +53,9 @@ userprog_SRC += userprog/gdt.c		# GDT in
  userprog_SRC += userprog/tss.c		# TSS management.
  
@@ -16,7 +16,7 @@ diff -u src/Makefile.build~ src/Makefile.build
 Index: src/devices/timer.c
 diff -u src/devices/timer.c~ src/devices/timer.c
 --- src/devices/timer.c~ 2005-07-06 13:45:36.000000000 -0700
-+++ src/devices/timer.c 2006-04-08 18:52:50.000000000 -0700
++++ src/devices/timer.c 2006-05-16 13:44:56.000000000 -0700
 @@ -23,6 +23,9 @@ static volatile int64_t ticks;
     Initialized by timer_calibrate(). */
  static unsigned loops_per_tick;
@@ -95,8 +95,8 @@ diff -u src/devices/timer.c~ src/devices/timer.c
  /* Returns true if LOOPS iterations waits for more than one timer
 Index: src/threads/init.c
 diff -u src/threads/init.c~ src/threads/init.c
---- src/threads/init.c~ 2006-01-29 13:32:55.000000000 -0800
-+++ src/threads/init.c 2006-04-08 18:52:50.000000000 -0700
+--- src/threads/init.c~ 2006-04-25 11:35:56.000000000 -0700
++++ src/threads/init.c 2006-05-16 13:44:56.000000000 -0700
 @@ -33,6 +33,8 @@
  #include "filesys/filesys.h"
  #include "filesys/fsutil.h"
@@ -118,8 +118,8 @@ diff -u src/threads/init.c~ src/threads/init.c
    /* Run actions specified on kernel command line. */
 Index: src/threads/interrupt.c
 diff -u src/threads/interrupt.c~ src/threads/interrupt.c
---- src/threads/interrupt.c~ 2006-01-29 13:32:55.000000000 -0800
-+++ src/threads/interrupt.c 2006-04-08 18:52:50.000000000 -0700
+--- src/threads/interrupt.c~ 2006-04-25 11:35:56.000000000 -0700
++++ src/threads/interrupt.c 2006-05-16 13:44:56.000000000 -0700
 @@ -354,6 +354,8 @@ intr_handler (struct intr_frame *frame) 
        in_external_intr = true;
        yield_on_return = false;
@@ -131,10 +131,10 @@ diff -u src/threads/interrupt.c~ src/threads/interrupt.c
       If there is no handler, invoke the unexpected interrupt
 Index: src/threads/thread.c
 diff -u src/threads/thread.c~ src/threads/thread.c
---- src/threads/thread.c~ 2006-04-08 12:09:39.000000000 -0700
-+++ src/threads/thread.c 2006-04-08 18:52:50.000000000 -0700
+--- src/threads/thread.c~ 2006-04-25 11:35:57.000000000 -0700
++++ src/threads/thread.c 2006-05-16 13:44:56.000000000 -0700
 @@ -13,6 +13,7 @@
- #include "threads/synch.h"
+ #include "threads/vaddr.h"
  #ifdef USERPROG
  #include "userprog/process.h"
 +#include "userprog/syscall.h"
@@ -227,8 +227,8 @@ diff -u src/threads/thread.c~ src/threads/thread.c
  
 Index: src/threads/thread.h
 diff -u src/threads/thread.h~ src/threads/thread.h
---- src/threads/thread.h~ 2005-06-18 20:21:21.000000000 -0700
-+++ src/threads/thread.h 2006-04-08 18:52:50.000000000 -0700
+--- src/threads/thread.h~ 2006-04-13 13:53:34.000000000 -0700
++++ src/threads/thread.h 2006-05-16 13:44:56.000000000 -0700
 @@ -2,8 +2,10 @@
  #define THREADS_THREAD_H
  
@@ -295,7 +295,7 @@ diff -u src/threads/thread.h~ src/threads/thread.h
 Index: src/userprog/exception.c
 diff -u src/userprog/exception.c~ src/userprog/exception.c
 --- src/userprog/exception.c~ 2006-01-29 13:32:56.000000000 -0800
-+++ src/userprog/exception.c 2006-04-08 18:52:50.000000000 -0700
++++ src/userprog/exception.c 2006-05-16 13:44:56.000000000 -0700
 @@ -4,6 +4,7 @@
  #include "userprog/gdt.h"
  #include "threads/interrupt.h"
@@ -324,8 +324,8 @@ diff -u src/userprog/exception.c~ src/userprog/exception.c
            not_present ? "not present" : "rights violation",
 Index: src/userprog/pagedir.c
 diff -u src/userprog/pagedir.c~ src/userprog/pagedir.c
---- src/userprog/pagedir.c~ 2006-01-29 13:32:56.000000000 -0800
-+++ src/userprog/pagedir.c 2006-04-08 18:52:50.000000000 -0700
+--- src/userprog/pagedir.c~ 2006-04-25 11:35:58.000000000 -0700
++++ src/userprog/pagedir.c 2006-05-16 13:44:56.000000000 -0700
 @@ -35,15 +35,7 @@ pagedir_destroy (uint32_t *pd) 
    ASSERT (pd != base_page_dir);
    for (pde = pd; pde < pd + pd_no (PHYS_BASE); pde++)
@@ -345,9 +345,10 @@ diff -u src/userprog/pagedir.c~ src/userprog/pagedir.c
  
 Index: src/userprog/process.c
 diff -u src/userprog/process.c~ src/userprog/process.c
---- src/userprog/process.c~ 2006-04-08 19:37:00.000000000 -0700
-+++ src/userprog/process.c 2006-04-08 19:35:29.000000000 -0700
-@@ -15,11 +15,25 @@
+--- src/userprog/process.c~ 2006-04-25 11:35:58.000000000 -0700
++++ src/userprog/process.c 2006-05-16 13:44:56.000000000 -0700
+@@ -14,12 +14,26 @@
+ #include "threads/flags.h"
  #include "threads/init.h"
  #include "threads/interrupt.h"
 +#include "threads/malloc.h"
@@ -808,8 +809,8 @@ diff -u src/userprog/process.c~ src/userprog/process.c
 Index: src/userprog/syscall.c
 diff -u src/userprog/syscall.c~ src/userprog/syscall.c
 --- src/userprog/syscall.c~ 2005-06-18 20:21:21.000000000 -0700
-+++ src/userprog/syscall.c 2006-04-08 19:36:04.000000000 -0700
-@@ -1,20 +1,557 @@
++++ src/userprog/syscall.c 2006-05-16 14:17:02.000000000 -0700
+@@ -1,20 +1,598 @@
  #include "userprog/syscall.h"
  #include <stdio.h>
 +#include <string.h>
@@ -825,8 +826,8 @@ diff -u src/userprog/syscall.c~ src/userprog/syscall.c
 +#include "threads/malloc.h"
 +#include "threads/palloc.h"
  #include "threads/thread.h"
-+#include "threads/vaddr.h"
 -
++#include "threads/vaddr.h"
 +#include "vm/page.h"
 + 
 + 
@@ -847,13 +848,15 @@ diff -u src/userprog/syscall.c~ src/userprog/syscall.c
 +static int sys_munmap (int mapping);
 + 
  static void syscall_handler (struct intr_frame *);
--
 +static void copy_in (void *, const void *, size_t);
+ 
++static struct lock fs_lock;
 + 
  void
  syscall_init (void) 
  {
    intr_register_int (0x30, 3, INTR_ON, syscall_handler, "syscall");
++  lock_init (&fs_lock);
  }
 + 
 +/* System call handler. */
@@ -888,11 +891,11 @@ diff -u src/userprog/syscall.c~ src/userprog/syscall.c
 +      {2, (syscall_function *) sys_mmap},
 +      {1, (syscall_function *) sys_munmap},
 +    };
- 
++
 +  const struct syscall *sc;
 +  unsigned call_nr;
 +  int args[3];
-+
+ 
 +  /* Get the system call. */
 +  copy_in (&call_nr, f->esp, sizeof call_nr);
 +  if (call_nr >= sizeof syscall_table / sizeof *syscall_table)
@@ -1003,8 +1006,10 @@ diff -u src/userprog/syscall.c~ src/userprog/syscall.c
 +{
 +  tid_t tid;
 +  char *kfile = copy_in_string (ufile);
-+ 
++
++  lock_acquire (&fs_lock);
 +  tid = process_execute (kfile);
++  lock_release (&fs_lock);
 + 
 +  palloc_free_page (kfile);
 + 
@@ -1023,7 +1028,12 @@ diff -u src/userprog/syscall.c~ src/userprog/syscall.c
 +sys_create (const char *ufile, unsigned initial_size) 
 +{
 +  char *kfile = copy_in_string (ufile);
-+  bool ok = filesys_create (kfile, initial_size);
++  bool ok;
++
++  lock_acquire (&fs_lock);
++  ok = filesys_create (kfile, initial_size);
++  lock_release (&fs_lock);
++
 +  palloc_free_page (kfile);
 + 
 +  return ok;
@@ -1034,7 +1044,12 @@ diff -u src/userprog/syscall.c~ src/userprog/syscall.c
 +sys_remove (const char *ufile) 
 +{
 +  char *kfile = copy_in_string (ufile);
-+  bool ok = filesys_remove (kfile);
++  bool ok;
++
++  lock_acquire (&fs_lock);
++  ok = filesys_remove (kfile);
++  lock_release (&fs_lock);
++
 +  palloc_free_page (kfile);
 + 
 +  return ok;
@@ -1059,6 +1074,7 @@ diff -u src/userprog/syscall.c~ src/userprog/syscall.c
 +  fd = malloc (sizeof *fd);
 +  if (fd != NULL)
 +    {
++      lock_acquire (&fs_lock);
 +      fd->file = filesys_open (kfile);
 +      if (fd->file != NULL)
 +        {
@@ -1068,6 +1084,7 @@ diff -u src/userprog/syscall.c~ src/userprog/syscall.c
 +        }
 +      else 
 +        free (fd);
++      lock_release (&fs_lock);
 +    }
 +  
 +  palloc_free_page (kfile);
@@ -1102,7 +1119,9 @@ diff -u src/userprog/syscall.c~ src/userprog/syscall.c
 +  struct file_descriptor *fd = lookup_fd (handle);
 +  int size;
 + 
++  lock_acquire (&fs_lock);
 +  size = file_length (fd->file);
++  lock_release (&fs_lock);
 + 
 +  return size;
 +}
@@ -1116,10 +1135,7 @@ diff -u src/userprog/syscall.c~ src/userprog/syscall.c
 +  struct file_descriptor *fd;
 +  int bytes_read = 0;
 +
-+  /* Look up file descriptor. */
-+  if (handle != STDIN_FILENO)
-+    fd = lookup_fd (handle);
-+
++  fd = lookup_fd (handle);
 +  while (size > 0) 
 +    {
 +      /* How much to read into this page? */
@@ -1127,37 +1143,44 @@ diff -u src/userprog/syscall.c~ src/userprog/syscall.c
 +      size_t read_amt = size < page_left ? size : page_left;
 +      off_t retval;
 +
-+      /* Check that touching this page is okay. */
-+      if (!page_lock (udst, true)) 
-+        thread_exit ();
-+
 +      /* Read from file into page. */
 +      if (handle != STDIN_FILENO) 
 +        {
++          if (!page_lock (udst, true)) 
++            thread_exit (); 
++          lock_acquire (&fs_lock);
 +          retval = file_read (fd->file, udst, read_amt);
-+          if (retval < 0)
-+            {
-+              if (bytes_read == 0)
-+                bytes_read = -1; 
-+              break;
-+            }
-+          bytes_read += retval; 
++          lock_release (&fs_lock);
++          page_unlock (udst);
 +        }
 +      else 
 +        {
 +          size_t i;
 +          
 +          for (i = 0; i < read_amt; i++) 
-+            udst[i] = kbd_getc ();
++            {
++              char c = kbd_getc ();
++              if (!page_lock (udst, true)) 
++                thread_exit ();
++              udst[i] = c;
++              page_unlock (udst);
++            }
 +          bytes_read = read_amt;
 +        }
-+
-+      /* Release page. */
-+      page_unlock (udst);
-+
-+      /* If it was a short read we're done. */
-+      if (retval != (off_t) read_amt)
-+        break;
++      
++      /* Check success. */
++      if (retval < 0)
++        {
++          if (bytes_read == 0)
++            bytes_read = -1; 
++          break;
++        }
++      bytes_read += retval; 
++      if (retval != (off_t) read_amt) 
++        {
++          /* Short read, so we're done. */
++          break; 
++        }
 +
 +      /* Advance. */
 +      udst += retval;
@@ -1186,11 +1209,10 @@ diff -u src/userprog/syscall.c~ src/userprog/syscall.c
 +      size_t write_amt = size < page_left ? size : page_left;
 +      off_t retval;
 +
-+      /* Check that we can touch this user page. */
++      /* Write from page into file. */
 +      if (!page_lock (usrc, false)) 
 +        thread_exit ();
-+
-+      /* Do the write. */
++      lock_acquire (&fs_lock);
 +      if (handle == STDOUT_FILENO)
 +        {
 +          putbuf ((char *) usrc, write_amt);
@@ -1198,8 +1220,7 @@ diff -u src/userprog/syscall.c~ src/userprog/syscall.c
 +        }
 +      else
 +        retval = file_write (fd->file, usrc, write_amt);
-+
-+      /* Release user page. */
++      lock_release (&fs_lock);
 +      page_unlock (usrc);
 +
 +      /* Handle return value. */
@@ -1227,8 +1248,13 @@ diff -u src/userprog/syscall.c~ src/userprog/syscall.c
 +static int
 +sys_seek (int handle, unsigned position) 
 +{
++  struct file_descriptor *fd = lookup_fd (handle);
++   
++  lock_acquire (&fs_lock);
 +  if ((off_t) position >= 0)
-+    file_seek (lookup_fd (handle)->file, position);
++    file_seek (fd->file, position);
++  lock_release (&fs_lock);
++
 +  return 0;
 +}
 + 
@@ -1236,7 +1262,14 @@ diff -u src/userprog/syscall.c~ src/userprog/syscall.c
 +static int
 +sys_tell (int handle) 
 +{
-+  return file_tell (lookup_fd (handle)->file);
++  struct file_descriptor *fd = lookup_fd (handle);
++  unsigned position;
++   
++  lock_acquire (&fs_lock);
++  position = file_tell (fd->file);
++  lock_release (&fs_lock);
++
++  return position;
 +}
 + 
 +/* Close system call. */
@@ -1244,7 +1277,9 @@ diff -u src/userprog/syscall.c~ src/userprog/syscall.c
 +sys_close (int handle) 
 +{
 +  struct file_descriptor *fd = lookup_fd (handle);
++  lock_acquire (&fs_lock);
 +  file_close (fd->file);
++  lock_release (&fs_lock);
 +  list_remove (&fd->elem);
 +  free (fd);
 +  return 0;
@@ -1308,7 +1343,9 @@ diff -u src/userprog/syscall.c~ src/userprog/syscall.c
 +    return -1;
 +
 +  m->handle = thread_current ()->next_handle++;
++  lock_acquire (&fs_lock);
 +  m->file = file_reopen (fd->file);
++  lock_release (&fs_lock);
 +  if (m->file == NULL) 
 +    {
 +      free (m);
@@ -1319,7 +1356,9 @@ diff -u src/userprog/syscall.c~ src/userprog/syscall.c
 +  list_push_front (&thread_current ()->mappings, &m->elem);
 +
 +  offset = 0;
++  lock_acquire (&fs_lock);
 +  length = file_length (m->file);
++  lock_release (&fs_lock);
 +  while (length > 0)
 +    {
 +      struct page *p = page_allocate ((uint8_t *) addr + offset, false);
@@ -1359,7 +1398,9 @@ diff -u src/userprog/syscall.c~ src/userprog/syscall.c
 +    {
 +      struct file_descriptor *fd = list_entry (e, struct file_descriptor, elem);
 +      next = list_next (e);
++      lock_acquire (&fs_lock);
 +      file_close (fd->file);
++      lock_release (&fs_lock);
 +      free (fd);
 +    }
 +   
@@ -1374,7 +1415,7 @@ diff -u src/userprog/syscall.c~ src/userprog/syscall.c
 Index: src/userprog/syscall.h
 diff -u src/userprog/syscall.h~ src/userprog/syscall.h
 --- src/userprog/syscall.h~ 2004-09-05 22:38:45.000000000 -0700
-+++ src/userprog/syscall.h 2006-04-08 18:52:50.000000000 -0700
++++ src/userprog/syscall.h 2006-05-16 13:44:56.000000000 -0700
 @@ -2,5 +2,6 @@
  #define USERPROG_SYSCALL_H
  
@@ -1385,7 +1426,7 @@ diff -u src/userprog/syscall.h~ src/userprog/syscall.h
 Index: src/vm/frame.c
 diff -u src/vm/frame.c~ src/vm/frame.c
 --- src/vm/frame.c~ 1969-12-31 16:00:00.000000000 -0800
-+++ src/vm/frame.c 2006-04-08 18:52:50.000000000 -0700
++++ src/vm/frame.c 2006-05-16 13:44:56.000000000 -0700
 @@ -0,0 +1,162 @@
 +#include "vm/frame.h"
 +#include <stdio.h>
@@ -1552,7 +1593,7 @@ diff -u src/vm/frame.c~ src/vm/frame.c
 Index: src/vm/frame.h
 diff -u src/vm/frame.h~ src/vm/frame.h
 --- src/vm/frame.h~ 1969-12-31 16:00:00.000000000 -0800
-+++ src/vm/frame.h 2006-04-08 18:52:50.000000000 -0700
++++ src/vm/frame.h 2006-05-16 13:44:56.000000000 -0700
 @@ -0,0 +1,23 @@
 +#ifndef VM_FRAME_H
 +#define VM_FRAME_H
@@ -1580,7 +1621,7 @@ diff -u src/vm/frame.h~ src/vm/frame.h
 Index: src/vm/page.c
 diff -u src/vm/page.c~ src/vm/page.c
 --- src/vm/page.c~ 1969-12-31 16:00:00.000000000 -0800
-+++ src/vm/page.c 2006-04-08 18:52:50.000000000 -0700
++++ src/vm/page.c 2006-05-16 13:44:56.000000000 -0700
 @@ -0,0 +1,293 @@
 +#include "vm/page.h"
 +#include <stdio.h>
@@ -1878,7 +1919,7 @@ diff -u src/vm/page.c~ src/vm/page.c
 Index: src/vm/page.h
 diff -u src/vm/page.h~ src/vm/page.h
 --- src/vm/page.h~ 1969-12-31 16:00:00.000000000 -0800
-+++ src/vm/page.h 2006-04-08 18:52:50.000000000 -0700
++++ src/vm/page.h 2006-05-16 13:44:56.000000000 -0700
 @@ -0,0 +1,50 @@
 +#ifndef VM_PAGE_H
 +#define VM_PAGE_H
@@ -1933,7 +1974,7 @@ diff -u src/vm/page.h~ src/vm/page.h
 Index: src/vm/swap.c
 diff -u src/vm/swap.c~ src/vm/swap.c
 --- src/vm/swap.c~ 1969-12-31 16:00:00.000000000 -0800
-+++ src/vm/swap.c 2006-04-08 18:52:50.000000000 -0700
++++ src/vm/swap.c 2006-05-16 13:44:56.000000000 -0700
 @@ -0,0 +1,85 @@
 +#include "vm/swap.h"
 +#include <bitmap.h>
@@ -2023,7 +2064,7 @@ diff -u src/vm/swap.c~ src/vm/swap.c
 Index: src/vm/swap.h
 diff -u src/vm/swap.h~ src/vm/swap.h
 --- src/vm/swap.h~ 1969-12-31 16:00:00.000000000 -0800
-+++ src/vm/swap.h 2006-04-08 18:52:50.000000000 -0700
++++ src/vm/swap.h 2006-05-16 13:44:56.000000000 -0700
 @@ -0,0 +1,11 @@
 +#ifndef VM_SWAP_H
 +#define VM_SWAP_H 1
