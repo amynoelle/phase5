@@ -1,7 +1,5 @@
 -*- text -*-
 
-* Bochs is not fully reproducible.
-
 Godmar says:
 
 - In Project 2, we're missing tests that pass arguments to system calls
