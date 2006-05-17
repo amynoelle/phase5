@@ -40,10 +40,6 @@ incorrect implementations to pass with a perfect score.
 
 We are seeing the following wrong implementations pass all tests:
 
-- Implementations that assume locks are released in the opposite order
-in which they're acquired. The students implement this by
-popping/pushing on the donation list.
-
 - Implementations that assume that the priority of a thread waiting on
 a semaphore or condition variable cannot change between when the
 thread was blocked and when it is unblocked. The students implement
@@ -53,18 +49,9 @@ picking the maximum thread on unblock.
 Neither of these two cases is detected; do you currently check for
 these mistakes manually?
 
-I wrote a test that checks for the first case; it is here:
-http://people.cs.vt.edu/~gback/pintos/priority-donate-multiple-2.patch
-
-[...]
-
 I also wrote a test case for the second scenario:
 http://people.cs.vt.edu/~gback/pintos/priority-donate-sema.c
 http://people.cs.vt.edu/~gback/pintos/priority-donate-sema.ck
-
-I put the other tests up here:
-http://people.cs.vt.edu/~gback/pintos/priority-donate-multiple2.c
-http://people.cs.vt.edu/~gback/pintos/priority-donate-multiple2.ck
 
 From: "Godmar Back" <godmar@gmail.com>
 Subject: multiple threads waking up at same clock tick
