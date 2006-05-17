@@ -207,9 +207,6 @@ via Godmar Back:
 
 * Get rid of mmap syscall, add sbrk.
 
-* Make backtrace program accept multiple object file arguments,
-  e.g. add -u option to allow backtracing user program also.
-
 * page-linear, page-shuffle VM tests do not use enough memory to force
   eviction.  Should increase memory consumption.
 
