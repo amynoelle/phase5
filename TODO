@@ -203,8 +203,6 @@ Godmar Back <godmar@gmail.com> writes:
 
 * Finish writing tour.
 
-* Introduce a "yield" system call to speed up the syn-* tests.
-
 via Godmar Back:
 
 * Get rid of mmap syscall, add sbrk.
