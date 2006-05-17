@@ -26,33 +26,6 @@ Add a system call "get_kernel_memory_information".  User programs
 could engage in a variety of activities and notice leaks by checking
 the kernel memory statistics.
 
----
-
-From: "Godmar Back" <godmar@gmail.com>
-Subject: priority donation tests
-To: "Ben Pfaff" <blp@cs.stanford.edu>
-Date: Fri, 3 Mar 2006 11:02:08 -0500
-
-Ben,
-
-it seems the priority donation tests are somewhat incomplete and allow
-incorrect implementations to pass with a perfect score.
-
-We are seeing the following wrong implementations pass all tests:
-
-- Implementations that assume that the priority of a thread waiting on
-a semaphore or condition variable cannot change between when the
-thread was blocked and when it is unblocked. The students implement
-this by doing an insert into an ordered list on block, rather than
-picking the maximum thread on unblock.
-
-Neither of these two cases is detected; do you currently check for
-these mistakes manually?
-
-I also wrote a test case for the second scenario:
-http://people.cs.vt.edu/~gback/pintos/priority-donate-sema.c
-http://people.cs.vt.edu/~gback/pintos/priority-donate-sema.ck
-
 From: "Godmar Back" <godmar@gmail.com>
 Subject: multiple threads waking up at same clock tick
 To: "Ben Pfaff" <blp@cs.stanford.edu>
