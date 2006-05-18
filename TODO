@@ -27,22 +27,6 @@ could engage in a variety of activities and notice leaks by checking
 the kernel memory statistics.
 
 From: "Godmar Back" <godmar@gmail.com>
-
-For reasons I don't currently understand, some of our students seem
-hesitant to include each thread in a second "all-threads" list and are
-looking for ways to implement the advanced scheduler without one.
-
-Currently, I believe, all tests for the mlfqs are such that all
-threads are either ready or sleeping in timer_sleep(). This allows for
-an incorrect implementation in which recent-cpu and priorities are
-updated only for those threads that are on the alarm list or the ready
-list.
-
-The todo item would be a test where a thread is blocked on a
-semaphore, lock or condition variable and have its recent_cpu decay to
-zero, and check that it's scheduled right after the unlock/up/signal.
-
-From: "Godmar Back" <godmar@gmail.com>
 Subject: set_priority & donation - a TODO item
 To: "Ben Pfaff" <blp@cs.stanford.edu>
 Date: Mon, 20 Feb 2006 22:20:26 -0500
