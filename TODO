@@ -7,11 +7,6 @@ that span multiple pages, where some are mapped and some are not.
 An implementation that only checks the first page, rather than all pages 
 that can be touched during a call to read()/write() passes all tests.
 
-- In Project 2, we're missing a test that would fail if they assumed
-that contiguous user-virtual addresses are laid out contiguously 
-in memory.  The loading code should ensure that non-contiguous 
-physical pages are allocated for the data segment (at least.)
-
 - Need some tests that test that illegal accesses lead to process
 termination. I have written some, will add them. In P2, obviously, 
 this would require that the students break this functionality since 
