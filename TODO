@@ -21,22 +21,6 @@ Add a system call "get_kernel_memory_information".  User programs
 could engage in a variety of activities and notice leaks by checking
 the kernel memory statistics.
 
-From: "Godmar Back" <godmar@gmail.com>
-Subject: set_priority & donation - a TODO item
-To: "Ben Pfaff" <blp@cs.stanford.edu>
-Date: Mon, 20 Feb 2006 22:20:26 -0500
-
-Ben,
-
-it seems that there are currently no tests that check the proper
-behavior of thread_set_priority() when called by a thread that is
-running under priority donation.  The proper behavior, I assume, is to
-temporarily drop the donation if the set priority is higher, and to
-reassume the donation should the thread subsequently set its own
-priority again to a level that's lower than a still active donation.
-
- - Godmar
-
 From: Godmar Back <godmar@gmail.com>
 Subject: on caching in project 4
 To: Ben Pfaff <blp@cs.stanford.edu>
@@ -110,8 +94,6 @@ via Godmar Back:
 * Assignments:
 
   - Add extra credit:
-
-    . Low-level x86 stuff, like paged page tables.
 
     . Specifics on how to implement sbrk, malloc.
 
