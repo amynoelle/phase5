@@ -136,17 +136,17 @@ diff -u src/userprog/process.c~ src/userprog/process.c
 +   thread. */
 +struct exec_info 
 +  {
-+    const char *filename;               /* Program to load. */
++    const char *file_name;              /* Program to load. */
 +    struct semaphore load_done;         /* "Up"ed when loading complete. */
 +    struct wait_status *wait_status;    /* Child process. */
 +    bool success;                       /* Program successfully loaded? */
 +  };
  
  /* Starts a new thread running a user program loaded from
-    FILENAME.  The new thread may be scheduled (and may even exit)
+    FILE_NAME.  The new thread may be scheduled (and may even exit)
 @@ -27,29 +39,37 @@ static bool load (const char *cmdline, v
  tid_t
- process_execute (const char *filename) 
+ process_execute (const char *file_name) 
  {
 -  char *fn_copy;
 +  struct exec_info exec;
@@ -154,21 +154,21 @@ diff -u src/userprog/process.c~ src/userprog/process.c
 +  char *save_ptr;
    tid_t tid;
  
--  /* Make a copy of FILENAME.
+-  /* Make a copy of FILE_NAME.
 -     Otherwise there's a race between the caller and load(). */
 -  fn_copy = palloc_get_page (0);
 -  if (fn_copy == NULL)
 -    return TID_ERROR;
--  strlcpy (fn_copy, filename, PGSIZE);
+-  strlcpy (fn_copy, file_name, PGSIZE);
 +  /* Initialize exec_info. */
-+  exec.filename = filename;
++  exec.file_name = file_name;
 +  sema_init (&exec.load_done, 0);
  
-   /* Create a new thread to execute FILENAME. */
--  tid = thread_create (filename, PRI_DEFAULT, execute_thread, fn_copy);
+   /* Create a new thread to execute FILE_NAME. */
+-  tid = thread_create (file_name, PRI_DEFAULT, execute_thread, fn_copy);
 -  if (tid == TID_ERROR)
 -    palloc_free_page (fn_copy); 
-+  strlcpy (thread_name, filename, sizeof thread_name);
++  strlcpy (thread_name, file_name, sizeof thread_name);
 +  strtok_r (thread_name, " ", &save_ptr);
 +  tid = thread_create (thread_name, PRI_DEFAULT, execute_thread, &exec);
 +  if (tid != TID_ERROR)
@@ -186,20 +186,20 @@ diff -u src/userprog/process.c~ src/userprog/process.c
  /* A thread function that loads a user process and starts it
     running. */
  static void
--execute_thread (void *filename_)
+-execute_thread (void *file_name_)
 +execute_thread (void *exec_)
  {
--  char *filename = filename_;
+-  char *file_name = file_name_;
 +  struct exec_info *exec = exec_;
    struct intr_frame if_;
    bool success;
  
-@@ -58,10 +78,28 @@ execute_thread (void *filename_)
+@@ -58,10 +78,28 @@ execute_thread (void *file_name_)
    if_.gs = if_.fs = if_.es = if_.ds = if_.ss = SEL_UDSEG;
    if_.cs = SEL_UCSEG;
    if_.eflags = FLAG_IF | FLAG_MBS;
--  success = load (filename, &if_.eip, &if_.esp);
-+  success = load (exec->filename, &if_.eip, &if_.esp);
+-  success = load (file_name, &if_.eip, &if_.esp);
++  success = load (exec->file_name, &if_.eip, &if_.esp);
 +
 +  /* Allocate wait_status. */
 +  if (success)
@@ -210,7 +210,7 @@ diff -u src/userprog/process.c~ src/userprog/process.c
 +    }
  
 -  /* If load failed, quit. */
--  palloc_free_page (filename);
+-  palloc_free_page (file_name);
 +  /* Initialize wait_status. */
 +  if (success) 
 +    {
@@ -226,7 +226,7 @@ diff -u src/userprog/process.c~ src/userprog/process.c
    if (!success) 
      thread_exit ();
  
-@@ -75,18 +113,47 @@ execute_thread (void *filename_)
+@@ -75,18 +113,47 @@ execute_thread (void *file_name_)
    NOT_REACHED ();
  }
  
@@ -325,11 +325,11 @@ diff -u src/userprog/process.c~ src/userprog/process.c
     and its initial stack pointer into *ESP.
     Returns true if successful, false otherwise. */
  bool
--load (const char *filename, void (**eip) (void), void **esp) 
+-load (const char *file_name, void (**eip) (void), void **esp) 
 +load (const char *cmd_line, void (**eip) (void), void **esp) 
  {
    struct thread *t = thread_current ();
-+  char filename[NAME_MAX + 2];
++  char file_name[NAME_MAX + 2];
    struct Elf32_Ehdr ehdr;
    struct file *file = NULL;
    off_t file_ofs;
@@ -338,31 +338,31 @@ diff -u src/userprog/process.c~ src/userprog/process.c
    int i;
  
    /* Allocate and activate page directory. */
-@@ -224,13 +317,22 @@ load (const char *filename, void (**eip)
+@@ -224,13 +317,22 @@ load (const char *file_name, void (**eip)
      goto done;
    process_activate ();
  
-+  /* Extract filename from command line. */
++  /* Extract file_name from command line. */
 +  while (*cmd_line == ' ')
 +    cmd_line++;
-+  strlcpy (filename, cmd_line, sizeof filename);
-+  cp = strchr (filename, ' ');
++  strlcpy (file_name, cmd_line, sizeof file_name);
++  cp = strchr (file_name, ' ');
 +  if (cp != NULL)
 +    *cp = '\0';
 +
    /* Open executable file. */
--  file = filesys_open (filename);
-+  t->bin_file = file = filesys_open (filename);
+-  file = filesys_open (file_name);
++  t->bin_file = file = filesys_open (file_name);
    if (file == NULL) 
      {
-       printf ("load: %s: open failed\n", filename);
+       printf ("load: %s: open failed\n", file_name);
        goto done; 
      }
 +  file_deny_write (file);
  
    /* Read and verify executable header. */
    if (file_read (file, &ehdr, sizeof ehdr) != sizeof ehdr
-@@ -284,7 +386,7 @@ load (const char *filename, void (**eip)
+@@ -284,7 +386,7 @@ load (const char *file_name, void (**eip)
      }
  
    /* Set up stack. */
@@ -371,7 +371,7 @@ diff -u src/userprog/process.c~ src/userprog/process.c
      goto done;
  
    /* Start address. */
-@@ -294,7 +396,6 @@ load (const char *filename, void (**eip)
+@@ -294,7 +396,6 @@ load (const char *file_name, void (**eip)
  
   done:
    /* We arrive here whether the load is successful or not. */

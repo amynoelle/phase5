@@ -6,7 +6,7 @@ diff -u src/Makefile.build~ src/Makefile.build
  userprog_SRC += userprog/tss.c		# TSS management.
  
  # No virtual memory code yet.
--#vm_SRC = vm/filename.c			# Some file.
+-#vm_SRC = vm/file.c			# Some file.
 +vm_SRC = vm/page.c
 +vm_SRC += vm/frame.c
 +vm_SRC += vm/swap.c
@@ -780,10 +780,10 @@ diff -u src/filesys/filesys.c~ src/filesys/filesys.c
  #include "devices/disk.h"
 +#include "threads/thread.h"
  
- /* The disk that contains the filesystem. */
+ /* The disk that contains the file system. */
  struct disk *filesys_disk;
 @@ -23,6 +25,7 @@ filesys_init (bool format) 
-     PANIC ("hd0:1 (hdb) not present, filesystem initialization failed");
+     PANIC ("hd0:1 (hdb) not present, file system initialization failed");
  
    inode_init ();
 +  cache_init ();
@@ -835,10 +835,10 @@ diff -u src/filesys/filesys.c~ src/filesys/filesys.c
 +/* Resolves relative or absolute file NAME.
 +   Returns true if successful, false on failure.
 +   Stores the directory corresponding to the name into *DIRP,
-+   and the file name part into BASENAME. */
++   and the file name part into BASE_NAME. */
 +static bool
 +resolve_name (const char *name,
-+              struct dir **dirp, char basename[NAME_MAX + 1]) 
++              struct dir **dirp, char base_name[NAME_MAX + 1]) 
 +{
 +  struct dir *dir = NULL;
 +  struct inode *inode;
@@ -878,14 +878,14 @@ diff -u src/filesys/filesys.c~ src/filesys/filesys.c
 +
 +  /* Return our results. */
 +  *dirp = dir;
-+  strlcpy (basename, part, NAME_MAX + 1);
++  strlcpy (base_name, part, NAME_MAX + 1);
 +  return true;
 +
 + error:
 +  /* Return failure. */
 +  dir_close (dir);
 +  *dirp = NULL;
-+  basename[0] = '\0';
++  base_name[0] = '\0';
 +  return false;
  }
  
@@ -898,17 +898,17 @@ diff -u src/filesys/filesys.c~ src/filesys/filesys.c
 +filesys_create (const char *name, off_t initial_size, enum inode_type type) 
  {
 +  struct dir *dir;
-+  char basename[NAME_MAX + 1];
++  char base_name[NAME_MAX + 1];
    disk_sector_t inode_sector = 0;
 -  struct dir *dir = dir_open_root ();
 -  bool success = (dir != NULL
 -                  && free_map_allocate (1, &inode_sector)
 -                  && inode_create (inode_sector, initial_size)
 -                  && dir_add (dir, name, inode_sector));
-+  bool success = (resolve_name (name, &dir, basename)
++  bool success = (resolve_name (name, &dir, base_name)
 +                  && free_map_allocate (&inode_sector)
 +                  && inode_create (inode_sector, initial_size, type)
-+                  && dir_add (dir, basename, inode_sector));
++                  && dir_add (dir, base_name, inode_sector));
    if (!success && inode_sector != 0) 
 -    free_map_release (inode_sector, 1);
 +    free_map_release (inode_sector);
@@ -925,7 +925,7 @@ diff -u src/filesys/filesys.c~ src/filesys/filesys.c
  {
 -  struct dir *dir = dir_open_root ();
 +  struct dir *dir = NULL;
-+  char basename[NAME_MAX + 1];
++  char base_name[NAME_MAX + 1];
    struct inode *inode = NULL;
  
 -  if (dir != NULL)
@@ -934,8 +934,8 @@ diff -u src/filesys/filesys.c~ src/filesys/filesys.c
 +    inode = inode_open (ROOT_DIR_SECTOR);
 +  else if (!strcmp (name, "."))
 +    inode = inode_reopen (dir_get_inode (thread_current ()->wd));
-+  else if (resolve_name (name, &dir, basename))
-+    dir_lookup (dir, basename, &inode);
++  else if (resolve_name (name, &dir, base_name))
++    dir_lookup (dir, base_name, &inode);
    dir_close (dir);
  
 -  return file_open (inode);
@@ -950,11 +950,11 @@ diff -u src/filesys/filesys.c~ src/filesys/filesys.c
 -  struct dir *dir = dir_open_root ();
 -  bool success = dir != NULL && dir_remove (dir, name);
 +  struct dir *dir = NULL;
-+  char basename[NAME_MAX + 1];
++  char base_name[NAME_MAX + 1];
 +  bool success = false;
 +
-+  if (resolve_name (name, &dir, basename)) 
-+    success = dir_remove (dir, basename);
++  if (resolve_name (name, &dir, base_name)) 
++    success = dir_remove (dir, base_name);
    dir_close (dir); 
  
 @@ -91,5 +193,44 @@
@@ -978,11 +978,11 @@ diff -u src/filesys/filesys.c~ src/filesys/filesys.c
 +    }
 +  else 
 +    {
-+      char basename[NAME_MAX + 1];
++      char base_name[NAME_MAX + 1];
 +      struct inode *base_inode;
 +      struct dir *base_dir;
-+      if (!resolve_name (name, &dir, basename)
-+          || !dir_lookup (dir, basename, &base_inode)
++      if (!resolve_name (name, &dir, base_name)
++          || !dir_lookup (dir, base_name, &base_inode)
 +          || (base_dir = dir_open (base_inode)) == NULL)
 +        {
 +          dir_close (dir);
@@ -1034,7 +1034,7 @@ diff -u src/filesys/filesys.c~ src/filesys/filesys.c
 @@ -173,9 +308,13 @@ static void
  do_format (void)
  {
-   printf ("Formatting filesystem...");
+   printf ("Formatting file system...");
 +
 +  /* Set up free map. */
    free_map_create ();
@@ -1192,32 +1192,32 @@ diff -u src/filesys/fsutil.c~ src/filesys/fsutil.c
 @@ -30,7 +30,7 @@ fsutil_cat (char **argv)
    char *buffer;
  
-   printf ("Printing '%s' to the console...\n", filename);
--  file = filesys_open (filename);
-+  file = file_open (filesys_open (filename));
+   printf ("Printing '%s' to the console...\n", file_name);
+-  file = filesys_open (file_name);
++  file = file_open (filesys_open (file_name));
    if (file == NULL)
-     PANIC ("%s: open failed", filename);
+     PANIC ("%s: open failed", file_name);
    buffer = palloc_get_page (PAL_ASSERT);
 @@ -102,9 +102,9 @@ fsutil_put (char **argv) 
-     PANIC ("%s: invalid file size %d", filename, size);
+     PANIC ("%s: invalid file size %d", file_name, size);
    
    /* Create destination file. */
--  if (!filesys_create (filename, size))
-+  if (!filesys_create (filename, size, FILE_INODE))
-     PANIC ("%s: create failed", filename);
--  dst = filesys_open (filename);
-+  dst = file_open (filesys_open (filename));
+-  if (!filesys_create (file_name, size))
++  if (!filesys_create (file_name, size, FILE_INODE))
+     PANIC ("%s: create failed", file_name);
+-  dst = filesys_open (file_name);
++  dst = file_open (filesys_open (file_name));
    if (dst == NULL)
-     PANIC ("%s: open failed", filename);
+     PANIC ("%s: open failed", file_name);
  
 @@ -154,7 +154,7 @@ fsutil_get (char **argv)
      PANIC ("couldn't allocate buffer");
  
    /* Open source file. */
--  src = filesys_open (filename);
-+  src = file_open (filesys_open (filename));
+-  src = filesys_open (file_name);
++  src = file_open (filesys_open (file_name));
    if (src == NULL)
-     PANIC ("%s: open failed", filename);
+     PANIC ("%s: open failed", file_name);
    size = file_length (src);
 Index: src/filesys/inode.c
 diff -u src/filesys/inode.c~ src/filesys/inode.c
@@ -2200,7 +2200,7 @@ diff -u src/userprog/process.c~ src/userprog/process.c
 +   thread. */
 +struct exec_info 
 +  {
-+    const char *filename;               /* Program to load. */
++    const char *file_name;              /* Program to load. */
 +    struct semaphore load_done;         /* "Up"ed when loading complete. */
 +    struct wait_status *wait_status;    /* Child process. */
 +    struct dir *wd;                     /* Working directory. */
@@ -2208,10 +2208,10 @@ diff -u src/userprog/process.c~ src/userprog/process.c
 +  };
  
  /* Starts a new thread running a user program loaded from
-    FILENAME.  The new thread may be scheduled (and may even exit)
+    FILE_NAME.  The new thread may be scheduled (and may even exit)
 @@ -28,41 +43,78 @@ static bool load (const char *cmdline, v
  tid_t
- process_execute (const char *filename) 
+ process_execute (const char *file_name) 
  {
 -  char *fn_copy;
 +  struct dir *wd = thread_current ()->wd;
@@ -2220,23 +2220,23 @@ diff -u src/userprog/process.c~ src/userprog/process.c
 +  char *save_ptr;
    tid_t tid;
  
--  /* Make a copy of FILENAME.
+-  /* Make a copy of FILE_NAME.
 -     Otherwise there's a race between the caller and load(). */
 -  fn_copy = palloc_get_page (0);
 -  if (fn_copy == NULL)
 +  /* Initialize exec_info. */
-+  exec.filename = filename;
++  exec.file_name = file_name;
 +  exec.wd = wd != NULL ? dir_reopen (wd) : dir_open_root ();
 +  if (exec.wd == NULL)
      return TID_ERROR;
--  strlcpy (fn_copy, filename, PGSIZE);
+-  strlcpy (fn_copy, file_name, PGSIZE);
 +  sema_init (&exec.load_done, 0);
  
-   /* Create a new thread to execute FILENAME. */
--  tid = thread_create (filename, PRI_DEFAULT, execute_thread, fn_copy);
+   /* Create a new thread to execute FILE_NAME. */
+-  tid = thread_create (file_name, PRI_DEFAULT, execute_thread, fn_copy);
 -  if (tid == TID_ERROR)
 -    palloc_free_page (fn_copy); 
-+  strlcpy (thread_name, filename, sizeof thread_name);
++  strlcpy (thread_name, file_name, sizeof thread_name);
 +  strtok_r (thread_name, " ", &save_ptr);
 +  tid = thread_create (thread_name, PRI_DEFAULT, execute_thread, &exec);
 +  if (tid != TID_ERROR)
@@ -2259,10 +2259,10 @@ diff -u src/userprog/process.c~ src/userprog/process.c
  /* A thread function that loads a user process and starts it
     running. */
  static void
--execute_thread (void *filename_)
+-execute_thread (void *file_name_)
 +execute_thread (void *exec_)
  {
--  char *filename = filename_;
+-  char *file_name = file_name_;
 +  struct exec_info *exec = exec_;
    struct intr_frame if_;
    bool success;
@@ -2274,11 +2274,11 @@ diff -u src/userprog/process.c~ src/userprog/process.c
    if_.gs = if_.fs = if_.es = if_.ds = if_.ss = SEL_UDSEG;
    if_.cs = SEL_UCSEG;
    if_.eflags = FLAG_IF | FLAG_MBS;
--  success = load (filename, &if_.eip, &if_.esp);
-+  success = load (exec->filename, &if_.eip, &if_.esp);
+-  success = load (file_name, &if_.eip, &if_.esp);
++  success = load (exec->file_name, &if_.eip, &if_.esp);
  
 -  /* If load failed, quit. */
--  palloc_free_page (filename);
+-  palloc_free_page (file_name);
 +  /* Allocate wait_status. */
 +  if (success)
 +    {
@@ -2302,7 +2302,7 @@ diff -u src/userprog/process.c~ src/userprog/process.c
    if (!success) 
      thread_exit ();
  
-@@ -76,18 +128,47 @@ execute_thread (void *filename_)
+@@ -76,18 +128,47 @@ execute_thread (void *file_name_)
    NOT_REACHED ();
  }
  
@@ -2404,11 +2404,11 @@ diff -u src/userprog/process.c~ src/userprog/process.c
     and its initial stack pointer into *ESP.
     Returns true if successful, false otherwise. */
  bool
--load (const char *filename, void (**eip) (void), void **esp) 
+-load (const char *file_name, void (**eip) (void), void **esp) 
 +load (const char *cmd_line, void (**eip) (void), void **esp) 
  {
    struct thread *t = thread_current ();
-+  char filename[NAME_MAX + 2];
++  char file_name[NAME_MAX + 2];
    struct Elf32_Ehdr ehdr;
    struct file *file = NULL;
    off_t file_ofs;
@@ -2417,7 +2417,7 @@ diff -u src/userprog/process.c~ src/userprog/process.c
    int i;
  
    /* Allocate and activate page directory. */
-@@ -220,13 +330,28 @@ load (const char *filename, void (**eip)
+@@ -220,13 +330,28 @@ load (const char *file_name, void (**eip)
      goto done;
    process_activate ();
  
@@ -2427,27 +2427,27 @@ diff -u src/userprog/process.c~ src/userprog/process.c
 +    goto done;
 +  hash_init (t->pages, page_hash, page_less, NULL);
 +
-+  /* Extract filename from command line. */
++  /* Extract file_name from command line. */
 +  while (*cmd_line == ' ')
 +    cmd_line++;
-+  strlcpy (filename, cmd_line, sizeof filename);
-+  cp = strchr (filename, ' ');
++  strlcpy (file_name, cmd_line, sizeof file_name);
++  cp = strchr (file_name, ' ');
 +  if (cp != NULL)
 +    *cp = '\0';
 +
    /* Open executable file. */
--  file = filesys_open (filename);
-+  t->bin_file = file = file_open (filesys_open (filename));
+-  file = filesys_open (file_name);
++  t->bin_file = file = file_open (filesys_open (file_name));
    if (file == NULL) 
      {
-       printf ("load: %s: open failed\n", filename);
+       printf ("load: %s: open failed\n", file_name);
        goto done; 
      }
 +  file_deny_write (file);
  
    /* Read and verify executable header. */
    if (file_read (file, &ehdr, sizeof ehdr) != sizeof ehdr
-@@ -301,7 +426,7 @@ load (const char *filename, void (**eip)
+@@ -301,7 +426,7 @@ load (const char *file_name, void (**eip)
      }
  
    /* Set up stack. */
@@ -2456,7 +2456,7 @@ diff -u src/userprog/process.c~ src/userprog/process.c
      goto done;
  
    /* Start address. */
-@@ -311,14 +436,11 @@ load (const char *filename, void (**eip)
+@@ -311,14 +436,11 @@ load (const char *file_name, void (**eip)
  
   done:
    /* We arrive here whether the load is successful or not. */
