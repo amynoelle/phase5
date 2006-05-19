@@ -97,8 +97,6 @@ via Godmar Back:
 
     . Other good ideas.
 
-    . opendir/readdir/closedir
-
     . everything needed for getcwd()
 
 To add partition support:

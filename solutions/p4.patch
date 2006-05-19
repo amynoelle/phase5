@@ -722,16 +722,23 @@ diff -u src/filesys/directory.c~ src/filesys/directory.c
    return success;
  }
  
-@@ -205,8 +210,10 @@ dir_list (const struct dir *dir)
+@@ -216,14 +216,17 @@
+ {
    struct dir_entry e;
-   size_t ofs;
-   
+ 
 +  inode_lock (dir->inode);
-   for (ofs = 0; inode_read_at (dir->inode, &e, sizeof e, ofs) == sizeof e;
-        ofs += sizeof e) 
-     if (e.in_use)
-       printf ("%s\n", e.name);
+   while (inode_read_at (dir->inode, &e, sizeof e, dir->pos) == sizeof e) 
+     {
+       dir->pos += sizeof e;
+       if (e.in_use)
+         {
+           strlcpy (name, e.name, NAME_MAX + 1);
++          inode_unlock (dir->inode);
+           return true;
+         } 
+     }
 +  inode_unlock (dir->inode);
+   return false;
  }
 Index: src/filesys/directory.h
 diff -u src/filesys/directory.h~ src/filesys/directory.h
@@ -908,7 +915,7 @@ diff -u src/filesys/filesys.c~ src/filesys/filesys.c
    dir_close (dir);
  
    return success;
-@@ -64,17 +161,18 @@ filesys_create (const char *name, off_t 
+@@ -64,17 +161,22 @@ filesys_create (const char *name, off_t 
     otherwise.
     Fails if no file named NAME exists,
     or if an internal memory allocation fails. */
@@ -917,13 +924,17 @@ diff -u src/filesys/filesys.c~ src/filesys/filesys.c
  filesys_open (const char *name)
  {
 -  struct dir *dir = dir_open_root ();
-+  struct dir *dir;
++  struct dir *dir = NULL;
 +  char basename[NAME_MAX + 1];
    struct inode *inode = NULL;
  
 -  if (dir != NULL)
 -    dir_lookup (dir, name, &inode);
-+  if (resolve_name (name, &dir, basename))
++  if (!strcmp (name, "/"))
++    inode = inode_open (ROOT_DIR_SECTOR);
++  else if (!strcmp (name, "."))
++    inode = inode_reopen (dir_get_inode (thread_current ()->wd));
++  else if (resolve_name (name, &dir, basename))
 +    dir_lookup (dir, basename, &inode);
    dir_close (dir);
  
@@ -932,7 +943,7 @@ diff -u src/filesys/filesys.c~ src/filesys/filesys.c
  }
  
  /* Deletes the file named NAME.
-@@ -84,13 +182,56 @@ filesys_open (const char *name)
+@@ -84,7 +182,11 @@ filesys_open (const char *name)
  bool
  filesys_remove (const char *name) 
  {
@@ -946,9 +957,9 @@ diff -u src/filesys/filesys.c~ src/filesys/filesys.c
 +    success = dir_remove (dir, basename);
    dir_close (dir); 
  
+@@ -91,5 +193,44 @@
    return success;
  }
- 
 +/* Change current directory to NAME.
 +   Return true if successful, false on failure. */
 +bool
@@ -988,28 +999,9 @@ diff -u src/filesys/filesys.c~ src/filesys/filesys.c
 +  return true;
 +}
 +
- /* Prints a list of files in the filesystem to the system
-    console.
-    Returns true if successful, false on failure,
-@@ -98,15 +239,9 @@ filesys_remove (const char *name) 
- bool
- filesys_list (void) 
- {
--  struct dir *dir = dir_open_root ();
--  if (dir != NULL) 
--    {
--      dir_list (dir);
--      dir_close (dir);
--      return true;
--    }
--  else
--    return false;
-+  dir_list (thread_current ()->wd);
-+
-+  return true;
- }
  
  static void must_succeed_function (int, bool) NO_INLINE;
+ #define MUST_SUCCEED(EXPR) must_succeed_function (__LINE__, EXPR)
 @@ -129,8 +264,8 @@ filesys_self_test (void)
      {
        /* Create file and check that it contains zeros
@@ -1067,7 +1059,7 @@ diff -u src/filesys/filesys.h~ src/filesys/filesys.h
  
  /* Sectors of system file inodes. */
  #define FREE_MAP_SECTOR 0       /* Free map file inode sector. */
-@@ -13,8 +14,8 @@ extern struct disk *filesys_disk;
+@@ -13,9 +14,10 @@ extern struct disk *filesys_disk;
  
  void filesys_init (bool format);
  void filesys_done (void);
@@ -1076,8 +1068,10 @@ diff -u src/filesys/filesys.h~ src/filesys/filesys.h
 +bool filesys_create (const char *name, off_t initial_size, enum inode_type);
 +struct inode *filesys_open (const char *name);
  bool filesys_remove (const char *name);
- bool filesys_chdir (const char *name);
- bool filesys_list (void);
++bool filesys_chdir (const char *name);
+ 
+ void filesys_self_test (void);
+ 
 Index: src/filesys/free-map.c
 diff -u src/filesys/free-map.c~ src/filesys/free-map.c
 --- src/filesys/free-map.c	2005-06-18 20:20:48.000000000 -0700
@@ -2661,7 +2655,7 @@ Index: src/userprog/syscall.c
 diff -u src/userprog/syscall.c~ src/userprog/syscall.c
 --- src/userprog/syscall.c	2005-06-18 20:21:21.000000000 -0700
 +++ src/userprog/syscall.c	2006-05-18 21:26:51.000000000 -0700
-@@ -1,20 +1,594 @@
+@@ -1,20 +1,671 @@
  #include "userprog/syscall.h"
  #include <stdio.h>
 +#include <string.h>
@@ -2699,7 +2693,8 @@ diff -u src/userprog/syscall.c~ src/userprog/syscall.c
 +static int sys_munmap (int mapping);
 +static int sys_chdir (const char *udir);
 +static int sys_mkdir (const char *udir);
-+static int sys_lsdir (void);
++static int sys_readdir (int handle, char *name);
++static int sys_isdir (int handle);
 + 
  static void syscall_handler (struct intr_frame *);
 -
@@ -2744,7 +2739,8 @@ diff -u src/userprog/syscall.c~ src/userprog/syscall.c
 +      {1, (syscall_function *) sys_munmap},
 +      {1, (syscall_function *) sys_chdir},
 +      {1, (syscall_function *) sys_mkdir},
-+      {0, (syscall_function *) sys_lsdir},
++      {2, (syscall_function *) sys_readdir},
++      {1, (syscall_function *) sys_isdir},
 +    };
  
 +  const struct syscall *sc;
@@ -2790,6 +2786,32 @@ diff -u src/userprog/syscall.c~ src/userprog/syscall.c
 +
 +      dst += chunk_size;
 +      usrc += chunk_size;
++      size -= chunk_size;
++    }
++}
++ 
++/* Copies SIZE bytes from kernel address SRC to user address
++   UDST.
++   Call thread_exit() if any of the user accesses are invalid. */
++static void
++copy_out (void *udst_, const void *src_, size_t size) 
++{
++  uint8_t *udst = udst_;
++  const uint8_t *src = src_;
++
++  while (size > 0) 
++    {
++      size_t chunk_size = PGSIZE - pg_ofs (udst);
++      if (chunk_size > size)
++        chunk_size = size;
++      
++      if (!page_lock (udst, false))
++        thread_exit ();
++      memcpy (udst, src, chunk_size);
++      page_unlock (udst);
++
++      udst += chunk_size;
++      src += chunk_size;
 +      size -= chunk_size;
 +    }
 +}
@@ -2903,6 +2925,7 @@ diff -u src/userprog/syscall.c~ src/userprog/syscall.c
 +  {
 +    struct list_elem elem;      /* List element. */
 +    struct file *file;          /* File. */
++    struct dir *dir;            /* Directory. */
 +    int handle;                 /* File handle. */
 +  };
 + 
@@ -2914,18 +2937,28 @@ diff -u src/userprog/syscall.c~ src/userprog/syscall.c
 +  struct file_descriptor *fd;
 +  int handle = -1;
 + 
-+  fd = malloc (sizeof *fd);
++  fd = calloc (1, sizeof *fd);
 +  if (fd != NULL)
 +    {
-+      fd->file = file_open (filesys_open (kfile));
-+      if (fd->file != NULL)
++      struct inode *inode = filesys_open (kfile);
++      if (inode != NULL)
 +        {
-+          struct thread *cur = thread_current ();
-+          handle = fd->handle = cur->next_handle++;
-+          list_push_front (&cur->fds, &fd->elem);
++          if (inode_get_type (inode) == FILE_INODE)
++            fd->file = file_open (inode);
++          else
++            fd->dir = dir_open (inode);
++          if (fd->file != NULL || fd->dir != NULL)
++            {
++              struct thread *cur = thread_current ();
++              handle = fd->handle = cur->next_handle++;
++              list_push_front (&cur->fds, &fd->elem);
++            }
++          else 
++            {
++              free (fd);
++              inode_close (inode);
++            }
 +        }
-+      else 
-+        free (fd);
 +    }
 +  
 +  palloc_free_page (kfile);
@@ -2953,11 +2986,35 @@ diff -u src/userprog/syscall.c~ src/userprog/syscall.c
 +  thread_exit ();
 +}
 + 
++/* Returns the file descriptor associated with the given handle.
++   Terminates the process if HANDLE is not associated with an
++   open ordinary file. */
++static struct file_descriptor *
++lookup_file_fd (int handle) 
++{
++  struct file_descriptor *fd = lookup_fd (handle);
++  if (fd->file == NULL)
++    thread_exit ();
++  return fd;
++}
++ 
++/* Returns the file descriptor associated with the given handle.
++   Terminates the process if HANDLE is not associated with an
++   open directory. */
++static struct file_descriptor *
++lookup_dir_fd (int handle) 
++{
++  struct file_descriptor *fd = lookup_fd (handle);
++  if (fd->dir == NULL)
++    thread_exit ();
++  return fd;
++}
++
 +/* Filesize system call. */
 +static int
 +sys_filesize (int handle) 
 +{
-+  struct file_descriptor *fd = lookup_fd (handle);
++  struct file_descriptor *fd = lookup_file_fd (handle);
 +  int size;
 + 
 +  size = file_length (fd->file);
@@ -2975,7 +3032,7 @@ diff -u src/userprog/syscall.c~ src/userprog/syscall.c
 +
 +  /* Look up file descriptor. */
 +  if (handle != STDIN_FILENO)
-+    fd = lookup_fd (handle);
++    fd = lookup_file_fd (handle);
 +
 +  while (size > 0) 
 +    {
@@ -3035,7 +3092,7 @@ diff -u src/userprog/syscall.c~ src/userprog/syscall.c
 +
 +  /* Lookup up file descriptor. */
 +  if (handle != STDOUT_FILENO)
-+    fd = lookup_fd (handle);
++    fd = lookup_file_fd (handle);
 +
 +  while (size > 0) 
 +    {
@@ -3086,7 +3143,7 @@ diff -u src/userprog/syscall.c~ src/userprog/syscall.c
 +sys_seek (int handle, unsigned position) 
 +{
 +  if ((off_t) position >= 0)
-+    file_seek (lookup_fd (handle)->file, position);
++    file_seek (lookup_file_fd (handle)->file, position);
 +  return 0;
 +}
 + 
@@ -3094,7 +3151,7 @@ diff -u src/userprog/syscall.c~ src/userprog/syscall.c
 +static int
 +sys_tell (int handle) 
 +{
-+  return file_tell (lookup_fd (handle)->file);
++  return file_tell (lookup_file_fd (handle)->file);
 +}
 + 
 +/* Close system call. */
@@ -3103,6 +3160,7 @@ diff -u src/userprog/syscall.c~ src/userprog/syscall.c
 +{
 +  struct file_descriptor *fd = lookup_fd (handle);
 +  file_close (fd->file);
++  dir_close (fd->dir);
 +  list_remove (&fd->elem);
 +  free (fd);
 +  return 0;
@@ -3157,7 +3215,7 @@ diff -u src/userprog/syscall.c~ src/userprog/syscall.c
 +static int
 +sys_mmap (int handle, void *addr)
 +{
-+  struct file_descriptor *fd = lookup_fd (handle);
++  struct file_descriptor *fd = lookup_file_fd (handle);
 +  struct mapping *m = malloc (sizeof *m);
 +  size_t offset;
 +  off_t length;
@@ -3227,12 +3285,24 @@ diff -u src/userprog/syscall.c~ src/userprog/syscall.c
 +  return ok;
 +}
 +
-+/* Lsdir system call. */
++/* Readdir system call. */
 +static int
-+sys_lsdir (void) 
++sys_readdir (int handle, char *uname)
 +{
-+  dir_list (thread_current ()->wd);
-+  return 0;
++  struct file_descriptor *fd = lookup_dir_fd (handle);
++  char name[NAME_MAX + 1];
++  bool ok = dir_readdir (fd->dir, name);
++  if (ok)
++    copy_out (uname, name, strlen (name) + 1);
++  return ok;
++}
++
++/* Isdir system call. */
++static int
++sys_isdir (int handle)
++{
++  struct file_descriptor *fd = lookup_fd (handle);
++  return fd->dir != NULL;
 +}
 + 
 +/* On thread exit, close all open files and unmap all mappings. */
@@ -3247,6 +3317,7 @@ diff -u src/userprog/syscall.c~ src/userprog/syscall.c
 +      struct file_descriptor *fd = list_entry (e, struct file_descriptor, elem);
 +      next = list_next (e);
 +      file_close (fd->file);
++      dir_close (fd->dir);
 +      free (fd);
 +    }
 +   
