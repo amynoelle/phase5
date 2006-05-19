@@ -74,8 +74,6 @@ via Godmar Back:
 
 * Internal tests.
 
-* Improve automatic interpretation of exception messages.
-
 * Filesys project:
 
   - Need a better way to measure performance improvement of buffer
