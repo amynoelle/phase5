@@ -726,7 +726,7 @@ diff -u src/filesys/directory.c~ src/filesys/directory.c
    return dir != NULL;
  }
  
-@@ -61,22 +99,34 @@ dir_open_root (struct dir **dirp)
+@@ -61,22 +99,36 @@ dir_open_root (struct dir **dirp)
    return dir_open (inode_open (ROOT_DIR_SECTOR), dirp);
  }
  
@@ -734,7 +734,9 @@ diff -u src/filesys/directory.c~ src/filesys/directory.c
 +bool
 +dir_reopen (struct dir *dir)
 +{
++  lock_acquire (&dir->dir_lock);
 +  dir->open_cnt++;
++  lock_release (&dir->dir_lock);
 +  return true;
 +}
 +
