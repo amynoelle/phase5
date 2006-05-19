@@ -1,7 +1,7 @@
 Index: src/Makefile.build
 diff -u src/Makefile.build~ src/Makefile.build
---- src/Makefile.build~ 2005-06-18 20:20:47.000000000 -0700
-+++ src/Makefile.build 2006-04-08 19:57:07.000000000 -0700
+--- src/Makefile.build	2005-06-18 20:20:47.000000000 -0700
++++ src/Makefile.build	2006-05-18 21:26:51.000000000 -0700
 @@ -53,7 +53,9 @@ userprog_SRC += userprog/gdt.c		# GDT in
  userprog_SRC += userprog/tss.c		# TSS management.
  
@@ -23,8 +23,8 @@ diff -u src/Makefile.build~ src/Makefile.build
  OBJECTS = $(patsubst %.c,%.o,$(patsubst %.S,%.o,$(SOURCES)))
 Index: src/devices/timer.c
 diff -u src/devices/timer.c~ src/devices/timer.c
---- src/devices/timer.c~ 2005-07-06 13:45:36.000000000 -0700
-+++ src/devices/timer.c 2006-04-08 19:57:07.000000000 -0700
+--- src/devices/timer.c	2005-07-06 13:45:36.000000000 -0700
++++ src/devices/timer.c	2006-05-18 21:26:51.000000000 -0700
 @@ -23,6 +23,9 @@ static volatile int64_t ticks;
     Initialized by timer_calibrate(). */
  static unsigned loops_per_tick;
@@ -103,8 +103,8 @@ diff -u src/devices/timer.c~ src/devices/timer.c
  /* Returns true if LOOPS iterations waits for more than one timer
 Index: src/filesys/Make.vars
 diff -u src/filesys/Make.vars~ src/filesys/Make.vars
---- src/filesys/Make.vars~ 2005-06-20 13:24:21.000000000 -0700
-+++ src/filesys/Make.vars 2006-04-08 19:57:07.000000000 -0700
+--- src/filesys/Make.vars	2005-06-20 13:24:21.000000000 -0700
++++ src/filesys/Make.vars	2006-05-18 21:26:51.000000000 -0700
 @@ -6,7 +6,7 @@ TEST_SUBDIRS = tests/userprog tests/file
  GRADING_FILE = $(SRCDIR)/tests/filesys/Grading.no-vm
  
@@ -119,8 +119,8 @@ diff -u src/filesys/Make.vars~ src/filesys/Make.vars
 +GRADING_FILE = $(SRCDIR)/tests/filesys/Grading.with-vm
 Index: src/filesys/cache.c
 diff -u src/filesys/cache.c~ src/filesys/cache.c
---- src/filesys/cache.c~ 1969-12-31 16:00:00.000000000 -0800
-+++ src/filesys/cache.c 2006-04-08 19:57:07.000000000 -0700
+--- src/filesys/cache.c	1969-12-31 16:00:00.000000000 -0800
++++ src/filesys/cache.c	2006-05-18 21:26:51.000000000 -0700
 @@ -0,0 +1,473 @@
 +#include "filesys/cache.h"
 +#include <debug.h>
@@ -597,8 +597,8 @@ diff -u src/filesys/cache.c~ src/filesys/cache.c
 +}
 Index: src/filesys/cache.h
 diff -u src/filesys/cache.h~ src/filesys/cache.h
---- src/filesys/cache.h~ 1969-12-31 16:00:00.000000000 -0800
-+++ src/filesys/cache.h 2006-04-08 19:57:07.000000000 -0700
+--- src/filesys/cache.h	1969-12-31 16:00:00.000000000 -0800
++++ src/filesys/cache.h	2006-05-18 21:26:51.000000000 -0700
 @@ -0,0 +1,23 @@
 +#ifndef FILESYS_CACHE_H
 +#define FILESYS_CACHE_H
@@ -625,27 +625,9 @@ diff -u src/filesys/cache.h~ src/filesys/cache.h
 +#endif /* filesys/cache.h */
 Index: src/filesys/directory.c
 diff -u src/filesys/directory.c~ src/filesys/directory.c
---- src/filesys/directory.c~ 2005-06-18 20:20:48.000000000 -0700
-+++ src/filesys/directory.c 2006-04-08 19:57:07.000000000 -0700
-@@ -3,12 +3,17 @@
- #include <string.h>
- #include <list.h>
- #include "filesys/filesys.h"
-+#include "filesys/fsutil.h"
- #include "filesys/inode.h"
- #include "threads/malloc.h"
-+#include "threads/synch.h"
- 
- /* A directory. */
- struct dir 
-   {
-+    struct list_elem list_elem;         /* open_dirs list element. */
-+    struct lock dir_lock;               /* Protects inode. */
-+    int open_cnt;                       /* Number of openers. */
-     struct inode *inode;                /* Backing store. */
-   };
- 
-@@ -20,15 +25,21 @@ struct dir_entry 
+--- src/filesys/directory.c	2006-05-18 22:26:21.000000000 -0700
++++ src/filesys/directory.c	2006-05-18 22:18:19.000000000 -0700
+@@ -20,21 +20,13 @@ struct dir_entry 
      bool in_use;                        /* In use or free? */
    };
  
@@ -653,109 +635,22 @@ diff -u src/filesys/directory.c~ src/filesys/directory.c
 -   given SECTOR.  Returns true if successful, false on failure. */
 -bool
 -dir_create (disk_sector_t sector, size_t entry_cnt) 
-+/* List of all open directories. */
-+static struct list open_dirs;
-+
-+/* Protects open_dirs additions or removals. */
-+static struct lock open_dirs_lock;
-+
-+/* Initializes directory modules. */
-+void
-+dir_init (void) 
- {
+-{
 -  return inode_create (sector, entry_cnt * sizeof (struct dir_entry));
-+  list_init (&open_dirs);
-+  lock_init (&open_dirs_lock);
- }
- 
--/* Opens the directory in the given INODE, of which it takes
-+/* Opens the directory for the given INODE, of which it takes
-    ownership, and sets *DIRP to the new directory or a null
-    pointer on failure.  Return true if successful, false on
-    failure. */
-@@ -36,19 +47,46 @@ bool
- dir_open (struct inode *inode, struct dir **dirp) 
+-}
+-
+ /* Opens and returns the directory for the given INODE, of which
+    it takes ownership.  Returns a null pointer on failure. */
+ struct dir *
+ dir_open (struct inode *inode) 
  {
-   struct dir *dir = NULL;
-+  struct list_elem *e;
-   
-   ASSERT (dirp != NULL);
- 
--  if (inode != NULL) 
-+  lock_acquire (&open_dirs_lock);
-+
-+  if (inode == NULL)
-+    goto done;
-+
-+  /* Inode must refer to directory. */
-+  if (inode_get_type (inode) != DIR_INODE)
-+    goto done;
-+
-+  /* Check whether this directory is already open. */
-+  for (e = list_begin (&open_dirs); e != list_end (&open_dirs);
-+       e = list_next (e)) 
+   struct dir *dir = calloc (1, sizeof *dir);
+-  if (inode != NULL && dir != NULL)
++  if (inode != NULL && dir != NULL && inode_get_type (inode) == DIR_INODE)
      {
--      dir = malloc (sizeof *dir);
--      if (dir != NULL) 
--        dir->inode = inode;
-+      dir = list_entry (e, struct dir, list_elem);
-+      if (dir->inode == inode) 
-+        {
-+          dir->open_cnt++;
-+          goto done;
-+        }
-+    }
-+
-+  /* Create new directory. */
-+  dir = calloc (1, sizeof *dir);
-+  if (dir != NULL)
-+    {
-+      list_push_front (&open_dirs, &dir->list_elem);
-+      lock_init (&dir->dir_lock);
-+      dir->open_cnt = 1;
-+      dir->inode = inode;
-+      inode_reopen (dir->inode);
-     }
-   
-+ done:
-   *dirp = dir;
--  if (dir == NULL)
--    inode_close (inode);
-+  inode_close (inode);
-+  lock_release (&open_dirs_lock);
-   return dir != NULL;
- }
- 
-@@ -61,22 +99,36 @@ dir_open_root (struct dir **dirp)
-   return dir_open (inode_open (ROOT_DIR_SECTOR), dirp);
- }
- 
-+/* Re-opens DIR and returns true. */
-+bool
-+dir_reopen (struct dir *dir)
-+{
-+  lock_acquire (&dir->dir_lock);
-+  dir->open_cnt++;
-+  lock_release (&dir->dir_lock);
-+  return true;
-+}
-+
- /* Destroys DIR and frees associated resources. */
- void
- dir_close (struct dir *dir) 
- {
--  if (dir != NULL)
-+  if (dir == NULL)
-+    return;
-+
-+  lock_acquire (&open_dirs_lock);
-+  if (--dir->open_cnt == 0) 
-     {
-+      list_remove (&dir->list_elem);
-       inode_close (dir->inode);
-       free (dir);
-     }
-+  lock_release (&open_dirs_lock);
+       dir->inode = inode;
+       return dir;
+@@ -67,10 +67,8 @@ dir_close (struct dir *dir) 
  }
  
  /* Searches DIR for a file with the given NAME.
@@ -768,20 +663,20 @@ diff -u src/filesys/directory.c~ src/filesys/directory.c
  static bool
  lookup (const struct dir *dir, const char *name,
          struct dir_entry *ep, off_t *ofsp) 
-@@ -113,10 +163,12 @@ dir_lookup (const struct dir *dir, const
+@@ -107,10 +105,12 @@ dir_lookup (const struct dir *dir, const
    ASSERT (dir != NULL);
    ASSERT (name != NULL);
  
-+  lock_acquire ((struct lock *) &dir->dir_lock);
++  inode_lock (dir->inode);
    if (lookup (dir, name, &e, NULL))
      *inode = inode_open (e.inode_sector);
    else
      *inode = NULL;
-+  lock_release ((struct lock *)&dir->dir_lock);
++  inode_unlock (dir->inode);
  
    return *inode != NULL;
  }
-@@ -138,10 +190,11 @@ dir_add (struct dir *dir, const char *na
+@@ -132,10 +132,11 @@ dir_add (struct dir *dir, const char *na
    ASSERT (name != NULL);
  
    /* Check NAME for validity. */
@@ -790,23 +685,23 @@ diff -u src/filesys/directory.c~ src/filesys/directory.c
      return false;
  
    /* Check that NAME is not in use. */
-+  lock_acquire (&dir->dir_lock);
++  inode_lock (dir->inode);
    if (lookup (dir, name, NULL, NULL))
      goto done;
  
-@@ -164,6 +217,7 @@ dir_add (struct dir *dir, const char *na
+@@ -158,6 +159,7 @@ dir_add (struct dir *dir, const char *na
    success = inode_write_at (dir->inode, &e, sizeof e, ofs) == sizeof e;
  
   done:
-+  lock_release (&dir->dir_lock);
++  inode_unlock (dir->inode);
    return success;
  }
  
-@@ -182,12 +236,14 @@ dir_remove (struct dir *dir, const char 
+@@ -176,12 +178,14 @@ dir_remove (struct dir *dir, const char 
    ASSERT (name != NULL);
  
    /* Find directory entry. */
-+  lock_acquire (&dir->dir_lock);
++  inode_lock (dir->inode);
    if (!lookup (dir, name, &e, &ofs))
      goto done;
  
@@ -819,55 +714,41 @@ diff -u src/filesys/directory.c~ src/filesys/directory.c
      goto done;
  
    /* Erase directory entry. */
-@@ -201,6 +257,7 @@ dir_remove (struct dir *dir, const char 
+@@ -195,6 +199,7 @@ dir_remove (struct dir *dir, const char 
  
   done:
    inode_close (inode);
-+  lock_release (&dir->dir_lock);
++  inode_unlock (dir->inode);
    return success;
  }
  
-@@ -211,8 +268,10 @@ dir_list (const struct dir *dir)
+@@ -205,8 +210,10 @@ dir_list (const struct dir *dir)
    struct dir_entry e;
    size_t ofs;
    
-+  lock_acquire ((struct lock *) &dir->dir_lock);
++  inode_lock (dir->inode);
    for (ofs = 0; inode_read_at (dir->inode, &e, sizeof e, ofs) == sizeof e;
         ofs += sizeof e) 
      if (e.in_use)
        printf ("%s\n", e.name);
-+  lock_release ((struct lock *) &dir->dir_lock);
++  inode_unlock (dir->inode);
  }
 Index: src/filesys/directory.h
 diff -u src/filesys/directory.h~ src/filesys/directory.h
---- src/filesys/directory.h~ 2005-06-18 20:20:48.000000000 -0700
-+++ src/filesys/directory.h 2006-04-08 19:57:07.000000000 -0700
-@@ -13,9 +13,10 @@
+--- src/filesys/directory.h	2006-05-18 22:26:02.000000000 -0700
++++ src/filesys/directory.h	2006-05-18 22:05:40.000000000 -0700
+@@ -12,6 +11,5 @@
+ #define NAME_MAX 14
  
  struct inode;
- struct dir;
 -bool dir_create (disk_sector_t sector, size_t entry_cnt);
-+void dir_init (void);
- bool dir_open (struct inode *, struct dir **);
- bool dir_open_root (struct dir **);
-+bool dir_reopen (struct dir *);
- void dir_close (struct dir *);
- bool dir_lookup (const struct dir *, const char *name, struct inode **);
- bool dir_add (struct dir *, const char *name, disk_sector_t);
+ struct dir *dir_open (struct inode *);
+ struct dir *dir_open_root (void);
 Index: src/filesys/file.c
 diff -u src/filesys/file.c~ src/filesys/file.c
---- src/filesys/file.c~ 2005-06-18 20:20:48.000000000 -0700
-+++ src/filesys/file.c 2006-04-08 19:57:07.000000000 -0700
-@@ -1,6 +1,8 @@
- #include "filesys/file.h"
- #include <debug.h>
-+#include "filesys/directory.h"
- #include "filesys/inode.h"
-+#include "filesys/filesys.h"
- #include "threads/malloc.h"
- 
- /* An open file. */
-@@ -18,7 +20,7 @@ struct file *
+--- src/filesys/file.c	2005-06-18 20:20:48.000000000 -0700
++++ src/filesys/file.c	2006-05-18 22:14:15.000000000 -0700
+@@ -18,7 +18,7 @@ struct file *
  file_open (struct inode *inode) 
  {
    struct file *file = calloc (1, sizeof *file);
@@ -878,8 +759,8 @@ diff -u src/filesys/file.c~ src/filesys/file.c
        file->pos = 0;
 Index: src/filesys/filesys.c
 diff -u src/filesys/filesys.c~ src/filesys/filesys.c
---- src/filesys/filesys.c~ 2005-06-18 20:20:48.000000000 -0700
-+++ src/filesys/filesys.c 2006-04-08 19:57:07.000000000 -0700
+--- src/filesys/filesys.c	2006-05-18 22:26:21.000000000 -0700
++++ src/filesys/filesys.c	2006-05-18 22:35:43.000000000 -0700
 @@ -2,11 +2,13 @@
  #include <debug.h>
  #include <stdio.h>
@@ -894,16 +775,15 @@ diff -u src/filesys/filesys.c~ src/filesys/filesys.c
  
  /* The disk that contains the filesystem. */
  struct disk *filesys_disk;
-@@ -23,6 +25,8 @@ filesys_init (bool format) 
+@@ -23,6 +25,7 @@ filesys_init (bool format) 
      PANIC ("hd0:1 (hdb) not present, filesystem initialization failed");
  
    inode_init ();
-+  dir_init ();
 +  cache_init ();
    free_map_init ();
  
    if (format) 
-@@ -37,6 +41,103 @@ void
+@@ -37,6 +40,99 @@ void
  filesys_done (void) 
  {
    free_map_close ();
@@ -960,17 +840,12 @@ diff -u src/filesys/filesys.c~ src/filesys/filesys.c
 +  int ok;
 +
 +  /* Find starting directory. */
-+  if (name[0] == '/' || thread_current ()->wd == NULL) 
-+    {
-+      if (!dir_open_root (&dir))
-+        goto error;
-+    }
-+  else 
-+    {
-+      if (!dir_reopen (thread_current ()->wd))
-+        goto error;
-+      dir = thread_current ()->wd;
-+    }
++  if (name[0] == '/' || thread_current ()->wd == NULL)
++    dir = dir_open_root ();
++  else
++    dir = dir_reopen (thread_current ()->wd);
++  if (dir == NULL)
++    goto error;
 +
 +  /* Get first name part. */
 +  cp = name;
@@ -985,7 +860,8 @@ diff -u src/filesys/filesys.c~ src/filesys/filesys.c
 +        goto error;
 +
 +      dir_close (dir);
-+      if (!dir_open (inode, &dir))
++      dir = dir_open (inode);
++      if (dir == NULL)
 +        goto error;
 +
 +      strlcpy (part, next_part, NAME_MAX + 1);
@@ -1007,32 +883,32 @@ diff -u src/filesys/filesys.c~ src/filesys/filesys.c
  }
  
  /* Creates a file named NAME with the given INITIAL_SIZE.
-@@ -44,16 +145,17 @@ filesys_done (void) 
+@@ -44,16 +140,17 @@ filesys_done (void) 
     Fails if a file named NAME already exists,
     or if internal memory allocation fails. */
  bool
 -filesys_create (const char *name, off_t initial_size) 
 +filesys_create (const char *name, off_t initial_size, enum inode_type type) 
  {
-   struct dir *dir;
++  struct dir *dir;
 +  char basename[NAME_MAX + 1];
    disk_sector_t inode_sector = 0;
--  bool success = (dir_open_root (&dir)
+-  struct dir *dir = dir_open_root ();
+-  bool success = (dir != NULL
 -                  && free_map_allocate (1, &inode_sector)
 -                  && inode_create (inode_sector, initial_size)
 -                  && dir_add (dir, name, inode_sector));
--  if (!success && inode_sector != 0) 
--    free_map_release (inode_sector, 1);
 +  bool success = (resolve_name (name, &dir, basename)
 +                  && free_map_allocate (&inode_sector)
 +                  && inode_create (inode_sector, initial_size, type)
 +                  && dir_add (dir, basename, inode_sector));
-+  if (!success && inode_sector) 
+   if (!success && inode_sector != 0) 
+-    free_map_release (inode_sector, 1);
 +    free_map_release (inode_sector);
    dir_close (dir);
  
    return success;
-@@ -64,17 +166,18 @@ filesys_create (const char *name, off_t 
+@@ -64,17 +161,18 @@ filesys_create (const char *name, off_t 
     otherwise.
     Fails if no file named NAME exists,
     or if an internal memory allocation fails. */
@@ -1040,11 +916,12 @@ diff -u src/filesys/filesys.c~ src/filesys/filesys.c
 +struct inode *
  filesys_open (const char *name)
  {
-   struct dir *dir;
+-  struct dir *dir = dir_open_root ();
++  struct dir *dir;
 +  char basename[NAME_MAX + 1];
    struct inode *inode = NULL;
  
--  if (dir_open_root (&dir))
+-  if (dir != NULL)
 -    dir_lookup (dir, name, &inode);
 +  if (resolve_name (name, &dir, basename))
 +    dir_lookup (dir, basename, &inode);
@@ -1055,12 +932,13 @@ diff -u src/filesys/filesys.c~ src/filesys/filesys.c
  }
  
  /* Deletes the file named NAME.
-@@ -85,13 +188,54 @@ bool
+@@ -84,13 +182,56 @@ filesys_open (const char *name)
+ bool
  filesys_remove (const char *name) 
  {
-   struct dir *dir = NULL;
--  bool success = (dir_open_root (&dir)
--                  && dir_remove (dir, name));
+-  struct dir *dir = dir_open_root ();
+-  bool success = dir != NULL && dir_remove (dir, name);
++  struct dir *dir = NULL;
 +  char basename[NAME_MAX + 1];
 +  bool success = false;
 +
@@ -1083,7 +961,8 @@ diff -u src/filesys/filesys.c~ src/filesys/filesys.c
 +    return false;
 +  else if (name[strspn (name, "/")] == '\0')
 +    {
-+      if (!dir_open_root (&dir))
++      dir = dir_open_root ();
++      if (dir == NULL)
 +        return false; 
 +    }
 +  else 
@@ -1093,7 +972,7 @@ diff -u src/filesys/filesys.c~ src/filesys/filesys.c
 +      struct dir *base_dir;
 +      if (!resolve_name (name, &dir, basename)
 +          || !dir_lookup (dir, basename, &base_inode)
-+          || !dir_open (base_inode, &base_dir))
++          || (base_dir = dir_open (base_inode)) == NULL)
 +        {
 +          dir_close (dir);
 +          return false;
@@ -1112,23 +991,26 @@ diff -u src/filesys/filesys.c~ src/filesys/filesys.c
  /* Prints a list of files in the filesystem to the system
     console.
     Returns true if successful, false on failure,
-@@ -99,13 +243,9 @@ filesys_remove (const char *name) 
+@@ -98,15 +239,9 @@ filesys_remove (const char *name) 
  bool
  filesys_list (void) 
  {
--  struct dir *dir = NULL;
--  bool success = dir_open_root (&dir);
--  if (success)
--    dir_list (dir);
--  dir_close (dir);
+-  struct dir *dir = dir_open_root ();
+-  if (dir != NULL) 
+-    {
+-      dir_list (dir);
+-      dir_close (dir);
+-      return true;
+-    }
+-  else
+-    return false;
 +  dir_list (thread_current ()->wd);
- 
--  return success;
++
 +  return true;
  }
  
  static void must_succeed_function (int, bool) NO_INLINE;
-@@ -128,8 +268,8 @@ filesys_self_test (void)
+@@ -129,8 +264,8 @@ filesys_self_test (void)
      {
        /* Create file and check that it contains zeros
           throughout the created length. */
@@ -1139,7 +1021,7 @@ diff -u src/filesys/filesys.c~ src/filesys/filesys.c
        MUST_SUCCEED (file_read (file, s2, sizeof s2) == sizeof s2);
        MUST_SUCCEED (memcmp (s2, zeros, sizeof s) == 0);
        MUST_SUCCEED (file_tell (file) == sizeof s);
-@@ -137,7 +277,7 @@ filesys_self_test (void)
+@@ -138,7 +273,7 @@ filesys_self_test (void)
        file_close (file);
  
        /* Reopen file and write to it. */
@@ -1148,7 +1030,7 @@ diff -u src/filesys/filesys.c~ src/filesys/filesys.c
        MUST_SUCCEED (file_write (file, s, sizeof s) == sizeof s);
        MUST_SUCCEED (file_tell (file) == sizeof s);
        MUST_SUCCEED (file_length (file) == sizeof s);
-@@ -145,7 +285,7 @@ filesys_self_test (void)
+@@ -146,7 +281,7 @@ filesys_self_test (void)
  
        /* Reopen file and verify that it reads back correctly.
           Delete file while open to check proper semantics. */
@@ -1157,7 +1039,7 @@ diff -u src/filesys/filesys.c~ src/filesys/filesys.c
        MUST_SUCCEED (filesys_remove ("foo"));
        MUST_SUCCEED (filesys_open ("foo") == NULL);
        MUST_SUCCEED (file_read (file, s2, sizeof s) == sizeof s);
-@@ -172,9 +312,13 @@ static void
+@@ -173,9 +308,13 @@ static void
  do_format (void)
  {
    printf ("Formatting filesystem...");
@@ -1175,8 +1057,8 @@ diff -u src/filesys/filesys.c~ src/filesys/filesys.c
  }
 Index: src/filesys/filesys.h
 diff -u src/filesys/filesys.h~ src/filesys/filesys.h
---- src/filesys/filesys.h~ 2005-06-18 20:20:48.000000000 -0700
-+++ src/filesys/filesys.h 2006-04-08 19:57:07.000000000 -0700
+--- src/filesys/filesys.h	2005-06-18 20:20:48.000000000 -0700
++++ src/filesys/filesys.h	2006-05-18 21:26:51.000000000 -0700
 @@ -3,6 +3,7 @@
  
  #include <stdbool.h>
@@ -1198,8 +1080,8 @@ diff -u src/filesys/filesys.h~ src/filesys/filesys.h
  bool filesys_list (void);
 Index: src/filesys/free-map.c
 diff -u src/filesys/free-map.c~ src/filesys/free-map.c
---- src/filesys/free-map.c~ 2005-06-18 20:20:48.000000000 -0700
-+++ src/filesys/free-map.c 2006-04-08 19:57:07.000000000 -0700
+--- src/filesys/free-map.c	2005-06-18 20:20:48.000000000 -0700
++++ src/filesys/free-map.c	2006-05-18 21:26:51.000000000 -0700
 @@ -3,15 +3,18 @@
  #include <debug.h>
  #include "filesys/file.h"
@@ -1297,8 +1179,8 @@ diff -u src/filesys/free-map.c~ src/filesys/free-map.c
  }
 Index: src/filesys/free-map.h
 diff -u src/filesys/free-map.h~ src/filesys/free-map.h
---- src/filesys/free-map.h~ 2005-06-18 20:20:48.000000000 -0700
-+++ src/filesys/free-map.h 2006-04-08 19:57:07.000000000 -0700
+--- src/filesys/free-map.h	2005-06-18 20:20:48.000000000 -0700
++++ src/filesys/free-map.h	2006-05-18 21:26:51.000000000 -0700
 @@ -11,7 +11,7 @@ void free_map_create (void);
  void free_map_open (void);
  void free_map_close (void);
@@ -1311,8 +1193,8 @@ diff -u src/filesys/free-map.h~ src/filesys/free-map.h
  #endif /* filesys/free-map.h */
 Index: src/filesys/fsutil.c
 diff -u src/filesys/fsutil.c~ src/filesys/fsutil.c
---- src/filesys/fsutil.c~ 2005-06-18 20:20:48.000000000 -0700
-+++ src/filesys/fsutil.c 2006-04-08 19:57:07.000000000 -0700
+--- src/filesys/fsutil.c	2006-04-22 22:25:13.000000000 -0700
++++ src/filesys/fsutil.c	2006-05-18 21:26:51.000000000 -0700
 @@ -30,7 +30,7 @@ fsutil_cat (char **argv)
    char *buffer;
  
@@ -1345,9 +1227,9 @@ diff -u src/filesys/fsutil.c~ src/filesys/fsutil.c
    size = file_length (src);
 Index: src/filesys/inode.c
 diff -u src/filesys/inode.c~ src/filesys/inode.c
---- src/filesys/inode.c~ 2006-04-08 12:09:33.000000000 -0700
-+++ src/filesys/inode.c 2006-04-08 20:03:00.000000000 -0700
-@@ -1,26 +1,41 @@
+--- src/filesys/inode.c	2006-04-08 12:09:33.000000000 -0700
++++ src/filesys/inode.c	2006-05-18 22:18:19.000000000 -0700
+@@ -1,23 +1,38 @@
  #include "filesys/inode.h"
 +#include <bitmap.h>
  #include <list.h>
@@ -1387,15 +1269,12 @@ diff -u src/filesys/inode.c~ src/filesys/inode.c
 -    uint32_t unused[125];               /* Not used. */
    };
  
--/* Returns the number of sectors to allocate for an inode SIZE
-+/* Returns the number of sectors to allocate for an indoe SIZE
-    bytes long. */
- static inline size_t
- bytes_to_sectors (off_t size)
-@@ -35,33 +50,29 @@ struct inode 
+ /* Returns the number of sectors to allocate for an inode SIZE
+@@ -35,33 +50,30 @@ struct inode 
      disk_sector_t sector;               /* Sector number of disk location. */
      int open_cnt;                       /* Number of openers. */
      bool removed;                       /* True if deleted, false otherwise. */
++    struct lock lock;                   /* Protects the inode. */
 +
 +    /* Denying writes. */
 +    struct lock deny_write_lock;        /* Protects members below. */
@@ -1437,7 +1316,7 @@ diff -u src/filesys/inode.c~ src/filesys/inode.c
  }
  
  /* Initializes an inode with LENGTH bytes of data and
-@@ -70,38 +81,35 @@ inode_init (void) 
+@@ -70,38 +82,35 @@ inode_init (void) 
     Returns true if successful.
     Returns false if memory or disk allocation fails. */
  bool
@@ -1495,7 +1374,7 @@ diff -u src/filesys/inode.c~ src/filesys/inode.c
    return success;
  }
  
-@@ -115,6 +123,7 @@ inode_open (disk_sector_t sector) 
+@@ -115,6 +124,7 @@ inode_open (disk_sector_t sector) 
    struct inode *inode;
  
    /* Check whether this inode is already open. */
@@ -1503,7 +1382,7 @@ diff -u src/filesys/inode.c~ src/filesys/inode.c
    for (e = list_begin (&open_inodes); e != list_end (&open_inodes);
         e = list_next (e)) 
      {
-@@ -122,22 +131,26 @@ inode_open (disk_sector_t sector) 
+@@ -122,22 +132,27 @@ inode_open (disk_sector_t sector) 
        if (inode->sector == sector) 
          {
            inode_reopen (inode);
@@ -1522,6 +1401,7 @@ diff -u src/filesys/inode.c~ src/filesys/inode.c
    list_push_front (&open_inodes, &inode->elem);
    inode->sector = sector;
    inode->open_cnt = 1;
++  lock_init (&inode->lock);
    inode->deny_write_cnt = 0;
 +  lock_init (&inode->deny_write_lock);
 +  cond_init (&inode->no_writers_cond);
@@ -1533,7 +1413,16 @@ diff -u src/filesys/inode.c~ src/filesys/inode.c
    return inode;
  }
  
-@@ -150,6 +163,17 @@ inode_reopen (struct inode *inode) 
+@@ -146,10 +161,25 @@ struct inode *
+ inode_reopen (struct inode *inode) 
+ {
+   if (inode != NULL) 
+-    inode->open_cnt++;
++    {
++      inode_lock (inode);
++      inode->open_cnt++;
++      inode_unlock (inode); 
++    }
    return inode;
  }
  
@@ -1551,7 +1440,7 @@ diff -u src/filesys/inode.c~ src/filesys/inode.c
  /* Closes INODE and writes it to disk.
     If this was the last reference to INODE, frees its memory.
     If INODE was also a removed inode, frees its blocks. */
-@@ -161,21 +185,60 @@ inode_close (struct inode *inode) 
+@@ -161,21 +191,60 @@ inode_close (struct inode *inode) 
      return;
  
    /* Release resources if this was the last opener. */
@@ -1617,7 +1506,7 @@ diff -u src/filesys/inode.c~ src/filesys/inode.c
  }
  
  /* Marks INODE to be deleted when it is closed by the last caller who
-@@ -187,6 +250,156 @@ inode_remove (struct inode *inode) 
+@@ -187,6 +256,156 @@ inode_remove (struct inode *inode) 
    inode->removed = true;
  }
  
@@ -1774,7 +1663,7 @@ diff -u src/filesys/inode.c~ src/filesys/inode.c
  /* Reads SIZE bytes from INODE into BUFFER, starting at position OFFSET.
     Returns the number of bytes actually read, which may be less
     than SIZE if an error occurs or end of file is reached. */
-@@ -195,13 +408,12 @@ inode_read_at (struct inode *inode, void
+@@ -195,13 +414,12 @@ inode_read_at (struct inode *inode, void
  {
    uint8_t *buffer = buffer_;
    off_t bytes_read = 0;
@@ -1790,7 +1679,7 @@ diff -u src/filesys/inode.c~ src/filesys/inode.c
  
        /* Bytes left in inode, bytes left in sector, lesser of the two. */
        off_t inode_left = inode_length (inode) - offset;
-@@ -210,26 +422,16 @@ inode_read_at (struct inode *inode, void
+@@ -210,26 +428,16 @@ inode_read_at (struct inode *inode, void
  
        /* Number of bytes to actually copy out of this sector. */
        int chunk_size = size < min_left ? size : min_left;
@@ -1823,7 +1712,7 @@ diff -u src/filesys/inode.c~ src/filesys/inode.c
          }
        
        /* Advance. */
-@@ -237,75 +439,84 @@ inode_read_at (struct inode *inode, void
+@@ -237,75 +445,84 @@ inode_read_at (struct inode *inode, void
        offset += chunk_size;
        bytes_read += chunk_size;
      }
@@ -1945,7 +1834,7 @@ diff -u src/filesys/inode.c~ src/filesys/inode.c
  
    return bytes_written;
  }
-@@ -315,8 +526,12 @@ inode_write_at (struct inode *inode, con
+@@ -315,8 +532,12 @@ inode_write_at (struct inode *inode, con
  void
  inode_deny_write (struct inode *inode) 
  {
@@ -1959,7 +1848,7 @@ diff -u src/filesys/inode.c~ src/filesys/inode.c
  }
  
  /* Re-enables writes to INODE.
-@@ -325,14 +540,33 @@ inode_deny_write (struct inode *inode) 
+@@ -325,14 +546,47 @@ inode_deny_write (struct inode *inode) 
  void
  inode_allow_write (struct inode *inode) 
  {
@@ -1993,11 +1882,25 @@ diff -u src/filesys/inode.c~ src/filesys/inode.c
 +  lock_release (&open_inodes_lock);
 +
 +  return open_cnt;
++}
++
++/* Locks INODE. */
++void
++inode_lock (struct inode *inode) 
++{
++  lock_acquire (&inode->lock);
++}
++
++/* Releases INODE's lock. */
++void
++inode_unlock (struct inode *inode) 
++{
++  lock_release (&inode->lock);
  }
 Index: src/filesys/inode.h
 diff -u src/filesys/inode.h~ src/filesys/inode.h
---- src/filesys/inode.h~ 2005-06-18 20:20:48.000000000 -0700
-+++ src/filesys/inode.h 2006-04-08 19:57:07.000000000 -0700
+--- src/filesys/inode.h	2005-06-18 20:20:48.000000000 -0700
++++ src/filesys/inode.h	2006-05-18 21:46:41.000000000 -0700
 @@ -7,10 +7,18 @@
  
  struct bitmap;
@@ -2018,17 +1921,19 @@ diff -u src/filesys/inode.h~ src/filesys/inode.h
  void inode_close (struct inode *);
  void inode_remove (struct inode *);
  off_t inode_read_at (struct inode *, void *, off_t size, off_t offset);
-@@ -18,5 +26,6 @@ off_t inode_write_at (struct inode *, co
+@@ -18,5 +26,8 @@ off_t inode_write_at (struct inode *, co
  void inode_deny_write (struct inode *);
  void inode_allow_write (struct inode *);
  off_t inode_length (const struct inode *);
 +int inode_open_cnt (const struct inode *);
++void inode_lock (struct inode *);
++void inode_unlock (struct inode *);
  
  #endif /* filesys/inode.h */
 Index: src/threads/init.c
 diff -u src/threads/init.c~ src/threads/init.c
---- src/threads/init.c~ 2006-01-29 13:32:55.000000000 -0800
-+++ src/threads/init.c 2006-04-08 19:57:07.000000000 -0700
+--- src/threads/init.c	2006-05-18 17:35:54.000000000 -0700
++++ src/threads/init.c	2006-05-18 21:26:51.000000000 -0700
 @@ -33,6 +33,8 @@
  #include "filesys/filesys.h"
  #include "filesys/fsutil.h"
@@ -2050,8 +1955,8 @@ diff -u src/threads/init.c~ src/threads/init.c
    /* Run actions specified on kernel command line. */
 Index: src/threads/interrupt.c
 diff -u src/threads/interrupt.c~ src/threads/interrupt.c
---- src/threads/interrupt.c~ 2006-01-29 13:32:55.000000000 -0800
-+++ src/threads/interrupt.c 2006-04-08 19:57:07.000000000 -0700
+--- src/threads/interrupt.c	2006-04-22 22:25:21.000000000 -0700
++++ src/threads/interrupt.c	2006-05-18 21:26:51.000000000 -0700
 @@ -354,6 +354,8 @@ intr_handler (struct intr_frame *frame) 
        in_external_intr = true;
        yield_on_return = false;
@@ -2063,10 +1968,10 @@ diff -u src/threads/interrupt.c~ src/threads/interrupt.c
       If there is no handler, invoke the unexpected interrupt
 Index: src/threads/thread.c
 diff -u src/threads/thread.c~ src/threads/thread.c
---- src/threads/thread.c~ 2006-04-08 12:09:39.000000000 -0700
-+++ src/threads/thread.c 2006-04-08 19:57:07.000000000 -0700
+--- src/threads/thread.c	2006-04-22 22:25:22.000000000 -0700
++++ src/threads/thread.c	2006-05-18 21:26:51.000000000 -0700
 @@ -13,6 +13,7 @@
- #include "threads/synch.h"
+ #include "threads/vaddr.h"
  #ifdef USERPROG
  #include "userprog/process.h"
 +#include "userprog/syscall.h"
@@ -2160,8 +2065,8 @@ diff -u src/threads/thread.c~ src/threads/thread.c
  
 Index: src/threads/thread.h
 diff -u src/threads/thread.h~ src/threads/thread.h
---- src/threads/thread.h~ 2005-06-18 20:21:21.000000000 -0700
-+++ src/threads/thread.h 2006-04-08 19:57:07.000000000 -0700
+--- src/threads/thread.h	2006-04-22 22:25:22.000000000 -0700
++++ src/threads/thread.h	2006-05-18 21:26:51.000000000 -0700
 @@ -2,8 +2,10 @@
  #define THREADS_THREAD_H
  
@@ -2228,8 +2133,8 @@ diff -u src/threads/thread.h~ src/threads/thread.h
  
 Index: src/userprog/exception.c
 diff -u src/userprog/exception.c~ src/userprog/exception.c
---- src/userprog/exception.c~ 2006-01-29 13:32:56.000000000 -0800
-+++ src/userprog/exception.c 2006-04-08 19:57:07.000000000 -0700
+--- src/userprog/exception.c	2006-01-29 13:32:56.000000000 -0800
++++ src/userprog/exception.c	2006-05-18 21:26:51.000000000 -0700
 @@ -4,6 +4,7 @@
  #include "userprog/gdt.h"
  #include "threads/interrupt.h"
@@ -2258,8 +2163,8 @@ diff -u src/userprog/exception.c~ src/userprog/exception.c
            not_present ? "not present" : "rights violation",
 Index: src/userprog/pagedir.c
 diff -u src/userprog/pagedir.c~ src/userprog/pagedir.c
---- src/userprog/pagedir.c~ 2006-01-29 13:32:56.000000000 -0800
-+++ src/userprog/pagedir.c 2006-04-08 19:57:07.000000000 -0700
+--- src/userprog/pagedir.c	2006-04-22 22:25:23.000000000 -0700
++++ src/userprog/pagedir.c	2006-05-18 21:26:51.000000000 -0700
 @@ -35,15 +35,7 @@ pagedir_destroy (uint32_t *pd) 
    ASSERT (pd != base_page_dir);
    for (pde = pd; pde < pd + pd_no (PHYS_BASE); pde++)
@@ -2279,9 +2184,10 @@ diff -u src/userprog/pagedir.c~ src/userprog/pagedir.c
  
 Index: src/userprog/process.c
 diff -u src/userprog/process.c~ src/userprog/process.c
---- src/userprog/process.c~ 2006-04-08 19:37:00.000000000 -0700
-+++ src/userprog/process.c 2006-04-08 20:00:47.000000000 -0700
-@@ -15,11 +15,26 @@
+--- src/userprog/process.c	2006-05-18 17:35:55.000000000 -0700
++++ src/userprog/process.c	2006-05-18 22:12:19.000000000 -0700
+@@ -14,12 +14,27 @@
+ #include "threads/flags.h"
  #include "threads/init.h"
  #include "threads/interrupt.h"
 +#include "threads/malloc.h"
@@ -2309,7 +2215,7 @@ diff -u src/userprog/process.c~ src/userprog/process.c
  
  /* Starts a new thread running a user program loaded from
     FILENAME.  The new thread may be scheduled (and may even exit)
-@@ -27,41 +42,82 @@ static bool load (const char *cmdline, v
+@@ -28,41 +43,78 @@ static bool load (const char *cmdline, v
  tid_t
  process_execute (const char *filename) 
  {
@@ -2326,12 +2232,8 @@ diff -u src/userprog/process.c~ src/userprog/process.c
 -  if (fn_copy == NULL)
 +  /* Initialize exec_info. */
 +  exec.filename = filename;
-+  if (wd) 
-+    {
-+      dir_reopen (wd);
-+      exec.wd = wd; 
-+    }
-+  else if (!dir_open_root (&exec.wd))
++  exec.wd = wd != NULL ? dir_reopen (wd) : dir_open_root ();
++  if (exec.wd == NULL)
      return TID_ERROR;
 -  strlcpy (fn_copy, filename, PGSIZE);
 +  sema_init (&exec.load_done, 0);
@@ -2380,7 +2282,9 @@ diff -u src/userprog/process.c~ src/userprog/process.c
    if_.eflags = FLAG_IF | FLAG_MBS;
 -  success = load (filename, &if_.eip, &if_.esp);
 +  success = load (exec->filename, &if_.eip, &if_.esp);
-+
+ 
+-  /* If load failed, quit. */
+-  palloc_free_page (filename);
 +  /* Allocate wait_status. */
 +  if (success)
 +    {
@@ -2388,9 +2292,7 @@ diff -u src/userprog/process.c~ src/userprog/process.c
 +        = malloc (sizeof *exec->wait_status);
 +      success = exec->wait_status != NULL; 
 +    }
- 
--  /* If load failed, quit. */
--  palloc_free_page (filename);
++
 +  /* Initialize wait_status. */
 +  if (success) 
 +    {
@@ -2406,7 +2308,7 @@ diff -u src/userprog/process.c~ src/userprog/process.c
    if (!success) 
      thread_exit ();
  
-@@ -76,18 +116,47 @@ execute_thread (void *filename_)
+@@ -76,18 +128,47 @@ execute_thread (void *filename_)
    NOT_REACHED ();
  }
  
@@ -2459,7 +2361,7 @@ diff -u src/userprog/process.c~ src/userprog/process.c
    return -1;
  }
  
-@@ -96,8 +165,35 @@ void
+@@ -96,8 +177,35 @@ void
  process_exit (void)
  {
    struct thread *cur = thread_current ();
@@ -2495,7 +2397,7 @@ diff -u src/userprog/process.c~ src/userprog/process.c
    /* Destroy the current process's page directory and switch back
       to the kernel-only page directory. */
    pd = cur->pagedir;
-@@ -194,7 +290,7 @@ struct Elf32_Phdr
+@@ -194,7 +302,7 @@ struct Elf32_Phdr
  #define PF_W 2          /* Writable. */
  #define PF_R 4          /* Readable. */
  
@@ -2504,7 +2406,7 @@ diff -u src/userprog/process.c~ src/userprog/process.c
  static bool validate_segment (const struct Elf32_Phdr *, struct file *);
  static bool load_segment (struct file *file, off_t ofs, uint8_t *upage,
                            uint32_t read_bytes, uint32_t zero_bytes,
-@@ -205,13 +301,15 @@ static bool load_segment (struct file *f
+@@ -205,13 +313,15 @@ static bool load_segment (struct file *f
     and its initial stack pointer into *ESP.
     Returns true if successful, false otherwise. */
  bool
@@ -2521,7 +2423,7 @@ diff -u src/userprog/process.c~ src/userprog/process.c
    int i;
  
    /* Allocate and activate page directory. */
-@@ -220,13 +318,28 @@ load (const char *filename, void (**eip)
+@@ -220,13 +330,28 @@ load (const char *filename, void (**eip)
      goto done;
    process_activate ();
  
@@ -2551,7 +2453,7 @@ diff -u src/userprog/process.c~ src/userprog/process.c
  
    /* Read and verify executable header. */
    if (file_read (file, &ehdr, sizeof ehdr) != sizeof ehdr
-@@ -271,7 +400,7 @@ load (const char *filename, void (**eip)
+@@ -301,7 +426,7 @@ load (const char *filename, void (**eip)
      }
  
    /* Set up stack. */
@@ -2560,7 +2462,7 @@ diff -u src/userprog/process.c~ src/userprog/process.c
      goto done;
  
    /* Start address. */
-@@ -311,14 +424,11 @@ load (const char *filename, void (**eip)
+@@ -311,14 +436,11 @@ load (const char *filename, void (**eip)
  
   done:
    /* We arrive here whether the load is successful or not. */
@@ -2575,7 +2477,7 @@ diff -u src/userprog/process.c~ src/userprog/process.c
  /* Checks whether PHDR describes a valid, loadable segment in
     FILE and returns true if so, false otherwise. */
  static bool
-@@ -387,79 +497,127 @@ load_segment (struct file *file, off_t o
+@@ -386,79 +508,127 @@ load_segment (struct file *file, off_t o
    ASSERT (pg_ofs (upage) == 0);
    ASSERT (ofs % PGSIZE == 0);
  
@@ -2678,12 +2580,12 @@ diff -u src/userprog/process.c~ src/userprog/process.c
 +  cmd_line_copy = push (kpage, &ofs, cmd_line, strlen (cmd_line) + 1);
 +  if (cmd_line_copy == NULL)
 +    return false;
-+
-+  if (push (kpage, &ofs, &null, sizeof null) == NULL)
-+    return false;
  
 -  kpage = palloc_get_page (PAL_USER | PAL_ZERO);
 -  if (kpage != NULL) 
++  if (push (kpage, &ofs, &null, sizeof null) == NULL)
++    return false;
++
 +  /* Parse command line into arguments
 +     and push them in reverse order. */
 +  argc = 0;
@@ -2757,8 +2659,8 @@ diff -u src/userprog/process.c~ src/userprog/process.c
  }
 Index: src/userprog/syscall.c
 diff -u src/userprog/syscall.c~ src/userprog/syscall.c
---- src/userprog/syscall.c~ 2005-06-18 20:21:21.000000000 -0700
-+++ src/userprog/syscall.c 2006-04-08 20:01:17.000000000 -0700
+--- src/userprog/syscall.c	2005-06-18 20:21:21.000000000 -0700
++++ src/userprog/syscall.c	2006-05-18 21:26:51.000000000 -0700
 @@ -1,20 +1,594 @@
  #include "userprog/syscall.h"
  #include <stdio.h>
@@ -2775,8 +2677,8 @@ diff -u src/userprog/syscall.c~ src/userprog/syscall.c
 +#include "threads/malloc.h"
 +#include "threads/palloc.h"
  #include "threads/thread.h"
-+#include "threads/vaddr.h"
 -
++#include "threads/vaddr.h"
 +#include "vm/page.h"
 + 
 + 
@@ -3360,8 +3262,8 @@ diff -u src/userprog/syscall.c~ src/userprog/syscall.c
 +}
 Index: src/userprog/syscall.h
 diff -u src/userprog/syscall.h~ src/userprog/syscall.h
---- src/userprog/syscall.h~ 2004-09-05 22:38:45.000000000 -0700
-+++ src/userprog/syscall.h 2006-04-08 19:57:08.000000000 -0700
+--- src/userprog/syscall.h	2004-09-05 22:38:45.000000000 -0700
++++ src/userprog/syscall.h	2006-05-18 21:26:51.000000000 -0700
 @@ -2,5 +2,6 @@
  #define USERPROG_SYSCALL_H
  
@@ -3371,8 +3273,8 @@ diff -u src/userprog/syscall.h~ src/userprog/syscall.h
  #endif /* userprog/syscall.h */
 Index: src/vm/frame.c
 diff -u src/vm/frame.c~ src/vm/frame.c
---- src/vm/frame.c~ 1969-12-31 16:00:00.000000000 -0800
-+++ src/vm/frame.c 2006-04-08 19:57:08.000000000 -0700
+--- src/vm/frame.c	1969-12-31 16:00:00.000000000 -0800
++++ src/vm/frame.c	2006-05-18 21:26:51.000000000 -0700
 @@ -0,0 +1,161 @@
 +#include "vm/frame.h"
 +#include <stdio.h>
@@ -3537,8 +3439,8 @@ diff -u src/vm/frame.c~ src/vm/frame.c
 +}
 Index: src/vm/frame.h
 diff -u src/vm/frame.h~ src/vm/frame.h
---- src/vm/frame.h~ 1969-12-31 16:00:00.000000000 -0800
-+++ src/vm/frame.h 2006-04-08 19:57:08.000000000 -0700
+--- src/vm/frame.h	1969-12-31 16:00:00.000000000 -0800
++++ src/vm/frame.h	2006-05-18 21:26:51.000000000 -0700
 @@ -0,0 +1,23 @@
 +#ifndef VM_FRAME_H
 +#define VM_FRAME_H
@@ -3565,8 +3467,8 @@ diff -u src/vm/frame.h~ src/vm/frame.h
 +#endif /* vm/frame.h */
 Index: src/vm/page.c
 diff -u src/vm/page.c~ src/vm/page.c
---- src/vm/page.c~ 1969-12-31 16:00:00.000000000 -0800
-+++ src/vm/page.c 2006-04-08 19:57:08.000000000 -0700
+--- src/vm/page.c	1969-12-31 16:00:00.000000000 -0800
++++ src/vm/page.c	2006-05-18 21:26:51.000000000 -0700
 @@ -0,0 +1,294 @@
 +#include "vm/page.h"
 +#include <stdio.h>
@@ -3864,8 +3766,8 @@ diff -u src/vm/page.c~ src/vm/page.c
 +}
 Index: src/vm/page.h
 diff -u src/vm/page.h~ src/vm/page.h
---- src/vm/page.h~ 1969-12-31 16:00:00.000000000 -0800
-+++ src/vm/page.h 2006-04-08 19:57:08.000000000 -0700
+--- src/vm/page.h	1969-12-31 16:00:00.000000000 -0800
++++ src/vm/page.h	2006-05-18 21:26:51.000000000 -0700
 @@ -0,0 +1,50 @@
 +#ifndef VM_PAGE_H
 +#define VM_PAGE_H
@@ -3919,8 +3821,8 @@ diff -u src/vm/page.h~ src/vm/page.h
 +#endif /* vm/page.h */
 Index: src/vm/swap.c
 diff -u src/vm/swap.c~ src/vm/swap.c
---- src/vm/swap.c~ 1969-12-31 16:00:00.000000000 -0800
-+++ src/vm/swap.c 2006-04-08 19:57:08.000000000 -0700
+--- src/vm/swap.c	1969-12-31 16:00:00.000000000 -0800
++++ src/vm/swap.c	2006-05-18 21:26:51.000000000 -0700
 @@ -0,0 +1,85 @@
 +#include "vm/swap.h"
 +#include <bitmap.h>
@@ -4009,8 +3911,8 @@ diff -u src/vm/swap.c~ src/vm/swap.c
 +}
 Index: src/vm/swap.h
 diff -u src/vm/swap.h~ src/vm/swap.h
---- src/vm/swap.h~ 1969-12-31 16:00:00.000000000 -0800
-+++ src/vm/swap.h 2006-04-08 19:57:08.000000000 -0700
+--- src/vm/swap.h	1969-12-31 16:00:00.000000000 -0800
++++ src/vm/swap.h	2006-05-18 21:26:51.000000000 -0700
 @@ -0,0 +1,11 @@
 +#ifndef VM_SWAP_H
 +#define VM_SWAP_H 1
