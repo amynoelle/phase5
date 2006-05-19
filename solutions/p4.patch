@@ -745,9 +745,9 @@ diff -u src/filesys/directory.h~ src/filesys/directory.h
 --- src/filesys/directory.h	2006-05-18 22:26:02.000000000 -0700
 +++ src/filesys/directory.h	2006-05-18 22:05:40.000000000 -0700
 @@ -12,6 +11,5 @@
- #define NAME_MAX 14
- 
  struct inode;
+ 
+ /* Opening and closing directories. */
 -bool dir_create (disk_sector_t sector, size_t entry_cnt);
  struct dir *dir_open (struct inode *);
  struct dir *dir_open_root (void);
