@@ -1,6 +1,7 @@
+Index: src/threads/thread.c
 diff -u src/threads/thread.c~ src/threads/thread.c
---- src/threads/thread.c~ 2005-06-02 14:35:12.000000000 -0700
-+++ src/threads/thread.c 2005-06-08 13:45:28.000000000 -0700
+--- src/threads/thread.c~
++++ src/threads/thread.c
 @@ -13,6 +13,7 @@
  #include "threads/synch.h"
  #ifdef USERPROG
@@ -43,9 +44,10 @@ diff -u src/threads/thread.c~ src/threads/thread.c
    t->magic = THREAD_MAGIC;
  }
  
+Index: src/threads/thread.h
 diff -u src/threads/thread.h~ src/threads/thread.h
---- src/threads/thread.h~ 2005-06-02 14:32:36.000000000 -0700
-+++ src/threads/thread.h 2005-06-08 13:47:09.000000000 -0700
+--- src/threads/thread.h~
++++ src/threads/thread.h
 @@ -4,6 +4,7 @@
  #include <debug.h>
  #include <list.h>
@@ -98,9 +100,10 @@ diff -u src/threads/thread.h~ src/threads/thread.h
  void thread_init (void);
  void thread_start (void);
  void thread_tick (void);
+Index: src/userprog/exception.c
 diff -u src/userprog/exception.c~ src/userprog/exception.c
---- src/userprog/exception.c~ 2005-01-01 18:09:59.000000000 -0800
-+++ src/userprog/exception.c 2005-06-08 13:45:28.000000000 -0700
+--- src/userprog/exception.c~
++++ src/userprog/exception.c
 @@ -150,6 +150,14 @@ page_fault (struct intr_frame *f) 
    write = (f->error_code & PF_W) != 0;
    user = (f->error_code & PF_U) != 0;
@@ -116,9 +119,10 @@ diff -u src/userprog/exception.c~ src/userprog/exception.c
    /* To implement virtual memory, delete the rest of the function
       body, and replace it with code that brings in the page to
       which fault_addr refers. */
+Index: src/userprog/process.c
 diff -u src/userprog/process.c~ src/userprog/process.c
---- src/userprog/process.c~ 2005-05-26 13:19:48.000000000 -0700
-+++ src/userprog/process.c 2005-06-08 13:49:13.000000000 -0700
+--- src/userprog/process.c~
++++ src/userprog/process.c
 @@ -14,11 +14,23 @@
  #include "threads/init.h"
  #include "threads/interrupt.h"
@@ -488,9 +492,10 @@ diff -u src/userprog/process.c~ src/userprog/process.c
        else
          palloc_free_page (kpage);
      }
+Index: src/userprog/syscall.c
 diff -u src/userprog/syscall.c~ src/userprog/syscall.c
---- src/userprog/syscall.c~ 2004-09-26 14:15:17.000000000 -0700
-+++ src/userprog/syscall.c 2005-06-08 13:45:28.000000000 -0700
+--- src/userprog/syscall.c~
++++ src/userprog/syscall.c
 @@ -1,20 +1,482 @@
  #include "userprog/syscall.h"
  #include <stdio.h>
@@ -978,9 +983,10 @@ diff -u src/userprog/syscall.c~ src/userprog/syscall.c
 +      free (fd);
 +    }
 +}
+Index: src/userprog/syscall.h
 diff -u src/userprog/syscall.h~ src/userprog/syscall.h
---- src/userprog/syscall.h~ 2004-09-05 22:38:45.000000000 -0700
-+++ src/userprog/syscall.h 2005-06-08 13:45:28.000000000 -0700
+--- src/userprog/syscall.h~
++++ src/userprog/syscall.h
 @@ -2,5 +2,6 @@
  #define USERPROG_SYSCALL_H
  
