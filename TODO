@@ -1,78 +1,44 @@
 -*- text -*-
 
-Godmar says:
-
-- In Project 2, we're missing tests that pass arguments to system calls
-that span multiple pages, where some are mapped and some are not. 
-An implementation that only checks the first page, rather than all pages 
-that can be touched during a call to read()/write() passes all tests.
-
-- Need some tests that test that illegal accesses lead to process
-termination. I have written some, will add them. In P2, obviously, 
-this would require that the students break this functionality since 
-the page directory is initialized for them, still it would be good 
-to have.
-
-- There does not appear to be a test that checks that they close all
-fd's on exit.  Idea: add statistics & self-diagnostics code to palloc.c
-and malloc.c.  Self-diagnostics code could be used for debugging.
-The statistics code would report how much kernel memory is free.
-Add a system call "get_kernel_memory_information".  User programs
-could engage in a variety of activities and notice leaks by checking
-the kernel memory statistics.
-
-From: Godmar Back <godmar@gmail.com>
-Subject: on caching in project 4
-To: Ben Pfaff <blp@cs.stanford.edu>
-Date: Mon, 9 Jan 2006 20:58:01 -0500
-
-here's an idea for future semesters.
-
-I'm in the middle of project 4, I've started by implementing a buffer
-cache and plugging it into the existing filesystem.  Along the way I
-was wondering how we could test the cache.
-
-Maybe one could adopt a similar testing strategy as in project 1 for
-the MLQFS scheduler: add a function that reads "get_cache_accesses()"
-and a function "get_cache_hits()".  Then create a version of pintos
-that creates access traces for a to-be-determined workload.  Run an
-off-line analysis that would determine how many hits a perfect cache
-would have (MAX), and how much say an LRU strategy would give (MIN).
-Then add a fudge factor to account for different index strategies and
-test that the reported number of cache hits/accesses is within (MIN,
-MAX) +/- fudge factor.
-
-(As an aside - I am curious why you chose to use a clock-style
-algorithm rather than the more straightforward LRU for your buffer
-cache implementation in your sample solution. Is there a reason for
-that?  I was curious to see if it made a difference, so I implemented
-LRU for your cache implementation and ran the test workload of project
-4 and printed cache hits/accesses.
-I found that for that workload, the clock-based algorithm performs
-almost identical to LRU (within about 1%, but I ran nondeterministally
-with QEMU). I then reduced the cache size to 32 blocks and found again
-the same performance, which raises the suspicion that the test
-workload might not force any cache replacement, so the eviction
-strategy doesn't matter.)
-
-* Get rid of rox--causes more trouble than it's worth
-
 * Reconsider command line arg style--confuses everyone.
 
-* Finish writing tour.
-
-via Godmar Back:
-
-* Get rid of mmap syscall, add sbrk.
-
-* page-linear, page-shuffle VM tests do not use enough memory to force
-  eviction.  Should increase memory consumption.
-
-* Add FS persistence test(s).
-
-* process_death test needs improvement
-
 * Internal tests.
+
+* Userprog project:
+
+  - Get rid of rox--causes more trouble than it's worth
+
+  - Extra credit: specifics on how to implement sbrk, malloc.
+
+  - Godmar: We're missing tests that pass arguments to system calls
+    that span multiple pages, where some are mapped and some are not.
+    An implementation that only checks the first page, rather than all
+    pages that can be touched during a call to read()/write() passes
+    all tests.
+
+  - Godmar: Need some tests that test that illegal accesses lead to
+    process termination. I have written some, will add them. In P2,
+    obviously, this would require that the students break this
+    functionality since the page directory is initialized for them,
+    still it would be good to have.
+
+  - Godmar: There does not appear to be a test that checks that they
+    close all fd's on exit.  Idea: add statistics & self-diagnostics
+    code to palloc.c and malloc.c.  Self-diagnostics code could be
+    used for debugging.  The statistics code would report how much
+    kernel memory is free.  Add a system call
+    "get_kernel_memory_information".  User programs could engage in a
+    variety of activities and notice leaks by checking the kernel
+    memory statistics.
+
+  - process_death test needs improvement
+
+* VM project:
+
+  - Godmar: Get rid of mmap syscall, add sbrk.
+
+  - Godmar: page-linear, page-shuffle VM tests do not use enough
+    memory to force eviction.  Should increase memory consumption.
 
 * Filesys project:
 
@@ -80,6 +46,41 @@ via Godmar Back:
     cache.  Some students reported that their system was slower with
     cache--likely, Bochs doesn't simulate a disk with a realistic
     speed.
+
+  - Do we check that non-empty directories cannot be removed?
+
+  - Need lots more tests.
+
+  - Add FS persistence test(s).
+
+  - Godmar: I'm in the middle of project 4, I've started by
+    implementing a buffer cache and plugging it into the existing
+    filesystem.  Along the way I was wondering how we could test the
+    cache.
+
+    Maybe one could adopt a similar testing strategy as in project 1
+    for the MLQFS scheduler: add a function that reads
+    "get_cache_accesses()" and a function "get_cache_hits()".  Then
+    create a version of pintos that creates access traces for a
+    to-be-determined workload.  Run an off-line analysis that would
+    determine how many hits a perfect cache would have (MAX), and how
+    much say an LRU strategy would give (MIN).  Then add a fudge
+    factor to account for different index strategies and test that the
+    reported number of cache hits/accesses is within (MIN, MAX) +/-
+    fudge factor.
+
+    (As an aside - I am curious why you chose to use a clock-style
+    algorithm rather than the more straightforward LRU for your buffer
+    cache implementation in your sample solution. Is there a reason
+    for that?  I was curious to see if it made a difference, so I
+    implemented LRU for your cache implementation and ran the test
+    workload of project 4 and printed cache hits/accesses.  I found
+    that for that workload, the clock-based algorithm performs almost
+    identical to LRU (within about 1%, but I ran nondeterministally
+    with QEMU). I then reduced the cache size to 32 blocks and found
+    again the same performance, which raises the suspicion that the
+    test workload might not force any cache replacement, so the
+    eviction strategy doesn't matter.)
 
 * Documentation:
 
@@ -89,75 +90,68 @@ via Godmar Back:
   - Add explanations of what "real" OSes do to give students some
     perspective.
 
-* Assignments:
+* To add partition support:
 
-  - Add extra credit:
+  - Find four partition types that are more or less unused and choose
+    to use them for Pintos.  (This is implemented.)
 
-    . Specifics on how to implement sbrk, malloc.
+  - Bootloader reads partition tables of all BIOS devices to find the
+    first that has the "Pintos kernel" partition type.  (This is
+    implemented.)  Ideally the bootloader would make sure there is
+    exactly one such partition, but I didn't implement that yet.
 
-    . Other good ideas.
+  - Bootloader reads kernel into memory at 1 MB using BIOS calls.
+    (This is implemented.)
 
-    . everything needed for getcwd()
+  - Kernel arguments have to go into a separate sector because the
+    bootloader is otherwise too big to fit now?  (I don't recall if I
+    did anything about this.)
 
-To add partition support:
+  - Kernel at boot also scans partition tables of all the disks it can
+    find to find the ones with the four Pintos partition types
+    (perhaps not all exist).  After that, it makes them available to
+    the rest of the kernel (and doesn't allow access to other devices,
+    for safety).
 
-- Find four partition types that are more or less unused and choose to
-  use them for Pintos.  (This is implemented.)
+  - "pintos" and "pintos-mkdisk" need to write a partition table to
+    the disks that they create.  "pintos-mkdisk" will need to take a
+    new parameter specifying the type.  (I might have partially
+    implemented this, don't remember.)
 
-- Bootloader reads partition tables of all BIOS devices to find the
-  first that has the "Pintos kernel" partition type.  (This is
-  implemented.)  Ideally the bootloader would make sure there is
-  exactly one such partition, but I didn't implement that yet.
+  - "pintos" should insist on finding a partition header on disks
+    handed to it, for safety.
 
-- Bootloader reads kernel into memory at 1 MB using BIOS calls.  (This
-  is implemented.)
+  - Need some way for "pintos" to assemble multiple disks or
+    partitions into a single image that can be copied directly to a
+    USB block device.  (I don't know whether I came up with a good
+    solution yet or not, or whether I implemented any of it.)
 
-- Kernel arguments have to go into a separate sector because the
-  bootloader is otherwise too big to fit now?  (I don't recall if I
-  did anything about this.)
+* To add USB support:
 
-- Kernel at boot also scans partition tables of all the disks it can
-  find to find the ones with the four Pintos partition types (perhaps
-  not all exist).  After that, it makes them available to the rest of
-  the kernel (and doesn't allow access to other devices, for safety).
+    - Needs to be able to scan PCI bus for UHCI controller.  (I
+      implemented this partially.)
 
-- "pintos" and "pintos-mkdisk" need to write a partition table to the
-  disks that they create.  "pintos-mkdisk" will need to take a new
-  parameter specifying the type.  (I might have partially implemented
-  this, don't remember.)
+    - May want to be able to initialize USB controllers over CardBus
+      bridges.  I don't know whether this requires additional work or
+      if it's useful enough to warrant extra work.  (It's of special
+      interest for me because I have a laptop that only has USB via
+      CardBus.)
 
-- "pintos" should insist on finding a partition header on disks handed
-  to it, for safety.
+    - There are many protocol layers involved: SCSI over USB-Mass
+      Storage over USB over UHCI over PCI.  (I may be forgetting one.)
+      I don't know yet whether it's best to separate the layers or to
+      merge (some of) them.  I think that a simple and clean
+      organization should be a priority.
 
-- Need some way for "pintos" to assemble multiple disks or partitions
-  into a single image that can be copied directly to a USB block
-  device.  (I don't know whether I came up with a good solution yet or
-  not, or whether I implemented any of it.)
+    - VMware can likely be used for testing because it can expose host
+      USB devices as guest USB devices.  This is safer and more
+      convenient than using real hardware for testing.
 
-To add USB support:
+    - Should test with a variety of USB keychain devices because there
+      seems to be wide variation among them, especially in the SCSI
+      protocols they support.  Should try to use a "lowest-common
+      denominator" SCSI protocol if any such thing really exists.
 
-- Needs to be able to scan PCI bus for UHCI controller.  (I
-  implemented this partially.)
-
-- May want to be able to initialize USB controllers over CardBus
-  bridges.  I don't know whether this requires additional work or if
-  it's useful enough to warrant extra work.  (It's of special interest
-  for me because I have a laptop that only has USB via CardBus.)
-
-- There are many protocol layers involved: SCSI over USB-Mass Storage
-  over USB over UHCI over PCI.  (I may be forgetting one.)  I don't
-  know yet whether it's best to separate the layers or to merge (some
-  of) them.  I think that a simple and clean organization should be a
-  priority.
-
-- VMware can likely be used for testing because it can expose host USB
-  devices as guest USB devices.  This is safer and more convenient
-  than using real hardware for testing.
-
-- Should test with a variety of USB keychain devices because there
-  seems to be wide variation among them, especially in the SCSI
-  protocols they support.  Should try to use a "lowest-common
-  denominator" SCSI protocol if any such thing really exists.
-
-- Might want to add a feature whereby kernel arguments can be given
-  interactively, rather than passed on-disk.  Needs some though.
+    - Might want to add a feature whereby kernel arguments can be
+      given interactively, rather than passed on-disk.  Needs some
+      though.
