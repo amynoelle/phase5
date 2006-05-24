@@ -7,6 +7,10 @@
 * Add serial input support.  Also, modify tests to redirect input from
   /dev/null, to avoid stray keystrokes getting sent into the VM.
 
+* Make pintos script read the serial output and kill the subprocess if
+  it panics (after waiting a few seconds) or triple-faults.  Might
+  want it to be optional, so that interactive users don't get killed.
+
 * Userprog project:
 
   - Get rid of rox--causes more trouble than it's worth
