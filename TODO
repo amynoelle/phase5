@@ -11,6 +11,129 @@
   it panics (after waiting a few seconds) or triple-faults.  Might
   want it to be optional, so that interactive users don't get killed.
 
+* Godmar: Introduce memory leak robustness tests - both for the
+  well-behaved as well as the mis-behaved case - that tests that the
+  kernel handles low-mem conditions well.
+
+* Godmar: Another area is concurrency. I noticed that I had passed all
+  tests with bochs 2.2.1 (in reproducibility mode). Then I ran them
+  with qemu and hit two deadlocks (one of them in rox-*,
+  incidentally). After fixing those deadlocks, I upgraded to bochs
+  2.2.5 and hit yet another deadlock in reproducibility mode that
+  didn't show up in 2.2.1. All in all, a standard grading run would
+  have missed 3 deadlocks in my code.  I'm not sure how to exploit
+  that for grading - either run with qemu n times (n=2 or 3), or run
+  it with bochs and a set of -j parameters.  Some of which could be
+  known to the students, some not, depending on preference.  (I ported
+  the -j patch to bochs 2.2.5 -
+  http://people.cs.vt.edu/~gback/pintos/bochs-2.2.5.jitter.patch but I
+  have to admit I never tried it so I don't know if it would have
+  uncovered the deadlocks that qemu and the switch to 2.2.5
+  uncovered.)
+
+* Godmar: There is also the option to require students to develop test
+  workloads themselves, for instance, to demonstrate the effectiveness
+  of a particular algorithm (page eviction & buffer cache replacement
+  come to mind.) This could involve a problem of the form: develop a
+  workload that you cover well, and develop a "worst-case" load where
+  you algorithm performs poorly, and show the results of your
+  quantitative evaluation in your report - this could then be part of
+  their test score.
+
+* Threads project:
+
+  - Godmar:
+
+    >> Describe a potential race in thread_set_priority() and explain how
+    >> your implementation avoids it.  Can you use a lock to avoid this race?
+
+    I'm not sure what you're getting at here:
+    If changing the priority of a thread involves accessing the ready
+    list, then of course there's a race with interrupt handlers and locks
+    can't be used to resolve it.
+
+    Changing the priority however also involves a race with respect to
+    accessing a thread's "priority" field - this race is with respect to
+    other threads that attempt to donate priority to the thread that's
+    changing its priority. Since this is a thread-to-thread race, I would
+    tend to believe that locks could be used, although I'm not certain.  [
+    I should point out, though, that lock_acquire currently disables
+    interrupts - the purpose of which I had doubted in an earlier email,
+    since sema_down() sufficiently establishes mutual exclusion. Taking
+    priority donation into account, disabling interrupts prevents the race
+    for the priority field, assuming the priority field of each thread is
+    always updated with interrupts disabled. ]
+
+    What answer are you looking for for this design document question?
+
+  - Godmar:
+
+    >> Did any ambiguities in the scheduler specification make values in the
+    >> table uncertain?  If so, what rule did you use to resolve them?  Does
+    >> this match the behavior of your scheduler?
+
+    My guess is that you're referring to the fact the scheduler
+    specification does not prescribe any order in which the priorities of
+    all threads are updated, so if multiple threads end up with the same
+    priority, it doesn't say which one to pick.  ("round-robin" order
+    would not apply here.)
+
+    Is that correct?
+
+  - Godmar:
+    
+    One of my groups implemented priority donation with these data
+    structures in synch.cc:
+    ---
+    struct value
+    {
+      struct list_elem elem;      /* List element. */
+      int value;                  /* Item value. */
+    };
+
+    static struct value values[10];
+    static int start = 10;
+    static int numNest = 0;
+    ---
+    In their implementation, the "elem" field in their "struct value" is
+    not even used.
+
+    The sad part is that they've passed all tests that are currently in
+    the Pintos base with this implementation. (They do fail the additional
+    tests I added priority-donate-sema & priority-donate-multiple2.)
+
+    Another group managed to pass all tests with this construct:
+    ---
+    struct lock
+      {
+	struct thread *holder;      /* Thread holding lock (for debugging). */
+	struct semaphore semaphore; /* Binary semaphore controlling access. */
+	//*************************************
+	int pri_prev;
+	int pri_delta;              //Used for Priority Donation
+	/**************************************************/
+      };
+    ---
+    where "pri_delta" keeps track of "priority deltas." They even pass
+    priority-donate-multiple2.
+
+    I think we'll need a test where a larger number of threads & locks
+    simultaneously exercise priority donation to weed out those
+    implementations.
+
+    It may also be a good idea to use non-constant deltas for the low,
+    medium, and high priority threads in the tests - otherwise, adding a
+    "priority delta" might give - by coincidence - the proper priority for
+    a thread.
+
+  - Godmar: Another thing: one group passed all tests even though they
+    wake up all waiters on a lock_release(), rather than just
+    one. Since there's never more than one waiter in our tests, they
+    didn't fail anything. Another possible TODO item - this could be
+    part a series of "regression tests" that check that they didn't
+    break basic functionality in project 1. I don't think this would
+    be insulting to the students.
+
 * Userprog project:
 
   - Get rid of rox--causes more trouble than it's worth
@@ -38,7 +161,42 @@
     variety of activities and notice leaks by checking the kernel
     memory statistics.
 
+  - Godmar: is there a test that tests that they properly kill a process that
+    attempts to access an invalid address in user code, e.g. *(void**)0 =
+    42;?
+
+    It seems all of the robustness tests deal with bad pointers passed to
+    system calls (at least judging from test/userprog/Rubric.robustness),
+    but none deals with bad accesses by user code, or I am missing
+    something.
+
+    ps: I found tests/vm/pt-bad-addr, which is in project 3 only, though.
+
+    For completeness, we should probably check read/write/jump to unmapped
+    user virtual address and to mapped kernel address, for a total of 6
+    cases. I wrote up some tests, see
+    http://people.cs.vt.edu/~gback/pintos/bad-pointers/
+
   - process_death test needs improvement
+
+  - Godmar: In the wait() tests, there's currently no test that tests
+    that a process can only wait for its own children. There's only
+    one test that tests that wait() on an invalid pid returns -1 (or
+    kills the process), but no test where a valid pid is used that is
+    not a child of the current process.
+
+    The current tests also do not ensure that both scenarios (parent waits
+    first vs. child exits first) are exercised. In this context, I'm
+    wondering if we should add a sleep() system call that would export
+    timer_sleep() to user processes; this would allow the construction of
+    such a test. It would also make it easier to construct a test for the
+    valid-pid, but not-a-child scenario.
+
+    As in Project 4, the baseline implementation of timer_sleep() should
+    suffice, so this would not necessarily require basing Project 2 on
+    Project 1. [ A related thought: IMO it would not be entirely
+    unreasonable to require timer_sleep() and priority scheduling sans
+    donation from Project 1 working for subsequent projects. ]
 
 * VM project:
 
@@ -47,6 +205,16 @@
   - Godmar: page-linear, page-shuffle VM tests do not use enough
     memory to force eviction.  Should increase memory consumption.
 
+  - Godmar: fix the page* tests to require swapping
+
+  - Godmar: make sure the filesystem fails if not properly
+    concurrency-protected in project 3.
+
+  - Godmar: Another area in which tests could be created are for
+    project 3: tests that combine mmap with a paging workload to see
+    their kernel pages properly while mmapping pages - I don't think
+    the current tests test that, do they?
+
 * Filesys project:
 
   - Need a better way to measure performance improvement of buffer
@@ -54,11 +222,18 @@
     cache--likely, Bochs doesn't simulate a disk with a realistic
     speed.
 
+    (Perhaps we should count disk reads and writes, not time.)
+
   - Do we check that non-empty directories cannot be removed?
 
   - Need lots more tests.
 
   - Add FS persistence test(s).
+
+  - Godmar: I'm not sure if I mentioned that already, but I passed all
+    tests for the filesys project without having implemented inode
+    deallocation. A test is needed that checks that blocks are
+    reclaimed when files are deleted.
 
   - Godmar: I'm in the middle of project 4, I've started by
     implementing a buffer cache and plugging it into the existing
@@ -88,6 +263,11 @@
     again the same performance, which raises the suspicion that the
     test workload might not force any cache replacement, so the
     eviction strategy doesn't matter.)
+
+  - Godmar: I haven't analyzed the tests for project 4 yet, but I'm
+    wondering if the fairness requirements your specification has for
+    readers/writers are covered in the tests or not.
+
 
 * Documentation:
 
