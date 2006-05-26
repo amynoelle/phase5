@@ -230,6 +230,12 @@
 
   - Add FS persistence test(s).
 
+  - Detect implementations that represent the cwd as a string, by
+    removing a directory that is the cwd of another process, then
+    creating a new directory of the same name and putting some files
+    in it, then checking whether the process that had it as cwd sees
+    them.
+
   - Godmar: I'm not sure if I mentioned that already, but I passed all
     tests for the filesys project without having implemented inode
     deallocation. A test is needed that checks that blocks are
