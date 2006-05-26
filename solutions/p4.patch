@@ -732,7 +732,7 @@ diff -u src/filesys/directory.c~ src/filesys/directory.c
    return success;
  }
  
-@@ -192,13 +217,18 @@ dir_remove (struct dir *dir, const char 
+@@ -192,13 +217,37 @@ dir_remove (struct dir *dir, const char 
    ASSERT (dir != NULL);
    ASSERT (name != NULL);
  
@@ -744,14 +744,31 @@ diff -u src/filesys/directory.c~ src/filesys/directory.c
    if (!lookup (dir, name, &e, &ofs))
      goto done;
  
--  /* Open inode. */
-+  /* Open inode and verify that it is not an in-use directory. */
+   /* Open inode. */
    inode = inode_open (e.inode_sector);
--  if (inode == NULL)
-+  if (inode == NULL
-+      || (inode_get_type (inode) == DIR_INODE && inode_open_cnt (inode) != 1))
+   if (inode == NULL)
      goto done;
  
++  /* Verify that it is not an in-use or non-empty directory. */
++  if (inode_get_type (inode) == DIR_INODE)
++    {
++      struct dir_entry e2;
++      off_t pos;
++
++      if (inode_open_cnt (inode) != 1)
++        goto done;
++
++      inode_lock (inode);
++      for (pos = 0; inode_read_at (inode, &e2, sizeof e2, pos) == sizeof e2;
++           pos += sizeof e2)
++        if (e2.in_use && strcmp (e2.name, ".") && strcmp (e2.name, ".."))
++          {
++            inode_unlock (inode);
++            goto done;
++          }
++      inode_unlock (inode);
++    }
++ 
    /* Erase directory entry. */
 @@ -211,6 +241,7 @@ dir_remove (struct dir *dir, const char 
    success = true;
@@ -1962,7 +1979,7 @@ diff -u src/filesys/inode.h~ src/filesys/inode.h
 +enum inode_type 
 +  {
 +    FILE_INODE,         /* Ordinary file. */
-+    DIR_INODE		/* Directory. */
++    DIR_INODE           /* Directory. */
 +  };
 +
  void inode_init (void);
