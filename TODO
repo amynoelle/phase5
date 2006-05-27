@@ -7,10 +7,6 @@
 * Add serial input support.  Also, modify tests to redirect input from
   /dev/null, to avoid stray keystrokes getting sent into the VM.
 
-* Make pintos script read the serial output and kill the subprocess if
-  it panics (after waiting a few seconds) or triple-faults.  Might
-  want it to be optional, so that interactive users don't get killed.
-
 * Godmar: Introduce memory leak robustness tests - both for the
   well-behaved as well as the mis-behaved case - that tests that the
   kernel handles low-mem conditions well.
