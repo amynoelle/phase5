@@ -224,17 +224,16 @@
 
     (Perhaps we should count disk reads and writes, not time.)
 
-  - Do we check that non-empty directories cannot be removed?
-
   - Need lots more tests.
-
-  - Add FS persistence test(s).
 
   - Detect implementations that represent the cwd as a string, by
     removing a directory that is the cwd of another process, then
     creating a new directory of the same name and putting some files
     in it, then checking whether the process that had it as cwd sees
     them.
+
+  - dir-rm-cwd should have a related test that uses a separate process
+    to try to pin the directory as its cwd.
 
   - Godmar: I'm not sure if I mentioned that already, but I passed all
     tests for the filesys project without having implemented inode
