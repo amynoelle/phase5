@@ -4,9 +4,6 @@
 
 * Internal tests.
 
-* Add serial input support.  Also, modify tests to redirect input from
-  /dev/null, to avoid stray keystrokes getting sent into the VM.
-
 * Godmar: Introduce memory leak robustness tests - both for the
   well-behaved as well as the mis-behaved case - that tests that the
   kernel handles low-mem conditions well.
