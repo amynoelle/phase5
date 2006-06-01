@@ -627,22 +627,31 @@ Index: src/filesys/directory.c
 diff -u src/filesys/directory.c~ src/filesys/directory.c
 --- src/filesys/directory.c~
 +++ src/filesys/directory.c
-@@ -21,12 +21,36 @@ struct dir_entry 
+@@ -1,4 +1,5 @@
+ #include <string.h>
+ #include <list.h>
++#include "filesys/free-map.h"
+ #include "filesys/filesys.h"
+ #include "filesys/inode.h"
+@@ -21,12 +21,39 @@ struct dir_entry 
      bool in_use;                        /* In use or free? */
    };
  
 -/* Creates a directory with space for ENTRY_CNT entries in the
 -   given SECTOR.  Returns true if successful, false on failure. */
 +/* Creates a directory in the given SECTOR.
-+   The directory's parent is in PARENT_SECTOR. */
- bool
++   The directory's parent is in PARENT_SECTOR.
++   Returns inode of created directory if successful,
++   null pointer on faiilure.
++   On failure, SECTOR is released in the free map. */
+-bool
++struct inode *
 -dir_create (disk_sector_t sector, size_t entry_cnt) 
 +dir_create (disk_sector_t sector, disk_sector_t parent_sector) 
  {
 -  return inode_create (sector, entry_cnt * sizeof (struct dir_entry));
 +  struct inode *inode = inode_create (sector, DIR_INODE);
-+  bool success = inode != NULL;
-+  if (success) 
++  if (inode != NULL) 
 +    {
 +      struct dir_entry entries[2];
 +
@@ -658,13 +667,14 @@ diff -u src/filesys/directory.c~ src/filesys/directory.c
 +      strlcpy (entries[1].name, "..", sizeof entries[1].name);
 +      entries[1].in_use = true;
 +      
-+      success = (inode_write_at (inode, entries, sizeof entries, 0)
-+                 == sizeof entries);
-+      if (!success)
-+        inode_remove (inode);
++      if (inode_write_at (inode, entries, sizeof entries, 0) != sizeof entries)
++        {
++          inode_remove (inode);
++          inode_close (inode); 
++          inode = NULL;
++        } 
 +    }
-+  inode_close (inode); 
-+  return success;
++  return inode;
  }
  
  /* Opens and returns the directory for the given INODE, of which
@@ -806,7 +816,7 @@ diff -u src/filesys/directory.h~ src/filesys/directory.h
  
  /* Opening and closing directories. */
 -bool dir_create (disk_sector_t sector, size_t entry_cnt);
-+bool dir_create (disk_sector_t sector, disk_sector_t parent_sector);
++struct inode *dir_create (disk_sector_t sector, disk_sector_t parent_sector);
  struct dir *dir_open (struct inode *);
  struct dir *dir_open_root (void);
  struct dir *dir_reopen (struct dir *);
@@ -814,26 +824,32 @@ Index: src/filesys/file.c
 diff -u src/filesys/file.c~ src/filesys/file.c
 --- src/filesys/file.c~
 +++ src/filesys/file.c
+@@ -1,4 +1,5 @@
+ #include "filesys/file.h"
+ #include <debug.h>
++#include "filesys/free-map.h"
+ #include "filesys/inode.h"
+ #include "threads/malloc.h"
 @@ -11,6 +11,24 @@ struct file 
      bool deny_write;            /* Has file_deny_write() been called? */
    };
  
 +/* Creates a file in the given SECTOR,
-+   initially LENGTH bytes long. */
-+bool
++   initially LENGTH bytes long. 
++   Returns inode for the file on success, null pointer on failure.
++   On failure, SECTOR is released in the free map. */
++struct inode *
 +file_create (disk_sector_t sector, off_t length) 
 +{
 +  struct inode *inode = inode_create (sector, FILE_INODE);
-+  bool success = inode != NULL;
-+  if (success && length != 0) 
++  if (inode != NULL && length > 0
++      && inode_write_at (inode, "", 1, length - 1) != 1)
 +    {
-+      ASSERT (length >= 0);
-+      success = inode_write_at (inode, "", 1, length - 1) == 1;
-+      if (!success)
-+        inode_remove (inode); 
++      inode_remove (inode); 
++      inode_close (inode);
++      inode = NULL;
 +    }
-+  inode_close (inode);
-+  return success;
++  return inode;
 +}
 +
  /* Opens a file for the given INODE, of which it takes ownership,
@@ -863,7 +879,7 @@ diff -u src/filesys/file.h~ src/filesys/file.h
  struct inode;
  
  /* Opening and closing files. */
-+bool file_create (disk_sector_t sector, off_t length);
++struct inode *file_create (disk_sector_t sector, off_t length);
  struct file *file_open (struct inode *);
  struct file *file_reopen (struct file *);
  void file_close (struct file *);
@@ -1024,35 +1040,45 @@ diff -u src/filesys/filesys.c~ src/filesys/filesys.c
  }
  
  /* Creates a file named NAME with the given INITIAL_SIZE.
-@@ -44,16 +171,24 @@ filesys_done (void) 
+@@ -44,16 +171,32 @@ filesys_done (void) 
     Fails if a file named NAME already exists,
     or if internal memory allocation fails. */
  bool
 -filesys_create (const char *name, off_t initial_size) 
 +filesys_create (const char *name, off_t initial_size, enum inode_type type) 
  {
-+  struct dir *dir;
-+  char base_name[NAME_MAX + 1];
-   disk_sector_t inode_sector = 0;
+-  disk_sector_t inode_sector = 0;
 -  struct dir *dir = dir_open_root ();
 -  bool success = (dir != NULL
 -                  && free_map_allocate (1, &inode_sector)
 -                  && inode_create (inode_sector, initial_size)
 -                  && dir_add (dir, name, inode_sector));
+-  if (!success && inode_sector != 0) 
+-    free_map_release (inode_sector, 1);
++  struct dir *dir;
++  char base_name[NAME_MAX + 1];
++  disk_sector_t inode_sector;
++
 +  bool success = (resolve_name_to_entry (name, &dir, base_name)
 +                  && free_map_allocate (&inode_sector));
 +  if (success) 
 +    {
++      struct inode *inode;
 +      if (type == FILE_INODE)
-+        success = file_create (inode_sector, initial_size);
++        inode = file_create (inode_sector, initial_size);
 +      else
-+        success = dir_create (inode_sector,
-+                              inode_get_inumber (dir_get_inode (dir))); 
++        inode = dir_create (inode_sector,
++                            inode_get_inumber (dir_get_inode (dir))); 
++      if (inode != NULL)
++        {
++          success = dir_add (dir, base_name, inode_sector);
++          if (!success)
++            inode_remove (inode);
++          inode_close (inode);
++        }
++      else
++        success = false;
 +    }
-+  success = success && dir_add (dir, base_name, inode_sector);
-   if (!success && inode_sector != 0) 
--    free_map_release (inode_sector, 1);
-+    free_map_release (inode_sector);
    dir_close (dir);
  
    return success;
@@ -1115,9 +1141,10 @@ diff -u src/filesys/filesys.c~ src/filesys/filesys.c
  
  static void must_succeed_function (int, bool) NO_INLINE;
  #define MUST_SUCCEED(EXPR) must_succeed_function (__LINE__, EXPR)
-@@ -155,9 +306,15 @@ static void
+@@ -155,9 +306,18 @@ static void
  do_format (void)
  {
++  struct inode *inode;
    printf ("Formatting file system...");
 +
 +  /* Set up free map. */
@@ -1125,8 +1152,10 @@ diff -u src/filesys/filesys.c~ src/filesys/filesys.c
 -  if (!dir_create (ROOT_DIR_SECTOR, 16))
 +
 +  /* Set up root directory. */
-+  if (!dir_create (ROOT_DIR_SECTOR, ROOT_DIR_SECTOR))
++  inode = dir_create (ROOT_DIR_SECTOR, ROOT_DIR_SECTOR);
++  if (inode == NULL)
      PANIC ("root directory creation failed");
++  inode_close (inode);  
 +
    free_map_close ();
 +
@@ -1241,14 +1270,18 @@ diff -u src/filesys/free-map.c~ src/filesys/free-map.c
    file_close (free_map_file);
  }
  
-@@ -72,7 +76,7 @@ void
+@@ -72,5 +76,9 @@ void
  free_map_create (void) 
  {
++  struct inode *inode;
++
    /* Create inode. */
 -  if (!inode_create (FREE_MAP_SECTOR, bitmap_file_size (free_map)))
-+  if (!file_create (FREE_MAP_SECTOR, 0))
++  inode = file_create (FREE_MAP_SECTOR, 0);
++  if (inode == NULL)   
      PANIC ("free map creation failed");
- 
++  inode_close (inode);
+
    /* Write bitmap to file. */
 Index: src/filesys/free-map.h
 diff -u src/filesys/free-map.h~ src/filesys/free-map.h
@@ -1343,7 +1376,7 @@ diff -u src/filesys/inode.c~ src/filesys/inode.c
    };
  
  /* Returns the number of sectors to allocate for an inode SIZE
-@@ -35,74 +50,54 @@ struct inode 
+@@ -35,74 +50,59 @@ struct inode 
      disk_sector_t sector;               /* Sector number of disk location. */
      int open_cnt;                       /* Number of openers. */
      bool removed;                       /* True if deleted, false otherwise. */
@@ -1397,7 +1430,8 @@ diff -u src/filesys/inode.c~ src/filesys/inode.c
 -inode_create (disk_sector_t sector, off_t length)
 +/* Initializes an inode of the given TYPE, writes the new inode
 +   to sector SECTOR on the file system disk, and returns the
-+   inode thus created.  Returns a null pointer if unsuccessful. */   
++   inode thus created.  Returns a null pointer if unsuccessful,
++   in which case SECTOR is released in the free map. */  
 +struct inode *
 +inode_create (disk_sector_t sector, enum inode_type type) 
  {
@@ -1405,6 +1439,7 @@ diff -u src/filesys/inode.c~ src/filesys/inode.c
 -  bool success = false;
 +  struct cache_block *block;
 +  struct inode_disk *disk_inode;
++  struct inode *inode;
  
 -  ASSERT (length >= 0);
 +  block = cache_lock (sector, EXCLUSIVE);
@@ -1441,7 +1476,10 @@ diff -u src/filesys/inode.c~ src/filesys/inode.c
 -      free (disk_inode);
 -    }
 -  return success;
-+  return inode_open (sector);
++  inode = inode_open (sector);
++  if (inode == NULL)
++    free_map_release (sector);
++  return inode;
  }
  
  /* Reads an inode from SECTOR
@@ -2738,7 +2776,7 @@ diff -u src/userprog/syscall.c~ src/userprog/syscall.c
  #include <syscall-nr.h>
 +#include "userprog/process.h"
 +#include "userprog/pagedir.h"
-+#include "devices/kbd.h"
++#include "devices/input.h"
 +#include "filesys/directory.h"
 +#include "filesys/filesys.h"
 +#include "filesys/file.h"
@@ -3141,7 +3179,7 @@ diff -u src/userprog/syscall.c~ src/userprog/syscall.c
 +          size_t i;
 +          
 +          for (i = 0; i < read_amt; i++) 
-+            udst[i] = kbd_getc ();
++            udst[i] = input_getc ();
 +          bytes_read = read_amt;
 +        }
 +

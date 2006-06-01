@@ -503,7 +503,7 @@ diff -u src/userprog/syscall.c~ src/userprog/syscall.c
  #include <syscall-nr.h>
 +#include "userprog/process.h"
 +#include "userprog/pagedir.h"
-+#include "devices/kbd.h"
++#include "devices/input.h"
 +#include "filesys/filesys.h"
 +#include "filesys/file.h"
 +#include "threads/init.h"
@@ -823,7 +823,7 @@ diff -u src/userprog/syscall.c~ src/userprog/syscall.c
 +  if (handle == STDIN_FILENO) 
 +    {
 +      for (bytes_read = 0; (size_t) bytes_read < size; bytes_read++)
-+        if (udst >= (uint8_t *) PHYS_BASE || !put_user (udst++, kbd_getc ()))
++        if (udst >= (uint8_t *) PHYS_BASE || !put_user (udst++, input_getc ()))
 +          thread_exit ();
 +      return bytes_read;
 +    }

@@ -817,7 +817,7 @@ diff -u src/userprog/syscall.c~ src/userprog/syscall.c
  #include <syscall-nr.h>
 +#include "userprog/process.h"
 +#include "userprog/pagedir.h"
-+#include "devices/kbd.h"
++#include "devices/input.h"
 +#include "filesys/directory.h"
 +#include "filesys/filesys.h"
 +#include "filesys/file.h"
@@ -1159,7 +1159,7 @@ diff -u src/userprog/syscall.c~ src/userprog/syscall.c
 +          
 +          for (i = 0; i < read_amt; i++) 
 +            {
-+              char c = kbd_getc ();
++              char c = input_getc ();
 +              if (!page_lock (udst, true)) 
 +                thread_exit ();
 +              udst[i] = c;
