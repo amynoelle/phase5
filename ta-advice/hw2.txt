@@ -101,5 +101,8 @@ PROBLEM 2: SYSTEM CALLS
      -5 Added big array (>= 512 bytes) to struct thread without justifying
     -10 Added big array (>= 1024 bytes) to struct thread
      -5 Superfluous locking on per-thread data structure [which]
+    -10 System call handler is poorly abstracted or unreadable
+     -5 Failed to update comment on process_wait() function after implementing
+     -5 "open" system call fails to release all resources in error cases
 
 Subtotal: /60 (capped at 0)

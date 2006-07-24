@@ -657,3 +657,30 @@ B11:
     Take off points if an answer assumes that there can be more than
     one thread per process and doesn't mention that this would be an
     extension to the Pintos design.
+
+Check the submitted code, by hand, for the following:
+
+  1. That the system call handler, which is probably in
+     userprog/syscall.c in syscall_handler(), is reasonably
+     abstracted.  It should not all be in one function as one huge
+     switch statement, for example.  The code that accesses user
+     memory should be separated into specialized functions.  If either
+     of these is not the case, or if the code is otherwise difficult
+     to read, take off points.
+
+  2. The "Source Code" section in the Introduction to the Pintos
+     manual says, "Update existing comments as you modify code."  Most
+     students ignore this.  Check whether the comment on
+     process_wait() in process.c has been updated.  At a minimum, the
+     two final sentences ("This function will be implemented in
+     problem 2-2.  For now, it does nothing.") should have been
+     deleted.
+
+  3. Find the implementation of the "open" system call.  Verify that
+     all resources are released in error cases and that errors are
+     properly handled.  One particular problem can be malloc() failure
+     after a file is successfully opened--is the return value checked?
+     If so, is the file closed before returning an error?
+
+     (Failure to check malloc() is in the OVERALL section of the grade
+     report, under DESIGN.)
