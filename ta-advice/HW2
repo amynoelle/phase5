@@ -125,7 +125,8 @@ A4:
 	
         - Fewer context switches: where parsing is done has no effect
           on the number of context switches required to start a
-          process.
+          process.  (It might be possible to justify this claim by
+          giving specific details.)
 
         - Policy enforcement: some students think that the shell is in
           charge of enforcing system security policies, but this is
@@ -270,6 +271,15 @@ B1(iii):
 	    struct semaphore dead;      /* 1=child alive, 0=child dead. */
 	  };
 
+    If the shared data is integrated into struct thread, then one of
+    the cleanest ways to do it is to use a pair of semaphores, both
+    initially set to 0, like so (see B5/B8 below for more information
+    on the usage of these semaphores):
+
+	int exit_code;		    /* Process's exit status. */
+	struct semaphore exiting;   /* Up'd when process ready to exit. */
+	struct semaphore may_exit;  /* Up'd after parent reads exit code. */
+
     Of course, each thread needs a way to find the shared data for
     each of its children and, if shared data is not stored in struct
     thread, its own shared data as well.  The sample solution adds a
@@ -277,6 +287,12 @@ B1(iii):
 
 	struct wait_status *wait_status; /* This process's completion state. */
 	struct list children;            /* Completion status of children. */
+
+    If the shared data is integrated into struct thread, then a list
+    of children and a corresponding list element is needed:
+
+        struct list children;		 /* List of child processes. */
+	struct list_elem child_elem;	 /* Used for `children' list. */
 
     Most solutions add an exit code member to struct thread, even if
     there is an exit code member in a separate shared data structure.
@@ -320,8 +336,9 @@ B2:
     If an array totalling 512 bytes or more (e.g. 128 elements of
     "int" or pointer type) is added to struct thread, then there must
     be some mention that this is a large amount of data to add to
-    struct thread.  See the "struct thread" section in the Reference
-    Guide chapter of the Pintos manual for explanation.
+    struct thread.  This can be mentioned here, or in B1(ii), or in
+    B10 below.  See the "struct thread" section in the Reference Guide
+    chapter of the Pintos manual for explanation.
 
     If the fd counter skips the first 3 fd values, with mention that
     this is for stdin, stdout, and stderr, then it must also mention
@@ -403,7 +420,7 @@ B4:
     4,096 user memory region can be on a separate page.  Penalize
     them.
 
-B5 and B7:
+B5 and B8:
 
     These questions really have to be graded together, because they
     are so closely related.  See B1(iii) above for information on the
@@ -428,39 +445,215 @@ B5 and B7:
     importantly, unnecessary given that it is so easy to keep a
     per-thread list of children.  Take off points.
 
-    The procedure for "wait" varies broadly based on the data
-    structures used.  If shared data separate from struct thread are
-    used, the procedure is simpler:
+    The procedures for "wait" and "exit" vary broadly based on the
+    data structures used.  If shared data separate from struct thread
+    are used:
 
-	- Find the child in the list of shared data structures.  (If
-          none is found, return -1.)
+	The procedure for "wait" is roughly this:
 
-	- Wait for the child to die, by downing a semaphore in the
-          shared data.
+	    - Find the child in the list of shared data structures.
+	      (If none is found, return -1.)
 
-	- Obtain the child's exit code from the shared data.
+	    - Wait for the child to die, by downing a semaphore in the
+	      shared data.
 
-	- Destroy the shared data structure and remove it from the
-          list.
+	    - Obtain the child's exit code from the shared data.
 
-	- Return the exit code.
+	    - Destroy the shared data structure and remove it from the
+	      list.
 
-    A common variation on the above is to mark the shared data
-    structure as "used" instead of removing it from the list and
-    destroying it, then on subsequent "wait"s noticing that it is
-    already used, skipping the down of the semaphore, and returning
-    -1.
+	    - Return the exit code.
 
-    The procedure for "exit", in this case, is:
+	The procedure for "exit" is then:
 
-        - Up the semaphore in the data shared with our parent process
-          (if any).  In some kind of race-free way (such as using a
-          lock and a reference count or pair of boolean variables in
-          the shared data area), mark the shared data as unused by us
-          and free it if the parent is also dead.
+	    - Save the exit code in the shared data.
 
-	- Iterate the list of children and, as in the previous step,
-          mark them as no longer used by us and free them if the child
-          is also dead.
+	    - Up the semaphore in the data shared with our parent
+	      process (if any).  In some kind of race-free way (such
+	      as using a lock and a reference count or pair of boolean
+	      variables in the shared data area), mark the shared data
+	      as unused by us and free it if the parent is also dead.
 
+	    - Iterate the list of children and, as in the previous
+	      step, mark them as no longer used by us and free them if
+	      the child is also dead.
 
+            - Terminate the thread.
+
+	A common variation on the above "wait" procedure is to mark
+	the shared data structure as "used" instead of removing it
+	from the list and destroying it, then on subsequent "wait"s
+	noticing that it is already used, skipping the down of the
+	semaphore, and returning -1.
+
+    If the shared data is integrated into struct thread:
+
+        The procedure for "wait" is roughly this:
+
+	    - Find the child in the list of child processes.  (If none
+              is found, return -1.)
+
+	    - Wait for the child to die, by downing a semaphore in the
+	      child thread struct (this is the "exiting" semaphore in
+	      the example in B1(iii)).
+
+	    - Obtain the child's exit code from its thread struct.
+
+	    - Remove the child from the list of children.
+
+	    - Give the child permission to finish exiting, by "up"ing
+              its may_exit semaphore.  (After this action, the child
+              thread struct must no longer be accessed, because the
+              child could wake up at any time and exit.  In particular
+              this means that the previous two steps *must* come
+              before this one.)
+
+	    - Return the exit code.
+
+        The procedure for "exit" is then:
+
+	    - Save the exit code in the exiting process's thread
+              struct.
+
+	    - Up the "exiting" semaphore, to allow a waiting parent to
+              retrieve the exit code.
+
+            - Iterate the list of children and up each child's
+              may_exit semaphore, to allow them to exit when they're
+              ready.
+
+            - Down the "may_exit" semaphore, to wait for our parent to
+              retrieve our exit code.
+
+            - Terminate the thread.
+
+	A common variation on the above "wait" procedure is to mark a
+	child as "used" instead of allowing it to terminate then on
+	subsequent "wait"s noticing that it is already used, skipping
+	the down of the semaphore, and returning -1.  Then the "exit"
+	procedure actually gives each child permission to terminate.
+
+        The main "trick" in this kind of implementation is that an
+        exiting process must not terminate until its parent process
+        has terminated or retrieved its exit status.  (If the exiting
+        process were allowed to terminate immediately, then its thread
+        struct would be freed and the exit status could not be
+        retrieved at all.)  If the students do not explain how they do
+        this, deduct points.
+
+    (Students are not required to explain the "exit" procedure as part
+    of B5, but they usually end up doing so.)
+
+    Some groups come up with extraordinarily complicated, confusing
+    schemes for implementing wait/exit.  If you can't understand their
+    description, take off points.
+
+    You should expect to see an answer to each of the 4 parts in B8.
+    Here's an example answer that corresponds to the sample solution
+    (which uses shared data separate from the thread struct):
+
+	- If P calls wait(C) before C exits, P will wait for C to die
+          by "down"ing the semaphore in C's wait_status struct, which
+          C will "up" when it dies.
+
+	- If P calls wait(C) after C exits, P will "down" the
+          semaphore similarly but no waiting will be required.
+
+	- If P terminates without waiting, before C exits, then
+          C will "up" the semaphore when it terminates, but P will
+          never "down" it, which is fine.
+
+	- If P terminates without waiting, after C exits, then the
+          same thing happens, except that C "up"s the semaphore before
+          P dies instead of after.
+
+    Students should also say something about freeing resources and
+    special cases, e.g.:
+
+	- When either C or P terminates, it decrements their shared
+          wait_status's reference count (under the wait_status lock).
+          When the reference count reaches 0, the wait_status is no
+          longer referenced so it is freed.
+
+	- There are no special cases.
+
+B6: 
+
+    There are three common types of answers:
+
+	- Pre-checking: System call handlers verify that all the data
+          they need to access can be accessed before allocating any
+          resources.  Thus, there's never anything to free on error.
+
+          (Once project 3 rolls around, this will no longer be
+          possible, so these students haven't done a good job of
+          looking ahead.)
+
+	- Manual freeing: If an error occurs, the system call handler
+          manually frees everything allocated up to that point.  Often
+          these answers focus on "abstraction", making the point that
+          it's easier to free resources if the resources are correctly
+          abstracted.
+
+	- Resource pools: All the resources allocated by a thread
+          (memory, locks, etc.) is put on a list.  If an error occurs,
+          a handler iterates through the list and releases all of the
+          resources.
+
+	  (This is a clever solution, but rare.)
+
+    Any of these are fine.
+
+B7:
+
+    This depends on the data structures defined in B1(iv) above.
+
+    The usual solution is to use a semaphore initialized to 0.  The
+    process calling "exec" downs it.  The new process "up"s it once
+    the load success or failure is known.  A shared Boolean variable
+    is used to indicate success or failure.
+
+    Some students use thread_block() instead of a semaphore.  Take off
+    points.
+
+    Some students store the success indicator variable in the child
+    process.  This requires additional synchronization so that the
+    child process can't terminate before the parent reads the status.
+    Typically, an additional semaphore is used to give the process
+    calling "exec" a chance to read the shared Boolean variable
+    without a race on the new process's termination.  This is not a
+    good approach, because it is so easy to do without the additional
+    synchronization by storing the success indicator in the parent's
+    thread struct or in a local variable (e.g. as in the sample
+    solution).  Take off points.
+
+B8:
+
+    See "B5 and B8", above.
+
+B9 and B10:
+
+    Just make sure of a few things here:
+
+	- They actually answered "why", not "how" or "what".
+
+	- Their answers do not contain any factual inaccuracies
+          (e.g. do not claim that Pintos processes inherit file
+          descriptors on exec, which contradicts what the assignment
+          says).
+
+	- Their answers seem "reasonable".
+
+B11:
+
+    A typical answer is just "we didn't change anything".  Otherwise,
+    see "B9 and B10" above.
+
+    Take off points if they come up with some bizarre or stupid scheme
+    and don't properly justify it, e.g. one group decided that pid_t
+    for a process should be the sum of its tid_t and its parent's
+    tid_t.
+
+    Take off points if an answer assumes that there can be more than
+    one thread per process and doesn't mention that this would be an
+    extension to the Pintos design.

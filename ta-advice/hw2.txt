@@ -1,0 +1,105 @@
+HW2 DESIGN SUMMARY
+==================
+
+OVERALL
+
+  DOCUMENTATION
+    -20 Egregious violation of style versus design document example
+    -10 Numerous excessively long lines (> 79 characters)
+    -10 Numerous capitalization, punctuation, spelling, or grammar errors
+
+  DESIGN
+    -10 Failure to check return value of malloc()
+    -10 Use of ASSERT to check something that can actually fail, e.g. malloc()
+
+  CODING STYLE
+    -10 Inconsistent or bad coding style: no indentation, cramming
+        many statements into one line, other issues at TA's discretion
+    -10 Numerous very long source code lines (> 100 characters)
+    -10 Commented-out or #if'd out code makes real code hard to read
+    -10 Many missing comments on structure, structure members, 
+        global or static variables, or function definitions
+    -10 Function(s) should be decomposed for clarity [indicate function]
+    -10 Cut-and-pasted code should be made into function [indicate where]
+    -10 Uninformative or deceptive identifiers
+
+Subtotal: /10 (not capped)
+
+PROBLEM 1: ARGUMENT PASSING
+
+  DOCUMENTATION
+    -30 Grossly inaccurate: documentation has no resemblance to code
+    -15 Important inaccuracies: documentation and code differ significantly
+        [indicate how]
+     -5 Minor inaccuracies: documentation and code differ [indicate how]
+     -5 A1: Missing entirely/missing comments or purpose/too long
+    -10 A2: Missing/non-responsive/too long/too short
+    -10 A3: Missing/non-responsive/too long/too short
+    -10 A3: Claims that strtok_r() does not modify the string it parses
+    -10 A3: Claims that strtok() uses a static buffer for parsing
+    -10 A4: Missing/non-responsive/too long/too short
+     -5 A4: Claims time or space advantage for user-space parsing
+     -5 A4: Claims that the shell implements relative paths
+     -5 A4: Claims that user space parsing reduces context switches
+     -5 A4: Claims that the shell enforces security policy
+ 
+  DESIGN
+    -30 Not implemented
+    -10 Uses global variables, locks, etc.
+    -15 Doesn't check for stack overflow
+    -10 Assumes any command line under N bytes long will fit in a page
+        [change N to the value assumed, where N >= 1,366]
+    -10 Assumes that the command line is capped at 128 bytes
+     -1 Assumes that individual strings must be word-aligned for performance
+    -10 Argument passing code is difficult to read or poorly abstracted
+
+Subtotal: /30 (capped at 0)
+
+PROBLEM 2: SYSTEM CALLS
+
+  DOCUMENTATION
+    -60 Grossly inaccurate: documentation has no resemblance to code
+    -30 Important inaccuracies: documentation and code differ significantly
+        [indicate how]
+    -10 Minor inaccuracies: documentation and code differ [indicate how]
+    -10 B1: Missing entirely/missing comments or purpose/too long
+     -1 B1: Omitted global file system synchronization
+     -3 B1: Omitted data for tracking file descriptors
+     -3 B1: Omitted data for "wait" system call
+     -3 B1: Omitted data for "exec" to wait for process loading to complete
+     -6 B2: Missing/non-responsive/too long/too short
+     -2 B2: Claims that Pintos has stderr file descriptor
+     -6 B3: Missing/non-responsive/too long/too short
+     -3 B3: Claims that struct intr_frame's eax member is on user stack
+     -6 B4: Missing/non-responsive/too long/too short
+     -6 B4: Inspects page table for every byte accessed
+     -6 B4: Inspects page table for each N-byte block (N <= 1,024)
+     -6 B4: Can miss inspection for some pages in a block
+     -6 B4: Claims that each byte in 4 kB can be on separate page
+     -6 B4: Wrong answer for "ideal" case
+    -12 B5+B8: Missing/non-responsive/too long/too short
+     -3 B5+B8: "wait" or "exit" disables interrupts
+     -3 B5+B8: "wait" or "exit" calls thread_block() (use semaphores instead)
+     -3 B5+B8: "wait" or "exit" uses global lock or semaphore
+     -3 B5+B8: "wait" always returns -1 if child has already exited
+     -3 B5+B8: "wait" or "exit" searches a global list of all processes
+     -6 B5+B8: "wait" or "exit" has race condition [which]
+     -6 B6: Missing/non-responsive/too long/too short
+     -6 B7: Missing/non-responsive/too long/too short
+     -3 B7: Calls thread_block() directly (use semaphores instead)
+     -3 B7: Success flag in child struct thread needs too much synchronization
+     -6 B9: Missing/non-responsive/too long/too short
+     -6 B10: Missing/non-responsive/too long/too short
+     -6 B11: Missing/non-responsive/too long/too short
+     -6 B11: Claims that Pintos supports multi-threaded processes
+
+  DESIGN
+    -60 Not implemented
+     -5 Global counter for file descriptors lacks synchronization
+    -10 Global table of file descriptors lacks synchronization
+     -5 Global table allows multiple processes to access same file descriptor
+     -5 Added big array (>= 512 bytes) to struct thread without justifying
+    -10 Added big array (>= 1024 bytes) to struct thread
+     -5 Superfluous locking on per-thread data structure [which]
+
+Subtotal: /60 (capped at 0)
