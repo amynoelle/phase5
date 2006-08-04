@@ -1,0 +1,314 @@
+		       PROJECT 3 GRADING ADVICE
+		       ========================
+
+This file contains advice for grading project 3.  General advice for
+Pintos grading is in README, which you should read first.
+
+			PAGE TABLE MANAGEMENT
+			=====================
+
+A1:
+
+    This should include a description of the students' supplemental
+    page table.  There are two common approaches:
+
+	- Hash table: a per-process hash table indexed on virtual
+          address.  The hash table elements normally include:
+
+	    * Virtual address.
+
+	    * Location.  At any given time, this is one of:
+
+		. Physical address.
+
+		. File and offset (and in many implementations, a byte
+		  count between 0 and 4,096 also, with the remaining
+		  bytes zeroed).
+
+		. Swap slot.
+
+		. All zeroes.
+
+	    * Read-only or read/write flag.
+
+            * Often, a pointer back to the owning thread or page
+              directory, so one of these structures can be used to
+              evict its page (it must be possible to find the page's
+              PTE to mark it not-present before it can be evicted).
+
+          Students should mention that they added a hash table member
+          to struct thread.
+
+	  Students come up with various ways to break this table into
+	  multiple tables.
+
+	- Modify the page table implementation: 31 bits of each PTE
+          for a page that is not in a frame are available for use.
+          Some groups use these to point to the supplemental page
+          table entry.
+
+	  That still leaves us needing a way to find the supplemental
+	  page table entry for a page that is in a frame.  We can do
+	  that with an array that has one entry for each physical
+	  page, indexing it based on the frame number for the frame
+	  pointed to by the PTE.
+
+    Some hybrid approaches are also possible.
+
+    A1 might also describe the frame table, swap table, and file
+    mapping table, but most students leave those for B1.  Either way
+    is fine.
+
+A2:
+
+    The answer should describe code, not data; the data structures
+    have already been explained in A1.
+
+A3:
+
+    The most common answer is "We always access user data through the
+    user virtual address," which is simple and correct.  Another
+    correct answer is "We check accessed and dirty bits for both user
+    and kernel virtual addresses."
+
+    If sharing is implemented, then the answer must explain how
+    accessed and dirty bits are coordinated.  Sharing excludes the
+    possibility of avoiding aliasing.
+
+    Look for confusion between user and kernel addresses here.  Unless
+    sharing is implemented, each user virtual address aliases exactly
+    one kernel virtual address.
+
+    Watch for the implication that an approximate idea of the dirty
+    status of a page is okay.  It's not--if the OS thinks a page is
+    clean, but it's actually dirty, then it could throw away changes
+    without writing them back.
+
+A4:
+
+    A typical answer is along these lines:
+
+	First we try to get a free frame with palloc_get_page(), which
+	does its own internal synchronization.  If it succeeds, we're
+	done.
+
+	Otherwise, we grab a lock needed to perform eviction.  The
+	lock prevents other threads from trying to evict a page at the
+	same time.
+
+A5:
+
+    If the students used a hash table, they should identify some of
+    the benefits of a hash table relative to alternative data
+    structures: an array would be sparse and thus too big, a list
+    would be slow to search, and so on.  Mentioning that a hash table
+    has O(1) average lookup time is also good.
+
+    If the students modified the existing page tables, then they
+    typically explain that this saves memory because the PTEs are
+    needed anyway, and that lookup through the page table is fast.
+
+    Students may mention that making their data structure
+    thread-specific reduces the need for locking, or that it makes it
+    easier to find all the pages that belong to a given process (for
+    cleanup when a process dies).
+
+Check the submitted code, by hand, for the following: 
+
+		       PAGING TO AND FROM DISK
+		       =======================
+
+B1:
+
+    Expect to see the following global data:
+
+	- A swap bitmap.
+
+	- A lock for the swap bitmap.  Sometimes swap synchronization
+          is handled by another lock, but sometimes it's forgotten
+          entirely.
+
+	- A list of frames.
+
+	- A pointer to a frame, used for the clock hand.  Not always
+          needed (see B2).
+
+	- A lock on the frame list.
+
+    There may be some structure definitions to go with the above.
+
+    Some of the data structures we expect to see here might have
+    already been described in A1.    
+
+B2:
+
+    This is normally a description of the second-chance or "clock"
+    algorithm, which sweeps around the list of frames looking for an
+    unset accessed bit, resetting those that are set as it goes.
+
+    Some students implement a preference to evict clean pages, to
+    reduce the needed I/O.  Others use two clock hands, one that
+    checks accessed bits and another ahead of the checking hand that
+    resets bits.  Those are nice touches.
+
+    The dirty bit should *not* be reset as part of the clock
+    algorithm.  That will cause data corruption.  Take off points if
+    the students say they do so.
+
+    Some students take the "clock" algorithm name too literally and
+    implement a thread that periodically resets all the accessed bits
+    in the system.  That's bad: it's not any more useful to have all
+    the accessed bits unset than it is to have all of them set.  It's
+    not a substitute for resetting accessed bits when we need a page,
+    either.  If the students do this without providing good rationale,
+    deduct points.
+
+B3:
+
+    This is a new question for this quarter, so it's hard to say what
+    the answers will look like.
+
+    I expect that the students will say that they reset the present
+    bit in the PTE for the page that was evicted and that they adjust
+    the supplementary page table for the page to point to its new
+    location.
+
+B4:
+
+    The heuristic should, roughly, check that the following are true:
+
+	- FA >= ESP - 32
+
+	- PHYS_BASE - STACK_LIMIT <= FA < PHYS_BASE
+
+    where FA is the faulting address, ESP is the user stack pointer,
+    PHYS_BASE is the macro defined in vaddr.h, and STACK_LIMIT is the
+    maximum size of the stack.
+
+    The first condition ensures that the fault is actually above the
+    stack pointer, allowing 32 bytes to allow the PUSHA instruction to
+    work.  Deduct points if their condition allows more than 32 bytes;
+    the documentation is explicit.
+
+    The second condition ensures that the fault is in a reasonable
+    place for the stack.  It prevents the stack from growing above
+    STACK_LIMIT in size.  It also prevents access to kernel virtual
+    memory.
+
+    STACK_LIMIT should be at least 1 MB.  Most students choose 8 MB.
+
+    Some students think that the "struct intr_frame" that the kernel
+    sees is pushed on the user stack.  That's wrong; deduct points.
+
+B5:
+
+    The answer must explain how the submitted code prevents one of the
+    4 conditions for deadlock from occurring.  Typically this is by
+    making sure that locks are always acquired in a particular order.
+    Some common schemes:
+
+	- "Terminal" locks, that is, locks under which no further
+          locks are acquired.  This is common, for example, for the
+          lock on the swap bitmap.
+
+	- Ranking locks: students describe the order in which locks
+          are acquired.
+
+    Wording that attempts to claim that the conditions for deadlock
+    are "rare" or that the window in which deadlock can occur is
+    "short" are not acceptable.  In a proper design, deadlock is
+    impossible, not just rare.  Deduct points.
+
+B6:
+
+    This is a two-part question, and students must answer both parts.
+
+    Usually, a lock protects the page.  To evict or to fault in a page
+    requires holding the lock.  P holds the lock during the entire
+    eviction process, so Q has to wait for it to be released if it
+    wants to fault it back in.
+
+    To prevent Q from accessing or modifying its page, P marks its PTE
+    not-present before it starts evicting it, but *after* it acquires
+    the page lock.  (If it marked it not-present before acquiring the
+    lock, it would race with Q faulting on the page and trying to
+    acquire the lock.)
+
+    Disabling interrupts is not required anywhere.  Deduct points from
+    solutions that disable interrupts.
+
+B7:
+
+    Several possible answers:
+
+	- Same as B6: hold the page's lock while it is being read in,
+          so Q cannot acquire it until it's finished.
+
+	- Don't add the new page to the list of frames that are
+          candidates for eviction until its page-in is complete.
+
+	- Mark frames with a "non-evictable" bit while they're being
+          read in.
+
+B8:
+
+    Several possible answers:
+
+	- Pre-lock all the pages that the system call will access,
+          then unlock them when the system call completes.
+
+	- Page fault in kernel.
+
+	- Acquire a global lock needed to evict pages.  (But there
+          should be some additional explanation of how the system call
+          makes sure that those pages are in main memory in the first
+          place.)
+
+B9:
+
+    Watch out for claims about deadlock here.  Wording that attempts
+    to claim that the conditions for deadlock are "rare" or that the
+    window in which deadlock can occur is "short" are not acceptable.
+    In a proper design, deadlock is impossible, not just rare.  Deduct
+    points.
+
+Check the submitted code, by hand, for the following:
+
+			 MEMORY MAPPED FILES
+			 ===================
+
+C1:
+
+    This usually includes a data structure that represents a mapped
+    file and adds a list of them to "struct thread".  Sometimes,
+    students add a new counter for a mapid_t, analogous to the
+    counters added for file descriptors in project 2.  The same
+    criteria apply as did in that project.
+
+C2:
+
+    Usually the answer is basically "We reused lots of existing data
+    structures, but we had to deal with a few differences."
+
+    For some reason, students sometimes talk about permanently
+    assigning or pre-reserving memory mapped files to swap slots or to
+    frames in physical memory here.  That's incorrect.  The assignment
+    is explicit that mapping should be lazily loaded and written back
+    to their files, not to swap.
+
+C3:
+
+    Basically, *each* page (not just the first) in the new mapping has
+    to be checked as to whether it overlaps any existing segment.
+
+    There should be some comment about interaction between stack
+    expansion and memory mapped files.
+
+    Memory mappings are per-process, so mappings in two different
+    processes do not "overlap".
+
+C4:
+
+    Usually, this says how the similar bits of the implementation are
+    shared and the different bits are not.  Just make sure it's a
+    reasonable rationale.
