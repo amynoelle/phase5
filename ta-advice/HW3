@@ -61,8 +61,9 @@ A1:
 
 A2:
 
-    The answer should describe code, not data; the data structures
-    have already been explained in A1.
+    The answer generally boils down to traversing the data structure
+    from A1.  The answer should describe code, not data; the data
+    structures have already been explained in A1.
 
 A3:
 
@@ -112,8 +113,6 @@ A5:
     thread-specific reduces the need for locking, or that it makes it
     easier to find all the pages that belong to a given process (for
     cleanup when a process dies).
-
-Check the submitted code, by hand, for the following: 
 
 		       PAGING TO AND FROM DISK
 		       =======================
@@ -255,14 +254,16 @@ B8:
     Several possible answers:
 
 	- Pre-lock all the pages that the system call will access,
-          then unlock them when the system call completes.
+          then unlock them when the system call completes.  There must
+          be a discussion of how to avoid deadlock among processes
+          that, among them have all of the user pool locked, and want
+          more.
 
 	- Page fault in kernel.
 
-	- Acquire a global lock needed to evict pages.  (But there
-          should be some additional explanation of how the system call
-          makes sure that those pages are in main memory in the first
-          place.)
+	- Acquire a global lock needed to evict pages.  There should
+          be some additional explanation of how the system call makes
+          sure that those pages are in main memory in the first place.
 
 B9:
 
@@ -270,9 +271,8 @@ B9:
     to claim that the conditions for deadlock are "rare" or that the
     window in which deadlock can occur is "short" are not acceptable.
     In a proper design, deadlock is impossible, not just rare.  Deduct
-    points.
-
-Check the submitted code, by hand, for the following:
+    points.  (This deduction is listed under B5 because similar claims
+    are common there.)
 
 			 MEMORY MAPPED FILES
 			 ===================
@@ -293,7 +293,7 @@ C2:
     For some reason, students sometimes talk about permanently
     assigning or pre-reserving memory mapped files to swap slots or to
     frames in physical memory here.  That's incorrect.  The assignment
-    is explicit that mapping should be lazily loaded and written back
+    is explicit that mappings should be lazily loaded and written back
     to their files, not to swap.
 
 C3:
