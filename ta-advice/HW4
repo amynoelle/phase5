@@ -1,0 +1,293 @@
+		       PROJECT 4 GRADING ADVICE
+		       ========================
+
+This file contains advice for grading project 4.  General advice for
+Pintos grading is in README, which you should read first.
+
+		     INDEXED AND EXTENSIBLE FILES
+		     ============================
+
+A1:
+
+    struct inode_disk should change here.  Many students just present
+    the new version instead of the detailed changes, which is fine
+    because most of it changes.  The typical result looks something
+    like this:
+
+	struct inode_disk
+	  {
+	    disk_sector_t sectors[SECTOR_CNT];  /* Sectors. */
+	    enum inode_type type;               /* FILE_INODE or DIR_INODE. */
+	    off_t length;                       /* File size in bytes. */
+	    unsigned magic;                     /* Magic number. */
+	  };
+
+    Some details:
+
+	- The "sectors" array might be divided into separate arrays or
+          scalars devoted to direct, indirect, and doubly indirect
+          blocks.  That's fine, and arguably cleaner.
+
+	- The "magic" member should be retained, but some groups might
+          drop it because they don't understand its purpose.  That's
+          OK.
+
+	- The "type" member might have been added to directory entries
+          instead, or its addition might be mentioned in the
+          subdirectories section instead, because it's more relevant
+          there.  If it's missing, look in B1.  If it's not mentioned
+          either place, take off points.
+
+	  Many groups name "type" something like "is_dir".
+
+	- The "start" member should be dropped.  If it's still there,
+          take off points.
+
+	- The "unused" array should be dropped, because if there's
+          extra space then it can be used for more direct blocks, etc.
+          If there's an unused array that's between 0 and 3 bytes (not
+          elements) long, then that's fine--probably they needed to
+          pad out some "char" or "short" elements to make the whole
+          thing exactly 512 bytes long.  Otherwise, take off points.
+
+    Most groups add a lock to struct inode that synchronizes file
+    growth (see A3, A4).
+
+A2:
+
+    Most groups use 123 or 124 direct blocks, 1 indirect block, and 1
+    doubly indirect block, which yield the following maximums:
+
+	123 direct: (123 + 128 + 128**2) * 512 = 8,517,120 bytes = 8,317.5 kB
+	124 direct: (124 + 128 + 128**2) * 512 = 8,517,632 bytes = 8,318 kB
+
+    Occasionally a group thinks that the "max file size" includes
+    metadata size.  The metadata in either situation above would be of
+    this size:
+
+	(1 + 1 + (1 + 128)) * 512 = 67,072 bytes = 65.5 kB
+
+    so that the totals would then be
+
+	123 direct: 8,517,120 + 67,072 = 8,584,192 bytes = 8,383 kB
+	124 direct: 8,517,632 + 67,072 = 8,584,704 bytes = 8,383.5 kB
+
+    Check that their math is correct if it doesn't match one of these.
+
+    Students must "show their work" or at least give enough numbers in
+    A1, A2, or A6 to allow you to check their work.  You shouldn't
+    have to look at the source code to check it.  Take off points if
+    you do.
+
+    Some students think that their design has 128 indirect blocks or
+    128 doubly indirect blocks.  That's not true.  Take off points.
+    (However, the blocks that the doubly indirect blocks point to are
+    indirect blocks in their own right.  But in that case they would
+    normally have 129, not 128, because of the indirect block that the
+    inode points to directly.)
+
+    See also A6.
+
+A3:
+
+    One important fact here is that Pintos files can grow but never
+    shrink.  (Although deletion might be thought of as "shrinking" to
+    size 0, this can never be observed by a user process, because the
+    file's contents are retained as long as a user process has it
+    open.)
+
+    A few approaches:
+
+	1. The most common approach is to use a lock to make extending
+	   a file into a critical section.  A write first checks the
+	   length of the file.  A write that won't extend the file
+	   doesn't need to take the lock and can proceed immediately.
+	   A write that extends the file takes the lock.
+
+	   The lock should be per-inode (per-file).  Take off points
+	   if it is global.
+
+	   There are some subtleties to this approach.  The first is
+	   that checking and updating the length of the file has to be
+	   synchronized.  If two writers try to write 10 bytes
+	   starting at the current EOF, they can both see the old file
+	   length.  Thus, the file length must be checked again after
+	   obtaining the lock, e.g.
+
+		if (final_ofs > disk_inode->length)   // First check.
+                  {
+                    lock_acquire (&inode->grow_lock);
+                    if (final_ofs > disk_inode->length)   // Second check.
+                      {
+                         // ...extend file...
+                      }
+                    lock_release (&inode->grow_lock);
+                  }
+
+	   Students who use this scheme must mention how they handle
+	   this problem.  If they don't, take off points.
+
+	   An even more subtle problem is that of race-free reads of
+	   the "length" member of disk_inode.  There ideally should be
+	   some locking around access to it, but a call to barrier()
+	   or use of volatile would be sufficient also.  However,
+	   reading a single integer is normally atomic on modern
+	   machines, so we'll just ignore this problem.
+
+	2. Use sector-based locking in the buffer cache.  In this
+	   approach, the buffer cache supports shared and exclusive
+	   locking of sectors.  To read or write a file normally can
+	   use a shared lock on the inode sector; extending a file
+	   requires an exclusive lock on the inode sector.
+
+        3. If all file accesses (or all write accesses) require a lock
+	   and hold it during the entire read or write, then that's a
+	   trivial solution, but it doesn't meet the requirements in
+	   the Synchronization section of the assignment: "Multiple
+	   reads of a single file must be able to complete without
+	   waiting for one another.  When writing to a file does not
+	   extend the file, multiple processes should also be able to
+	   write a single file at once."  Take off points.
+
+           This is not the same as taking a lock across a couple of
+           lines of code to check or set a variable in a race-free
+           way, etc.  That's fine.
+
+A4:
+
+    The typical solution to A4 depends on the solution chosen for A3:
+
+	1. a. Typically, the process extending the file doesn't update
+	      the file's length until the extension is fully
+	      completed.  Thus, before the extension is complete,
+	      readers won't see that the file's length has increased
+	      at all.
+
+           b. Another solution is to make reads past end-of-file wait
+	      for file extension to be completed, by making read past
+	      end-of-file take the lock needed to extend the file.
+	      That's fine too.
+
+	2. A process that wants to read the file will need to get a
+           shared lock on the inode sector, which it can't get until
+           the extending process has released its exclusive lock.
+           Thus, this approach will be correct as long as the
+           exclusive lock on the inode is held until the file
+           extension is complete.
+
+	3. This approach trivially solves the problem but doesn't
+           fulfill the synchronization requirements.  Take off points.
+
+A5:
+
+    Many answers are implicitly predicated on the fact that Pintos
+    locks and semaphores have fair, first-come, first-served queuing.
+    Most students don't mention it, though.
+
+    The typical answer depends on the answer to A4:
+
+	1. a. Readers, and writers not at end-of-file, don't have to
+              wait, so they have no fairness issues.  Writers that
+              extend a file are waiting on a lock, which queues their
+              extensions fairly.  After a file extension is complete,
+              subsequent reads and writes within the new file length
+              are completed fairly because there's no need for them to
+              wait.
+
+	   b. Essentially the same as 1a, except that readers beyond
+              end-of-file are treated like writers beyond end-of-file.
+              Because the lock queuing is fair, readers get serviced
+              fairly too.
+
+	2. Fairness here depends on the fairness of locking in the
+           buffer cache.  The group must explain how the buffer cache
+           provides fair locking.  Generally, two rules are needed to
+           ensure fairness:
+
+		- A rule to prevent readers from waiting for writers
+                  forever.  For example: when the exclusive holder of
+                  a lock releases it, any processes waiting for a
+                  shared lock are preferred over processes waiting for
+                  an exclusive lock.
+
+		- A rule to prevent writers from waiting for readers
+		  forever.  For example: if one or more processes hold
+		  a shared lock, and one or more processes are waiting
+		  for an exclusive lock, then no more processes may
+		  obtain a shared lock until at least one process has
+		  obtained an exclusive lock.
+
+	   The group must explain both rules; take off points
+	   otherwise.
+
+	3. This approach trivially solves the problem but doesn't
+           fulfill the synchronization requirements.  Take off points.
+
+    There should be no use of a timer to ensure fairness.  That's not
+    the right approach.
+
+    Fairness is not a matter of what kind of file access is "rare" or
+    "common".  Take off points from groups that argue, e.g., that
+    their implementation is unfair if a file is being extended but
+    that file extension happens "rarely".
+
+A6:
+
+    I haven't seen a group try to use a non-multilevel index structure
+    yet.  Such a choice would need good rationale.
+
+    Good answers include mention of advantages of multilevel indexes:
+
+	- Both random and sequential access are efficient.
+
+	- Large files can be supported, without imposing a penalty on
+          efficiency of small files.
+
+	- Works in presence of external fragmentation.
+
+	- Fast access to data for small files.
+
+    Some answers mention some disadvantages of multilevel indexes:
+
+	- It takes up to 3 disk accesses to find a data block in a big
+          file (although caching helps with sequential access
+          patterns).
+
+	- Fixed maximum file size.
+
+	- High overhead for small files.
+
+			    SUBDIRECTORIES
+			    ==============
+
+B1:
+
+B2:
+
+B3:
+
+B4:
+
+B5:
+
+B6:
+
+			     BUFFER CACHE
+			     ============
+
+C1:
+
+    struct inode should drop inode_disk; if it doesn't, then take off
+    points.  This might have been mentioned in A1 instead.
+
+C2:
+
+C3:
+
+C4:
+
+C5:
+
+C6:
+
+C7:
