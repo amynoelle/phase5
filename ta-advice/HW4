@@ -147,7 +147,8 @@ A3:
 
            This is not the same as taking a lock across a couple of
            lines of code to check or set a variable in a race-free
-           way, etc.  That's fine.
+           way, etc.  That's fine.  The issue is waiting for I/O to
+           complete, not for updating little bits of metadata.
 
 A4:
 
@@ -178,7 +179,8 @@ A5:
 
     Many answers are implicitly predicated on the fact that Pintos
     locks and semaphores have fair, first-come, first-served queuing.
-    Most students don't mention it, though.
+    Most students don't mention it, though.  Give a bonus point if
+    they do.
 
     The typical answer depends on the answer to A4:
 
@@ -252,6 +254,8 @@ A6:
         - Fixed maximum file size.
 
         - High overhead for small files.
+
+    At least two reasons must be mentioned.
 
                             SUBDIRECTORIES
                             ==============
@@ -436,13 +440,15 @@ B6:
           working directory: I haven't seen any of these groups make
           sensible claims yet.
 
+    At least two reasons must be given.
+
                              BUFFER CACHE
                              ============
 
 C1:
 
     struct inode should drop inode_disk; if it doesn't, then take off
-    points.  This might have been mentioned in A1 instead.
+    points.  Take off a lot of points if they This might have been mentioned in A1 instead.
 
     Expect to see a cache entry structure containing the following
     members:
