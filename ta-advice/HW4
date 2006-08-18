@@ -1,11 +1,11 @@
-		       PROJECT 4 GRADING ADVICE
-		       ========================
+                       PROJECT 4 GRADING ADVICE
+                       ========================
 
 This file contains advice for grading project 4.  General advice for
 Pintos grading is in README, which you should read first.
 
-		     INDEXED AND EXTENSIBLE FILES
-		     ============================
+                     INDEXED AND EXTENSIBLE FILES
+                     ============================
 
 A1:
 
@@ -14,32 +14,32 @@ A1:
     because most of it changes.  The typical result looks something
     like this:
 
-	struct inode_disk
-	  {
-	    disk_sector_t sectors[SECTOR_CNT];  /* Sectors. */
-	    enum inode_type type;               /* FILE_INODE or DIR_INODE. */
-	    off_t length;                       /* File size in bytes. */
-	    unsigned magic;                     /* Magic number. */
-	  };
+        struct inode_disk
+          {
+            disk_sector_t sectors[SECTOR_CNT];  /* Sectors. */
+            enum inode_type type;               /* FILE_INODE or DIR_INODE. */
+            off_t length;                       /* File size in bytes. */
+            unsigned magic;                     /* Magic number. */
+          };
 
     Some details:
 
-	- The "sectors" array might be divided into separate arrays or
+        - The "sectors" array might be divided into separate arrays or
           scalars devoted to direct, indirect, and doubly indirect
           blocks.  That's fine, and arguably cleaner.
 
-	- The "magic" member should be retained, but some groups might
+        - The "magic" member should be retained, but some groups might
           drop it because they don't understand its purpose.  That's
           OK.
 
-	- A "type" or "is_dir" member might have been added to
+        - A "type" or "is_dir" member might have been added to
           directory entries instead, or its addition might be
           mentioned in B1, because it's more relevant there.
 
-	- The "start" member should be dropped.  If it's still there,
+        - The "start" member should be dropped.  If it's still there,
           take off points.
 
-	- The "unused" array should be dropped, because if there's
+        - The "unused" array should be dropped, because if there's
           extra space then it can be used for more direct blocks, etc.
           If there's an unused array that's between 0 and 3 bytes (not
           elements) long, then that's fine--probably they needed to
@@ -54,19 +54,19 @@ A2:
     Most groups use 123 or 124 direct blocks, 1 indirect block, and 1
     doubly indirect block, which yield the following maximums:
 
-	123 direct: (123 + 128 + 128**2) * 512 = 8,517,120 bytes = 8,317.5 kB
-	124 direct: (124 + 128 + 128**2) * 512 = 8,517,632 bytes = 8,318 kB
+        123 direct: (123 + 128 + 128**2) * 512 = 8,517,120 bytes = 8,317.5 kB
+        124 direct: (124 + 128 + 128**2) * 512 = 8,517,632 bytes = 8,318 kB
 
     Occasionally a group thinks that the "max file size" includes
     metadata size.  The metadata in either situation above would be of
     this size:
 
-	(1 + 1 + (1 + 128)) * 512 = 67,072 bytes = 65.5 kB
+        (1 + 1 + (1 + 128)) * 512 = 67,072 bytes = 65.5 kB
 
     so that the totals would then be
 
-	123 direct: 8,517,120 + 67,072 = 8,584,192 bytes = 8,383 kB
-	124 direct: 8,517,632 + 67,072 = 8,584,704 bytes = 8,383.5 kB
+        123 direct: 8,517,120 + 67,072 = 8,584,192 bytes = 8,383 kB
+        124 direct: 8,517,632 + 67,072 = 8,584,704 bytes = 8,383.5 kB
 
     Check that their math is correct if it doesn't match one of these.
 
@@ -94,23 +94,23 @@ A3:
 
     A few approaches:
 
-	1. The most common approach is to use a lock to make extending
-	   a file into a critical section.  A write first checks the
-	   length of the file.  A write that won't extend the file
-	   doesn't need to take the lock and can proceed immediately.
-	   A write that extends the file takes the lock.
+        1. The most common approach is to use a lock to make extending
+           a file into a critical section.  A write first checks the
+           length of the file.  A write that won't extend the file
+           doesn't need to take the lock and can proceed immediately.
+           A write that extends the file takes the lock.
 
-	   The lock should be per-inode (per-file).  Take off points
-	   if it is global.
+           The lock should be per-inode (per-file).  Take off points
+           if it is global.
 
-	   There are some subtleties to this approach.  The first is
-	   that checking and updating the length of the file has to be
-	   synchronized.  If two writers try to write 10 bytes
-	   starting at the current EOF, they can both see the old file
-	   length.  Thus, the file length must be checked again after
-	   obtaining the lock, e.g.
+           There are some subtleties to this approach.  The first is
+           that checking and updating the length of the file has to be
+           synchronized.  If two writers try to write 10 bytes
+           starting at the current EOF, they can both see the old file
+           length.  Thus, the file length must be checked again after
+           obtaining the lock, e.g.
 
-		if (final_ofs > disk_inode->length)   // First check.
+                if (final_ofs > disk_inode->length)   // First check.
                   {
                     lock_acquire (&inode->grow_lock);
                     if (final_ofs > disk_inode->length)   // Second check.
@@ -120,30 +120,30 @@ A3:
                     lock_release (&inode->grow_lock);
                   }
 
-	   Students who use this scheme must mention how they handle
-	   this problem.  If they don't, take off points.
+           Students who use this scheme must mention how they handle
+           this problem.  If they don't, take off points.
 
-	   An even more subtle problem is that of race-free reads of
-	   the "length" member of disk_inode.  There ideally should be
-	   some locking around access to it, but a call to barrier()
-	   or use of volatile would be sufficient also.  However,
-	   reading a single integer is normally atomic on modern
-	   machines, so we'll just ignore this problem.
+           An even more subtle problem is that of race-free reads of
+           the "length" member of disk_inode.  There ideally should be
+           some locking around access to it, but a call to barrier()
+           or use of volatile would be sufficient also.  However,
+           reading a single integer is normally atomic on modern
+           machines, so we'll just ignore this problem.
 
-	2. Use sector-based locking in the buffer cache.  In this
-	   approach, the buffer cache supports shared and exclusive
-	   locking of sectors.  To read or write a file normally can
-	   use a shared lock on the inode sector; extending a file
-	   requires an exclusive lock on the inode sector.
+        2. Use sector-based locking in the buffer cache.  In this
+           approach, the buffer cache supports shared and exclusive
+           locking of sectors.  To read or write a file normally can
+           use a shared lock on the inode sector; extending a file
+           requires an exclusive lock on the inode sector.
 
         3. If all file accesses (or all write accesses) require a lock
-	   and hold it during the entire read or write, then that's a
-	   trivial solution, but it doesn't meet the requirements in
-	   the Synchronization section of the assignment: "Multiple
-	   reads of a single file must be able to complete without
-	   waiting for one another.  When writing to a file does not
-	   extend the file, multiple processes should also be able to
-	   write a single file at once."  Take off points.
+           and hold it during the entire read or write, then that's a
+           trivial solution, but it doesn't meet the requirements in
+           the Synchronization section of the assignment: "Multiple
+           reads of a single file must be able to complete without
+           waiting for one another.  When writing to a file does not
+           extend the file, multiple processes should also be able to
+           write a single file at once."  Take off points.
 
            This is not the same as taking a lock across a couple of
            lines of code to check or set a variable in a race-free
@@ -153,25 +153,25 @@ A4:
 
     The typical solution to A4 depends on the solution chosen for A3:
 
-	1. a. Typically, the process extending the file doesn't update
-	      the file's length until the extension is fully
-	      completed.  Thus, before the extension is complete,
-	      readers won't see that the file's length has increased
-	      at all.
+        1. a. Typically, the process extending the file doesn't update
+              the file's length until the extension is fully
+              completed.  Thus, before the extension is complete,
+              readers won't see that the file's length has increased
+              at all.
 
            b. Another solution is to make reads past end-of-file wait
-	      for file extension to be completed, by making read past
-	      end-of-file take the lock needed to extend the file.
-	      That's fine too.
+              for file extension to be completed, by making read past
+              end-of-file take the lock needed to extend the file.
+              That's fine too.
 
-	2. A process that wants to read the file will need to get a
+        2. A process that wants to read the file will need to get a
            shared lock on the inode sector, which it can't get until
            the extending process has released its exclusive lock.
            Thus, this approach will be correct as long as the
            exclusive lock on the inode is held until the file
            extension is complete.
 
-	3. This approach trivially solves the problem but doesn't
+        3. This approach trivially solves the problem but doesn't
            fulfill the synchronization requirements.  Take off points.
 
 A5:
@@ -182,7 +182,7 @@ A5:
 
     The typical answer depends on the answer to A4:
 
-	1. a. Readers, and writers not at end-of-file, don't have to
+        1. a. Readers, and writers not at end-of-file, don't have to
               wait, so they have no fairness issues.  Writers that
               extend a file are waiting on a lock, which queues their
               extensions fairly.  After a file extension is complete,
@@ -190,33 +190,33 @@ A5:
               are completed fairly because there's no need for them to
               wait.
 
-	   b. Essentially the same as 1a, except that readers beyond
+           b. Essentially the same as 1a, except that readers beyond
               end-of-file are treated like writers beyond end-of-file.
               Because the lock queuing is fair, readers get serviced
               fairly too.
 
-	2. Fairness here depends on the fairness of locking in the
+        2. Fairness here depends on the fairness of locking in the
            buffer cache.  The group must explain how the buffer cache
            provides fair locking.  Generally, two rules are needed to
            ensure fairness:
 
-		- A rule to prevent readers from waiting for writers
+                - A rule to prevent readers from waiting for writers
                   forever.  For example: when the exclusive holder of
                   a lock releases it, any processes waiting for a
                   shared lock are preferred over processes waiting for
                   an exclusive lock.
 
-		- A rule to prevent writers from waiting for readers
-		  forever.  For example: if one or more processes hold
-		  a shared lock, and one or more processes are waiting
-		  for an exclusive lock, then no more processes may
-		  obtain a shared lock until at least one process has
-		  obtained an exclusive lock.
+                - A rule to prevent writers from waiting for readers
+                  forever.  For example: if one or more processes hold
+                  a shared lock, and one or more processes are waiting
+                  for an exclusive lock, then no more processes may
+                  obtain a shared lock until at least one process has
+                  obtained an exclusive lock.
 
-	   The group must explain both rules; take off points
-	   otherwise.
+           The group must explain both rules; take off points
+           otherwise.
 
-	3. This approach trivially solves the problem but doesn't
+        3. This approach trivially solves the problem but doesn't
            fulfill the synchronization requirements.  Take off points.
 
     There should be no use of a timer to ensure fairness.  That's not
@@ -234,39 +234,39 @@ A6:
 
     Good answers include mention of advantages of multilevel indexes:
 
-	- Both random and sequential access are efficient.
+        - Both random and sequential access are efficient.
 
-	- Large files can be supported, without imposing a penalty on
+        - Large files can be supported, without imposing a penalty on
           efficiency of small files.
 
-	- Works in presence of external fragmentation.
+        - Works in presence of external fragmentation.
 
-	- Fast access to data for small files.
+        - Fast access to data for small files.
 
     Some answers mention some disadvantages of multilevel indexes:
 
-	- It takes up to 3 disk accesses to find a data block in a big
+        - It takes up to 3 disk accesses to find a data block in a big
           file (although caching helps with sequential access
           patterns).
 
-	- Fixed maximum file size.
+        - Fixed maximum file size.
 
-	- High overhead for small files.
+        - High overhead for small files.
 
-			    SUBDIRECTORIES
-			    ==============
+                            SUBDIRECTORIES
+                            ==============
 
 B1:
 
     struct thread should have a new member to keep track of the
     process's current directory.  Possibilities include:
 
-	- Pointer to a struct dir or struct inode.  This is the best
+        - Pointer to a struct dir or struct inode.  This is the best
           choice.
 
-	- A string.  This is not a good choice (see B6).
+        - A string.  This is not a good choice (see B6).
 
-	- A sector number.  This is not a good choice (see B6).
+        - A sector number.  This is not a good choice (see B6).
 
     struct dir_entry or struct inode_disk should have a new member to
     distinguish ordinary files from directories.  It is often named
@@ -276,14 +276,14 @@ B1:
 
     Directory synchronization possibilities include:
 
-	- Most implementations add a lock to struct inode or struct
+        - Most implementations add a lock to struct inode or struct
           dir and use it to synchronize directory operations.  This is
           simple and effective.
 
         - Some implementations use a global list of open directories.
-	  This generally requires a new global lock to control adding
-	  and removing list elements.  If there's a list but no
-	  locking or other explanation, deduct points.
+          This generally requires a new global lock to control adding
+          and removing list elements.  If there's a list but no
+          locking or other explanation, deduct points.
 
           In addition, this implementation needs some way to wait for
           a particular directory and to free directories when no one
@@ -301,7 +301,7 @@ B2:
     straightforward description of straightforward code.  There are
     only two slightly tricky bits:
 
-	- Absolute versus relative names.  When the current directory
+        - Absolute versus relative names.  When the current directory
           is represented by a struct dir or struct inode, the
           difference should just be whether traversal starts from the
           root directory or the current directory.  When the current
@@ -310,7 +310,7 @@ B2:
           you first traverse to the current directory before
           traversing the provided name.
 
-	- Whether to traverse the final component of the name.  Some
+        - Whether to traverse the final component of the name.  Some
           system calls, e.g. create, remove, mkdir, don't want to
           traverse the final component, because they want to act on a
           directory entry.  Others, e.g. open, chdir, do want to
@@ -321,18 +321,20 @@ B2:
 
 B3:
 
-    This question is new for summer 2006, so the answers may not be
-    what I expect.  I'm looking for roughly this:
+    I'm looking for roughly this:
 
-	It determines the current working directory (cwd) in reverse
-	order, moving from the cwd to the root.  It first determines
-	the inumber of ".".  Then it opens ".." and reads its entries
-	until it finds the one that has that inumber.  The
-	corresponding name is the last component of the cwd.  Then it
-	reads "../..", looking for the inumber of "..", which
-	determines the second-to-last component of the cwd.  It stops
-	when the inumber of a directory and its parent are the same,
-	because that means it's at the root.
+        It determines components of the current working directory
+        (cwd) in reverse order, moving from the cwd to the root.  It
+        first determines the inumber of ".".  Then it opens ".." and
+        reads its entries until it finds the one that has that
+        inumber.  The corresponding name is the last component of the
+        cwd.  Then it reads "../..", looking for the inumber of "..",
+        which determines the second-to-last component of the cwd.  It
+        stops when the inumber of a directory and its parent are the
+        same, because that means it's at the root.
+
+    This question is new for summer 2006, so the answers may not be
+    what I expect.
 
 B4:
 
@@ -343,26 +345,298 @@ B4:
 
 B5:
 
-    
+    The typical answer depends on how the current directory is
+    represented:
+
+        - Groups that use a struct dir or struct inode pointer to
+          represent the current working directory usually answer "yes"
+          (that they do prevent removal).  The usual way to prevent
+          removal is through the open_cnt member in struct inode: a
+          value of 1 means that it may be removed, a higher value
+          means that it's also open by some other process or in use as
+          a current working directory.  (It's a value of 1, not 0,
+          because typically the "remove" system call opens the
+          directory inode as part of deleting it.)
+
+        - Groups that represent the current working directory with a
+          string usually answer "no" (that removal is allowed),
+          because it requires no additional effort: when a directory
+          is deleted, traversing to it through a string fails, so
+          operations on the directory also fail.
+
+        - Groups that use a sector number to represent the current
+          working directory are hard to predict.  If they answer "no"
+          (that removal is allowed), they may try to claim that the
+          deleted directory inode on disk is recognized as deleted and
+          that based on that it is special cased.  But that won't work
+          reliably, because the inode may be reused at any time.
+          Deduct points.  If they give another answer, you're on your
+          own.
+
+    If the answer is "yes" (that removal is prevented), extra code
+    should not be necessary to avoid deleting the chain of parents of
+    processes' working directories.  None of those directories are
+    empty (they have at least one child directory), so they may not be
+    deleted on that basis.  Deduct points if students added special
+    code for this case.
 
 B6:
 
-			     BUFFER CACHE
-			     ============
+    The rationale depends on how the current directory is represented:
+
+        - Groups that use a struct dir or struct inode pointer to
+          represent the current working directory: 
+
+                * Access to cwd is fast and constant time, with no
+                  traversal necessary (better than a string
+                  representation).
+
+                * Storage of the cwd is small and constant space
+                  (better than a string representation).
+
+                * Easy to tell how many users a directory has (to
+                  prevent removing an in-use directory).
+
+                * No need to limit the depth of the cwd within the
+                  file system and no need for dynamic allocation in
+                  chdir system call (better than a string
+                  representation).
+
+        - Groups that represent the current working directory with a
+          string typically make these claims:
+
+                * No extra work is needed to handle removed
+                  directories.
+
+                  This is true.
+
+                * Recreating a removed directory makes operations in
+                  that directory work again.
+
+                  This is not normally desirable.  In a more advanced
+                  OS environment, where files and directories can be
+                  renamed and moved, it is normally desirable for a
+                  process to retain its current directory across a
+                  series of operations, not for it to suddenly be in
+                  an entirely new place.
+
+                * Operations that use file names are relatively
+                  infrequent compared to operations on file
+                  descriptors, so the penalty for having to
+                  re-traverse paths on each operation is amortized
+                  over many operations.
+
+                  I doubt this is true.
+
+                * Space efficiency (!).
+
+                  This is obviously false.
+
+        - Groups that use a sector number to represent the current
+          working directory: I haven't seen any of these groups make
+          sensible claims yet.
+
+                             BUFFER CACHE
+                             ============
 
 C1:
 
     struct inode should drop inode_disk; if it doesn't, then take off
     points.  This might have been mentioned in A1 instead.
 
+    Expect to see a cache entry structure containing the following
+    members:
+
+        - Sector number.
+
+        - Sector data (512 bytes) or a pointer to sector data.
+
+        - Dirty bit.
+
+        - A way to decide choose a block to evict, e.g.:
+
+                * Accessed bit.
+
+                * Aging, using multiple "accessed bits".  An access
+                  sets the high bit, and periodically the bits are
+                  shifted to the right.
+
+                * LRU list.  This should probably be a linked list,
+                  which makes it easy and fast to move an entry to the
+                  front.  If a linked list element is used, there
+                  should be a global list also and probably a lock
+                  too.
+
+                  Occasionally some group will rearrange the whole
+                  64-element array to manage LRU; that's inefficient,
+                  so deduct points.
+
+                * Some kind of "points" scheme, where accesses add
+                  points based on the type of access.
+
+          Often, any of these schemes are combined with a bit to
+          distinguish data from metadata, so that metadata can be
+          preferentially retained.
+
+        - Synchronization data, typically a lock.
+
+        - Often, a struct hash_elem to allow fast lookup.  This is not
+          essential; linear search is fast enough for a 64-element
+          list.
+
+    Generally there's a queue of blocks for use by a separate
+    read-ahead thread, as well as a lock to control access.
+
 C2:
+
+    Many schemes are possible.  For full credit, students must use an
+    algorithm that is at least as good as the second-chance (clock)
+    algorithm, and they must take the difference between data and
+    metadata into account in some way.
+
+    Some implementations I've seen, with comments:
+
+        - Reserve 1/3 of the cache for data, 2/3 for metadata, and do
+          local replacement within each cache.  Manage metadata in LRU
+          fashion, data in MRU fashion in the hope that sequential
+          access to data is common.
+
+          This is fine, although I suspect that MRU may not be the
+          best choice.
+
+        - Use the clock algorithm across data and metadata.  Skip over
+          metadata on the first trip around the clock.  Special case
+          calls to the "read" system call with "large" sizes,
+          scheduling them for quick eviction in the hope that they're
+          doing sequential access.
+
+          I suspect that this will actually penalize data *too* much,
+          but it's OK.
+
+        - Do LRU based on a "points" scheme.  Data accesses add 1
+          point, metadata accesses add 2 points.
+
+          This is OK.
+
+    It should not be necessary to modify all 64 entries on an access.
+    Deduct points.
+
+    Some implementations strictly prefer all metadata over all data,
+    so that the cache will end up with just 1 data block and 63
+    metadata blocks in it much of the time.  This leans too far toward
+    preferring metadata.  Deduct points.
 
 C3:
 
+    The expected implementation is use a background thread that sleeps
+    most of the time and flushes the cache whenever it wakes up.
+
+    Make sure they don't state or imply that the background thread
+    busy-waits.
+
 C4:
+
+    I've seen a few different implementations:
+
+        - Most commonly, readers put block numbers on a shared queue.
+          A single background thread gets block numbers from the queue
+          and reads the blocks.  This is fine.
+
+        - A reader creates a new thread to read the next block.
+          This creates one thread per read request, which is too
+          expensive.  Deduct points.
+
+        - A single threads does *all* reads, both for immediate
+          requests and read-ahead, prioritizing immediate requests.
+          This is fine (and kind of clever).  This thread might be in
+          charge of eviction, too.
 
 C5:
 
+    There are multiple possibilities:
+
+        - "Double-checked locking": Search for the block in the cache
+          without taking any lock.  Then, take the lock and see
+          whether it's still the same block.  If so, you've got locked
+          access to it.  Otherwise, release the lock and start over.
+
+        - Global lock: A global lock held during the whole eviction
+          process normally does not meet the synchronization
+          requirements, which says "...when I/O is required on a
+          particular block, operations on other blocks that do not
+          require I/O should proceed without having to wait for the
+          I/O to complete."  Deduct points.
+
+        - Two-level locking: Use one global lock to protect the sector
+          numbers in the list from changing, and a second per-block
+          lock to prevent eviction.  In pseudo-code it looks like
+          this:
+
+                acquire global lock
+                find block in cache
+                acquire per-block lock
+                release global lock
+                do I/O
+                release per-block lock
+
+          The problem is that if thread Y wants to access block B
+          while thread X is evicting block B, any thread Z that wants
+          to access *any* block must wait for X's I/O to finish:
+
+                Thread X            Thread Y           Thread Z
+                ------------------  ----------------   --------------------
+
+                get global lock
+                find B in cache
+                get B's lock
+                release global lock
+                start I/O
+                                    get global lock
+                                    find B in cache
+                                    block on B's lock
+                                                      block on global lock
+
+	  As you can see, Y still holds the global lock while it waits
+	  for B's lock, so Z has to wait for the global lock to be
+	  released, which won't happen until Y can get B's lock, which
+	  in turn won't happen until X's I/O is complete.
+
+	  There are ways around this problem.  If the students mention
+	  it and describe a solution, it's fine.  If they don't
+	  mention it at all, deduct points.
+
+        - Only one, specialized thread is allowed to do eviction.
+
 C6:
 
+    This is generally a consequence of the locking done in C5.  You
+    should expect the students to explain that.  Just a sentence or
+    two is necessary.
+
 C7:
+
+    Three different workloads must be described, one for each
+    optimization.
+
+    Workloads likely to benefit from buffer caching include:
+
+	- Use of a large file, because caching saves time re-reading
+          the inode and indirect and doubly indirect blocks.
+
+	- Random access within a small set of files that can be
+          completely cached.
+
+	- Repeated reads with locality in space.
+
+    Workloads likely to benefit from read-ahead include:
+
+	- Sequential reads, especially when processing is necessary on
+          each block, because that allows for greater parallelism.
+
+    Workloads likely to benefit from write-behind include:
+
+	- Multiple writes to small regions of a file, e.g. appending
+          to a file a file bytes at a time.
+
+	- Writes interspersed with computation, so that a process
+          never blocks on writes.
