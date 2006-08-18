@@ -32,13 +32,9 @@ A1:
           drop it because they don't understand its purpose.  That's
           OK.
 
-	- The "type" member might have been added to directory entries
-          instead, or its addition might be mentioned in the
-          subdirectories section instead, because it's more relevant
-          there.  If it's missing, look in B1.  If it's not mentioned
-          either place, take off points.
-
-	  Many groups name "type" something like "is_dir".
+	- A "type" or "is_dir" member might have been added to
+          directory entries instead, or its addition might be
+          mentioned in B1, because it's more relevant there.
 
 	- The "start" member should be dropped.  If it's still there,
           take off points.
@@ -262,13 +258,92 @@ A6:
 
 B1:
 
+    struct thread should have a new member to keep track of the
+    process's current directory.  Possibilities include:
+
+	- Pointer to a struct dir or struct inode.  This is the best
+          choice.
+
+	- A string.  This is not a good choice (see B6).
+
+	- A sector number.  This is not a good choice (see B6).
+
+    struct dir_entry or struct inode_disk should have a new member to
+    distinguish ordinary files from directories.  It is often named
+    something like "type" or "is_dir".  This might have been mentioned
+    in A1 instead; look there if it's missing.  If it's not mentioned
+    either place, take off points.
+
+    Directory synchronization possibilities include:
+
+	- Most implementations add a lock to struct inode or struct
+          dir and use it to synchronize directory operations.  This is
+          simple and effective.
+
+        - Some implementations use a global list of open directories.
+	  This generally requires a new global lock to control adding
+	  and removing list elements.  If there's a list but no
+	  locking or other explanation, deduct points.
+
+          In addition, this implementation needs some way to wait for
+          a particular directory and to free directories when no one
+          is still using them.  This can be done with an additional
+          per-directory lock and a waiting-processes counter.  If
+          there's no such data or explanation, deduct points.
+
+        - Some implementations use a global lock, or a few of them, to
+          synchronize directory operations.  This is unacceptable;
+          there is no reason to do global locking.  Deduct points.
+
 B2:
+
+    There's nothing tricky here, really.  This should be a
+    straightforward description of straightforward code.  There are
+    only two slightly tricky bits:
+
+	- Absolute versus relative names.  When the current directory
+          is represented by a struct dir or struct inode, the
+          difference should just be whether traversal starts from the
+          root directory or the current directory.  When the current
+          directory is represented by a string, either way you start
+          from the root directory, but if it's a relative name then
+          you first traverse to the current directory before
+          traversing the provided name.
+
+	- Whether to traverse the final component of the name.  Some
+          system calls, e.g. create, remove, mkdir, don't want to
+          traverse the final component, because they want to act on a
+          directory entry.  Others, e.g. open, chdir, do want to
+          traverse the final component, because they want to act on an
+          inode.
+
+    The best answers talk about both of these.
 
 B3:
 
+    This question is new for summer 2006, so the answers may not be
+    what I expect.  I'm looking for roughly this:
+
+	It determines the current working directory (cwd) in reverse
+	order, moving from the cwd to the root.  It first determines
+	the inumber of ".".  Then it opens ".." and reads its entries
+	until it finds the one that has that inumber.  The
+	corresponding name is the last component of the cwd.  Then it
+	reads "../..", looking for the inumber of "..", which
+	determines the second-to-last component of the cwd.  It stops
+	when the inumber of a directory and its parent are the same,
+	because that means it's at the root.
+
 B4:
 
+    This should explain how to apply the directory synchronization
+    whose data structure was added in B1.  Most commonly, it's just a
+    matter of taking the directory's lock around the directory
+    operation.
+
 B5:
+
+    
 
 B6:
 
