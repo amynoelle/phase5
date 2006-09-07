@@ -1,5 +1,9 @@
 -*- text -*-
 
+* In grading scripts, warn when a fault is caused by an attempt to
+  write to the kernel text segment.  (Among other things we need to
+  explain that "text" means "code".)
+
 * Reconsider command line arg style--confuses everyone.
 
 * Internal tests.
