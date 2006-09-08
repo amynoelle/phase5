@@ -32,12 +32,11 @@ diff -u src/threads/thread.c~ src/threads/thread.c
    schedule ();
    NOT_REACHED ();
  }
-@@ -400,6 +404,11 @@ init_thread (struct thread *t, const cha
+@@ -400,6 +404,10 @@ init_thread (struct thread *t, const cha
    strlcpy (t->name, name, sizeof t->name);
    t->stack = (uint8_t *) t + PGSIZE;
    t->priority = priority;
 +  list_init (&t->children);
-+  t->exit_code = -1;
 +  t->wait_status = NULL;
 +  list_init (&t->fds);
 +  t->next_handle = 2;
@@ -56,12 +55,11 @@ diff -u src/threads/thread.h~ src/threads/thread.h
  
  /* States in a thread's life cycle. */
  enum thread_status
-@@ -89,6 +90,11 @@ struct thread
+@@ -89,6 +90,10 @@ struct thread
      uint8_t *stack;                     /* Saved stack pointer. */
      int priority;                       /* Priority. */
  
 +    /* Owned by process.c. */
-+    int exit_code;                      /* Exit code. */
 +    struct wait_status *wait_status;    /* This process's completion status. */
 +    struct list children;               /* Completion status of children. */
 +
@@ -198,7 +196,7 @@ diff -u src/userprog/process.c~ src/userprog/process.c
    struct intr_frame if_;
    bool success;
  
-@@ -58,10 +78,28 @@ execute_thread (void *file_name_)
+@@ -58,10 +78,29 @@ execute_thread (void *file_name_)
    if_.gs = if_.fs = if_.es = if_.ds = if_.ss = SEL_UDSEG;
    if_.cs = SEL_UCSEG;
    if_.eflags = FLAG_IF | FLAG_MBS;
@@ -221,6 +219,7 @@ diff -u src/userprog/process.c~ src/userprog/process.c
 +      lock_init (&exec->wait_status->lock);
 +      exec->wait_status->ref_cnt = 2;
 +      exec->wait_status->tid = thread_current ()->tid;
++      exec->wait_status->exit_code = -1;
 +      sema_init (&exec->wait_status->dead, 0);
 +    }
 +  
@@ -283,15 +282,13 @@ diff -u src/userprog/process.c~ src/userprog/process.c
    return -1;
  }
  
-@@ -95,8 +162,32 @@ void
+@@ -95,8 +162,30 @@ void
  process_exit (void)
  {
    struct thread *cur = thread_current ();
 +  struct list_elem *e, *next;
    uint32_t *pd;
  
-+  printf ("%s: exit(%d)\n", cur->name, cur->exit_code);
-+
 +  /* Close executable (and allow writes). */
 +  file_close (cur->bin_file);
 +
@@ -299,7 +296,7 @@ diff -u src/userprog/process.c~ src/userprog/process.c
 +  if (cur->wait_status != NULL) 
 +    {
 +      struct wait_status *cs = cur->wait_status;
-+      cs->exit_code = cur->exit_code;
++      printf ("%s: exit(%d)\n", cur->name, cs->exit_code);
 +      sema_up (&cs->dead);
 +      release_child (cs);
 +    }
@@ -496,7 +493,7 @@ Index: src/userprog/syscall.c
 diff -u src/userprog/syscall.c~ src/userprog/syscall.c
 --- src/userprog/syscall.c~
 +++ src/userprog/syscall.c
-@@ -1,20 +1,482 @@
+@@ -1,20 +1,483 @@
  #include "userprog/syscall.h"
  #include <stdio.h>
 +#include <string.h>
@@ -533,6 +530,7 @@ diff -u src/userprog/syscall.c~ src/userprog/syscall.c
 -
 +static void copy_in (void *, const void *, size_t);
 + 
++/* Serializes file system operations. */
 +static struct lock fs_lock;
 + 
  void
@@ -679,7 +677,7 @@ diff -u src/userprog/syscall.c~ src/userprog/syscall.c
 +static int
 +sys_exit (int exit_code) 
 +{
-+  thread_current ()->exit_code = exit_code;
++  thread_current ()->wait_status->exit_code = exit_code;
 +  thread_exit ();
 +  NOT_REACHED ();
 +}
