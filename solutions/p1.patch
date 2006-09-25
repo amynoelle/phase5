@@ -61,7 +61,7 @@ diff -u src/devices/timer.c~ src/devices/timer.c
  }
  
  /* Suspends execution for approximately MS milliseconds. */
-@@ -132,6 +158,16 @@ timer_interrupt (struct intr_frame *args
+@@ -132,6 +158,17 @@ timer_interrupt (struct intr_frame *args
  {
    ticks++;
    thread_tick ();
@@ -73,6 +73,7 @@ diff -u src/devices/timer.c~ src/devices/timer.c
 +      if (ticks < t->wakeup_time) 
 +        break;
 +      sema_up (&t->timer_sema);
++      thread_yield_to_higher_priority ();
 +      list_pop_front (&wait_list);
 +    }
  }
@@ -417,7 +418,7 @@ diff -u src/threads/thread.c~ src/threads/thread.c
 -  /* Enforce preemption. */
 -  if (++thread_ticks >= TIME_SLICE)
 -    intr_yield_on_return ();
-+  if (enable_mlfqs) 
++  if (thread_mlfqs) 
 +    {
 +      /* Update load average. */
 +      if (timer_ticks () % TIMER_FREQ == 0) 
@@ -455,7 +456,7 @@ diff -u src/threads/thread.c~ src/threads/thread.c
 +  /* Switch threads if time slice has expired. */
 +  if (++thread_ticks >= TIME_SLICE) 
 +    {
-+      if (enable_mlfqs)
++      if (thread_mlfqs)
 +        thread_recompute_priority (thread_current ());
 +      intr_yield_on_return (); 
 +    }
@@ -480,7 +481,7 @@ diff -u src/threads/thread.c~ src/threads/thread.c
  
    /* Initialize thread. */
 -  init_thread (t, name, priority);
-+  init_thread (t, name, enable_mlfqs ? cur->priority : priority);
++  init_thread (t, name, thread_mlfqs ? cur->priority : priority);
    tid = t->tid = allocate_tid ();
 +  t->nice = cur->nice;
 +  t->recent_cpu = cur->recent_cpu;
@@ -551,7 +552,7 @@ diff -u src/threads/thread.c~ src/threads/thread.c
 +thread_set_priority (int priority) 
  {
 -  thread_current ()->priority = new_priority;
-+  if (!enable_mlfqs) 
++  if (!thread_mlfqs) 
 +    {
 +      struct thread *t = thread_current ();
 +
@@ -561,7 +562,7 @@ diff -u src/threads/thread.c~ src/threads/thread.c
  }
  
  /* Returns the current thread's priority. */
-@@ -298,33 +386,93 @@ thread_get_priority (void) 
+@@ -298,33 +386,98 @@ thread_get_priority (void) 
  
  /* Sets the current thread's nice value to NICE. */
  void
@@ -630,7 +631,7 @@ diff -u src/threads/thread.c~ src/threads/thread.c
 +  int old_priority = t->priority;
 +  int default_priority = t->normal_priority;
 +  int donation = PRI_MIN;
-+  if (enable_mlfqs) 
++  if (thread_mlfqs) 
 +    {
 +      default_priority = PRI_MAX - fix_round (t->recent_cpu) / 4 - t->nice * 2;
 +      if (default_priority < PRI_MIN)
@@ -659,7 +660,12 @@ diff -u src/threads/thread.c~ src/threads/thread.c
 +                                                 thread_lower_priority, NULL),
 +                                       struct thread, elem);
 +      if (max->priority > cur->priority)
-+        thread_yield (); 
++        {
++          if (intr_context ())
++            intr_yield_on_return ();
++          else
++            thread_yield (); 
++        }
 +    }
 +  intr_set_level (old_level);
  }
