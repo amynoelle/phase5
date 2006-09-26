@@ -36,8 +36,8 @@ at the appropriate time.  Details that distinguish solutions include:
 	- Synchronization: Most solutions manipulate the list with
           interrupts disabled to protect against the interrupt
           handler.  Other solutions are possible but most of them are
-          incorrect--watch out for missing memory barriers (see the
-          Memory Barriers section in the reference guide) or bad
+          incorrect--watch out for missing optimization barriers (see the
+          Optimization Barriers section in the reference guide) or bad
           assumptions of atomicity when there is none.
 
           In most solutions only the list insertion (typically a
