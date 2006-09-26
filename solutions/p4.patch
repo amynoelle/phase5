@@ -2236,9 +2236,9 @@ diff -u src/threads/thread.h~ src/threads/thread.h
 +    struct semaphore dead;              /* 1=child alive, 0=child dead. */
 +  };
 +
- void thread_init (void);
- void thread_start (void);
- 
+ /* If false (default), use round-robin scheduler.
+    If true, use multi-level feedback queue scheduler.
+    Controlled by kernel command-line options "-o mlfqs".
 Index: src/userprog/exception.c
 diff -u src/userprog/exception.c~ src/userprog/exception.c
 --- src/userprog/exception.c~
