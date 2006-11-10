@@ -493,7 +493,7 @@ Index: src/userprog/syscall.c
 diff -u src/userprog/syscall.c~ src/userprog/syscall.c
 --- src/userprog/syscall.c~
 +++ src/userprog/syscall.c
-@@ -1,20 +1,483 @@
+@@ -1,20 +1,486 @@
  #include "userprog/syscall.h"
  #include <stdio.h>
 +#include <string.h>
@@ -657,7 +657,10 @@ diff -u src/userprog/syscall.c~ src/userprog/syscall.c
 +  for (length = 0; length < PGSIZE; length++)
 +    {
 +      if (us >= (char *) PHYS_BASE || !get_user (ks + length, us++)) 
-+        thread_exit (); 
++        {
++          palloc_free_page (ks);
++          thread_exit (); 
++        }
 +       
 +      if (ks[length] == '\0')
 +        return ks;
