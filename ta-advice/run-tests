@@ -106,6 +106,8 @@ if (do_step (6)) {
     print "Saving grade report to tests.out...\n";
     xsystem ("cp pintos/src/$project/build/grade tests.out",
 	     DIE => "copy failed");
+    xsystem ("(cd pintos/src/$project/build && find tests -name '*.output' "
+	     . " | xargs grep '^hd[01]:[01]: [0-9]') > hdd.stats");
 }
 
 if (do_step (7)) {
