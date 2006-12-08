@@ -448,7 +448,7 @@ B6:
 C1:
 
     struct inode should drop inode_disk; if it doesn't, then take off
-    points.  Take off a lot of points if they This might have been mentioned in A1 instead.
+    points.  This might have been mentioned in A1 instead.
 
     Expect to see a cache entry structure containing the following
     members:
