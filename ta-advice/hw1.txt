@@ -86,7 +86,8 @@ PROBLEM 2: PRIORITY SCHEDULING
   DESIGN
     -30 Not implemented
     -15 Malfunctions in corner case (e.g. when malloc() returns NULL)
-    -15 Fixed limit on total number of donations, donees, donor locks, etc.
+    -15 Grossly simplified design egregiously limits generality, e.g. small,
+        fixed limit on total number of donations, donees, donor locks, etc.
      -5 Global list of donations is unnecessary and inefficient
      -3 sema_up() yields regardless of whether a higher-priority
         thread was unblocked
