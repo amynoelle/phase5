@@ -497,8 +497,7 @@ C2:
 
     Many schemes are possible.  For full credit, students must use an
     algorithm that is at least as good as the second-chance (clock)
-    algorithm, and they must take the difference between data and
-    metadata into account in some way.
+    algorithm.
 
     Some implementations I've seen, with comments:
 
