@@ -102,6 +102,16 @@ A3:
           parsing.  This is wrong: it modifies the string provided and
           stores a pointer into it statically.
 
+          However, the manpage for on GNU/Linux (at least) says that
+          strtok uses a static buffer.  That's wrong.  So don't
+          penalize students who repeat that claim.  Instead, please
+          add a note, such as:
+
+	      Although some manpages for strtok do claim that strtok
+	      uses a static buffer, this is incorrect.  strtok uses a
+	      user-provided buffer and statically stores a pointer
+	      into that buffer.
+
 A4:
 
     Some correct answers:
