@@ -2305,12 +2305,12 @@ diff -u src/userprog/process.c~ src/userprog/process.c
 +#include "vm/page.h"
 +#include "vm/frame.h"
  
- static thread_func execute_thread NO_RETURN;
+ static thread_func start_process NO_RETURN;
 -static bool load (const char *cmdline, void (**eip) (void), void **esp);
 +static bool load (const char *cmd_line, void (**eip) (void), void **esp);
 +
 +/* Data structure shared between process_execute() in the
-+   invoking thread and execute_thread() in the newly invoked
++   invoking thread and start_process() in the newly invoked
 +   thread. */
 +struct exec_info 
 +  {
@@ -2347,12 +2347,12 @@ diff -u src/userprog/process.c~ src/userprog/process.c
 +  sema_init (&exec.load_done, 0);
  
    /* Create a new thread to execute FILE_NAME. */
--  tid = thread_create (file_name, PRI_DEFAULT, execute_thread, fn_copy);
+-  tid = thread_create (file_name, PRI_DEFAULT, start_process, fn_copy);
 -  if (tid == TID_ERROR)
 -    palloc_free_page (fn_copy); 
 +  strlcpy (thread_name, file_name, sizeof thread_name);
 +  strtok_r (thread_name, " ", &save_ptr);
-+  tid = thread_create (thread_name, PRI_DEFAULT, execute_thread, &exec);
++  tid = thread_create (thread_name, PRI_DEFAULT, start_process, &exec);
 +  if (tid != TID_ERROR)
 +    {
 +      sema_down (&exec.load_done);
@@ -2373,8 +2373,8 @@ diff -u src/userprog/process.c~ src/userprog/process.c
  /* A thread function that loads a user process and starts it
     running. */
  static void
--execute_thread (void *file_name_)
-+execute_thread (void *exec_)
+-start_process (void *file_name_)
++start_process (void *exec_)
  {
 -  char *file_name = file_name_;
 +  struct exec_info *exec = exec_;
@@ -2416,7 +2416,7 @@ diff -u src/userprog/process.c~ src/userprog/process.c
    if (!success) 
      thread_exit ();
  
-@@ -76,18 +128,47 @@ execute_thread (void *file_name_)
+@@ -76,18 +128,47 @@ start_process (void *file_name_)
    NOT_REACHED ();
  }
  

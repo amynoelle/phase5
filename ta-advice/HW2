@@ -318,7 +318,7 @@ B1(iv):
     solution's structure:
 
 	/* Data structure shared between process_execute() in the
-	   invoking thread and execute_thread() in the newly invoked
+	   invoking thread and start_process() in the newly invoked
 	   thread. */
 	struct exec_info 
 	  {
