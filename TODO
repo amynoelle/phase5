@@ -8,9 +8,9 @@
 
 * Internal tests.
 
-* Godmar: Introduce memory leak robustness tests - both for the
-  well-behaved as well as the mis-behaved case - that tests that the
-  kernel handles low-mem conditions well.
+* Godmar: Extend memory leak robustness tests.
+  multi-oom should still pass in project 3/4 because kernel will run out
+  of kernel pool memory before running out of swap space.
 
 * Godmar: Another area is concurrency. I noticed that I had passed all
   tests with bochs 2.2.1 (in reproducibility mode). Then I ran them
@@ -36,6 +36,35 @@
   you algorithm performs poorly, and show the results of your
   quantitative evaluation in your report - this could then be part of
   their test score.
+
+* Godmar: the spec says that illegal syscall arguments can be handled either by
+  terminating the process, or by returning an error code such as -1.
+
+    Looking at http://gback.cs.vt.edu:8080/source/xref/tests/userprog/write-bad-ptr.c
+    and http://gback.cs.vt.edu:8080/source/xref/tests/userprog/write-bad-ptr.ck
+    I'm wondering if write-bad-ptr isn't forcing them to terminate the
+    process(?). Even though write-bad-ptr.ck has a provision to allow
+    continuation after returning -1, wouldn't it still fail since the test
+    executes:
+    fail ("should have exited with -1");
+    ?
+
+* Godmar: mmap-inherit needs a IGNORE_USER_FAULTS since we say to "not output
+    any messages Pintos doesn't already print." - which technically puts
+    the onus on us to ignore the default page fault msg whenever a test is
+    expected to fault.
+
+* Godmar: add _end to user.lds script and construct some tests that fail
+    unless students check a region for validity rather than just the first
+    address of a region. Right now, unfortunately, they pass all p2 tests
+    with just checking the first address. [A possible problem is that the
+    tests may be unable to tell termination due to unintentional fault
+    from willful termination when address check fails. Should we require
+    they return -1/EINVAL on a bad address and disallow termination? Or
+    construct a test that they'll likely fail if they unintentionally
+    terminate, maybe while holding the filesystem lock? Or require that
+    the diagnostic message only be output when fault occurs in user mode?
+    Something to think about.]
 
 * Threads project:
 
@@ -63,66 +92,6 @@
 
     What answer are you looking for for this design document question?
 
-  - Godmar:
-
-    >> Did any ambiguities in the scheduler specification make values in the
-    >> table uncertain?  If so, what rule did you use to resolve them?  Does
-    >> this match the behavior of your scheduler?
-
-    My guess is that you're referring to the fact the scheduler
-    specification does not prescribe any order in which the priorities of
-    all threads are updated, so if multiple threads end up with the same
-    priority, it doesn't say which one to pick.  ("round-robin" order
-    would not apply here.)
-
-    Is that correct?
-
-  - Godmar:
-    
-    One of my groups implemented priority donation with these data
-    structures in synch.cc:
-    ---
-    struct value
-    {
-      struct list_elem elem;      /* List element. */
-      int value;                  /* Item value. */
-    };
-
-    static struct value values[10];
-    static int start = 10;
-    static int numNest = 0;
-    ---
-    In their implementation, the "elem" field in their "struct value" is
-    not even used.
-
-    The sad part is that they've passed all tests that are currently in
-    the Pintos base with this implementation. (They do fail the additional
-    tests I added priority-donate-sema & priority-donate-multiple2.)
-
-    Another group managed to pass all tests with this construct:
-    ---
-    struct lock
-      {
-	struct thread *holder;      /* Thread holding lock (for debugging). */
-	struct semaphore semaphore; /* Binary semaphore controlling access. */
-	//*************************************
-	int pri_prev;
-	int pri_delta;              //Used for Priority Donation
-	/**************************************************/
-      };
-    ---
-    where "pri_delta" keeps track of "priority deltas." They even pass
-    priority-donate-multiple2.
-
-    I think we'll need a test where a larger number of threads & locks
-    simultaneously exercise priority donation to weed out those
-    implementations.
-
-    It may also be a good idea to use non-constant deltas for the low,
-    medium, and high priority threads in the tests - otherwise, adding a
-    "priority delta" might give - by coincidence - the proper priority for
-    a thread.
-
   - Godmar: Another thing: one group passed all tests even though they
     wake up all waiters on a lock_release(), rather than just
     one. Since there's never more than one waiter in our tests, they
@@ -136,18 +105,13 @@
   - Get rid of rox--causes more trouble than it's worth
 
   - Extra credit: specifics on how to implement sbrk, malloc.
+    Godmar: I have a sample solution and tests for that!  Stay tuned.
 
   - Godmar: We're missing tests that pass arguments to system calls
     that span multiple pages, where some are mapped and some are not.
     An implementation that only checks the first page, rather than all
     pages that can be touched during a call to read()/write() passes
     all tests.
-
-  - Godmar: Need some tests that test that illegal accesses lead to
-    process termination. I have written some, will add them. In P2,
-    obviously, this would require that the students break this
-    functionality since the page directory is initialized for them,
-    still it would be good to have.
 
   - Godmar: There does not appear to be a test that checks that they
     close all fd's on exit.  Idea: add statistics & self-diagnostics
@@ -156,25 +120,8 @@
     kernel memory is free.  Add a system call
     "get_kernel_memory_information".  User programs could engage in a
     variety of activities and notice leaks by checking the kernel
-    memory statistics.
-
-  - Godmar: is there a test that tests that they properly kill a process that
-    attempts to access an invalid address in user code, e.g. *(void**)0 =
-    42;?
-
-    It seems all of the robustness tests deal with bad pointers passed to
-    system calls (at least judging from test/userprog/Rubric.robustness),
-    but none deals with bad accesses by user code, or I am missing
-    something.
-
-    ps: I found tests/vm/pt-bad-addr, which is in project 3 only, though.
-
-    For completeness, we should probably check read/write/jump to unmapped
-    user virtual address and to mapped kernel address, for a total of 6
-    cases. I wrote up some tests, see
-    http://people.cs.vt.edu/~gback/pintos/bad-pointers/
-
-  - process_death test needs improvement
+    memory statistics. 
+    - note: multi-oom tests that now.
 
   - Godmar: In the wait() tests, there's currently no test that tests
     that a process can only wait for its own children. There's only
@@ -344,3 +291,16 @@
     - Might want to add a feature whereby kernel arguments can be
       given interactively, rather than passed on-disk.  Needs some
       though.
+
+==========================================================================
+============================== COMPLETED TASKS ===========================
+==========================================================================
+
+* Godmar: Introduce memory leak robustness tests - both for the
+  well-behaved as well as the mis-behaved case - that tests that the
+  kernel handles low-mem conditions well.
+
+    - handled by new multi-oom.
+
+* Godmar: improved priority inheritance tests (see priority-donate-chain)
+
