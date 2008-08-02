@@ -620,7 +620,7 @@ diff -u src/userprog/syscall.c~ src/userprog/syscall.c
 +{
 +  int eax;
 +  asm ("movl $1f, %%eax; movb %b2, %0; 1:"
-+       : "=m" (*udst), "=&a" (eax) : "r" (byte));
++       : "=m" (*udst), "=&a" (eax) : "q" (byte));
 +  return eax != 0;
 +}
 + 
