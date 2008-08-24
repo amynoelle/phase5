@@ -1310,17 +1310,17 @@ diff -u src/filesys/fsutil.c~ src/filesys/fsutil.c
    if (file == NULL)
      PANIC ("%s: open failed", file_name);
    buffer = palloc_get_page (PAL_ASSERT);
-@@ -110,9 +110,9 @@ fsutil_put (char **argv) 
-     PANIC ("%s: invalid file size %d", file_name, size);
-   
-   /* Create destination file. */
--  if (!filesys_create (file_name, size))
-+  if (!filesys_create (file_name, size, FILE_INODE))
-     PANIC ("%s: create failed", file_name);
--  dst = filesys_open (file_name);
-+  dst = file_open (filesys_open (file_name));
-   if (dst == NULL)
-     PANIC ("%s: open failed", file_name);
+@@ -117,9 +117,9 @@
+           printf ("Putting '%s' into the file system...\n", file_name);
+ 
+           /* Create destination file. */
+-          if (!filesys_create (file_name, size))
++          if (!filesys_create (file_name, size, FILE_INODE))
+             PANIC ("%s: create failed", file_name);
+-          dst = filesys_open (file_name);
++          dst = file_open (filesys_open (file_name));
+           if (dst == NULL)
+             PANIC ("%s: open failed", file_name);
  
 @@ -162,7 +162,7 @@ fsutil_get (char **argv)
      PANIC ("couldn't allocate buffer");
