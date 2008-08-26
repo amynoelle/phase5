@@ -36,7 +36,7 @@ diff -u src/devices/timer.c~ src/devices/timer.c
  }
  
  /* Calibrates loops_per_tick, used to implement brief delays. */
-@@ -87,15 +92,36 @@ timer_elapsed (int64_t then) 
+@@ -93,16 +93,37 @@
    return timer_ticks () - then;
  }
  
@@ -52,7 +52,8 @@ diff -u src/devices/timer.c~ src/devices/timer.c
 +  return a->wakeup_time < b->wakeup_time;
 +}
 +
- /* Suspends execution for approximately TICKS timer ticks. */
+ /* Sleeps for approximately TICKS timer ticks.  Interrupts must
+    be turned on. */
  void
  timer_sleep (int64_t ticks) 
  {
@@ -75,7 +76,7 @@ diff -u src/devices/timer.c~ src/devices/timer.c
 +  sema_down (&t->timer_sema);
  }
  
- /* Suspends execution for approximately MS milliseconds. */
+ /* Sleeps for approximately MS milliseconds.  Interrupts must be
 @@ -132,6 +158,16 @@ timer_interrupt (struct intr_frame *args
  {
    ticks++;
