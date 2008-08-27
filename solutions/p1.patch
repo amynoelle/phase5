@@ -1,8 +1,7 @@
-Index: src/devices/timer.c
-diff -u src/devices/timer.c~ src/devices/timer.c
---- src/devices/timer.c~
-+++ src/devices/timer.c
-@@ -23,6 +23,9 @@ static volatile int64_t ticks;
+diff -Nur ../../src/devices/timer.c src/devices/timer.c
+--- ../../src/devices/timer.c	2008-08-27 08:04:38.000000000 -0400
++++ src/devices/timer.c	2008-08-27 12:42:33.000000000 -0400
+@@ -24,6 +24,9 @@
     Initialized by timer_calibrate(). */
  static unsigned loops_per_tick;
  
@@ -12,7 +11,7 @@ diff -u src/devices/timer.c~ src/devices/timer.c
  static intr_handler_func timer_interrupt;
  static bool too_many_loops (unsigned loops);
  static void busy_wait (int64_t loops);
-@@ -43,6 +46,8 @@ timer_init (void) 
+@@ -45,6 +48,8 @@
    outb (0x40, count >> 8);
  
    intr_register_ext (0x20, timer_interrupt, "8254 Timer");
@@ -21,7 +20,7 @@ diff -u src/devices/timer.c~ src/devices/timer.c
  }
  
  /* Calibrates loops_per_tick, used to implement brief delays. */
-@@ -93,16 +93,37 @@
+@@ -93,16 +98,37 @@
    return timer_ticks () - then;
  }
  
@@ -62,7 +61,7 @@ diff -u src/devices/timer.c~ src/devices/timer.c
  }
  
  /* Sleeps for approximately MS milliseconds.  Interrupts must be
-@@ -132,6 +158,17 @@ timer_interrupt (struct intr_frame *args
+@@ -181,6 +207,17 @@
  {
    ticks++;
    thread_tick ();
@@ -80,10 +79,23 @@ diff -u src/devices/timer.c~ src/devices/timer.c
  }
  
  /* Returns true if LOOPS iterations waits for more than one timer
-Index: src/threads/fixed-point.h
-diff -u src/threads/fixed-point.h~ src/threads/fixed-point.h
---- src/threads/fixed-point.h~
-+++ src/threads/fixed-point.h
+diff -Nur ../../src/tests/Make.tests src/tests/Make.tests
+--- ../../src/tests/Make.tests	2007-01-11 22:07:10.000000000 -0500
++++ src/tests/Make.tests	2008-08-27 13:00:45.000000000 -0400
+@@ -51,6 +51,10 @@
+ # Prevent an environment variable VERBOSE from surprising us.
+ VERBOSE =
+ 
++# Append utils directory to fall back to pintos script in source tree
++# unless user places a different script in their path.
++export PATH := $(PATH):$(SRCDIR)/utils
++
+ TESTCMD = pintos -v -k -T $(TIMEOUT)
+ TESTCMD += $(SIMULATOR)
+ TESTCMD += $(PINTOSOPTS)
+diff -Nur ../../src/threads/fixed-point.h src/threads/fixed-point.h
+--- ../../src/threads/fixed-point.h	1969-12-31 19:00:00.000000000 -0500
++++ src/threads/fixed-point.h	2008-08-27 12:42:33.000000000 -0400
 @@ -0,0 +1,120 @@
 +#ifndef THREADS_FIXED_POINT_H
 +#define THREADS_FIXED_POINT_H
@@ -205,11 +217,10 @@ diff -u src/threads/fixed-point.h~ src/threads/fixed-point.h
 +}
 +
 +#endif /* threads/fixed-point.h */
-Index: src/threads/synch.c
-diff -u src/threads/synch.c~ src/threads/synch.c
---- src/threads/synch.c~
-+++ src/threads/synch.c
-@@ -114,10 +114,28 @@ sema_up (struct semaphore *sema) 
+diff -Nur ../../src/threads/synch.c src/threads/synch.c
+--- ../../src/threads/synch.c	2006-07-20 22:05:37.000000000 -0400
++++ src/threads/synch.c	2008-08-27 12:42:33.000000000 -0400
+@@ -113,10 +113,28 @@
    ASSERT (sema != NULL);
  
    old_level = intr_disable ();
@@ -241,7 +252,8 @@ diff -u src/threads/synch.c~ src/threads/synch.c
    intr_set_level (old_level);
  }
  
-@@ -200,8 +218,29 @@ lock_acquire (struct lock *lock)
+@@ -192,12 +210,33 @@
+ void
  lock_acquire (struct lock *lock)
  {
 +  enum intr_level old_level;
@@ -271,7 +283,11 @@ diff -u src/threads/synch.c~ src/threads/synch.c
    sema_down (&lock->semaphore);
    lock->holder = thread_current ();
 +  intr_set_level (old_level);
-@@ -238,9 +273,37 @@ void
+ }
+ 
+ /* Tries to acquires LOCK and returns true if successful or false
+@@ -228,11 +267,39 @@
+ void
  lock_release (struct lock *lock) 
  {
 +  enum intr_level old_level;
@@ -309,7 +325,8 @@ diff -u src/threads/synch.c~ src/threads/synch.c
 +  intr_set_level (old_level);
  }
  
-@@ -264,6 +323,7 @@ struct semaphore_elem 
+ /* Returns true if the current thread holds LOCK, false
+@@ -251,6 +318,7 @@
    {
      struct list_elem elem;              /* List element. */
      struct semaphore semaphore;         /* This semaphore. */
@@ -317,7 +334,7 @@ diff -u src/threads/synch.c~ src/threads/synch.c
    };
  
  /* Initializes condition variable COND.  A condition variable
-@@ -308,12 +368,26 @@ cond_wait (struct condition *cond, struc
+@@ -295,12 +363,26 @@
    ASSERT (lock_held_by_current_thread (lock));
    
    sema_init (&waiter.semaphore, 0);
@@ -344,7 +361,7 @@ diff -u src/threads/synch.c~ src/threads/synch.c
  /* If any threads are waiting on COND (protected by LOCK), then
     this function signals one of them to wake up from its wait.
     LOCK must be held before calling this function.
-@@ -330,8 +404,12 @@ cond_signal (struct condition *cond, str
+@@ -317,8 +399,12 @@
    ASSERT (lock_held_by_current_thread (lock));
  
    if (!list_empty (&cond->waiters)) 
@@ -359,11 +376,10 @@ diff -u src/threads/synch.c~ src/threads/synch.c
  }
  
  /* Wakes up all threads, if any, waiting on COND (protected by
-Index: src/threads/thread.c
-diff -u src/threads/thread.c~ src/threads/thread.c
---- src/threads/thread.c~
-+++ src/threads/thread.c
-@@ -5,12 +5,14 @@
+diff -Nur ../../src/threads/thread.c src/threads/thread.c
+--- ../../src/threads/thread.c	2008-08-27 13:06:01.000000000 -0400
++++ src/threads/thread.c	2008-08-27 13:14:12.000000000 -0400
+@@ -5,11 +5,13 @@
  #include <stdio.h>
  #include <string.h>
  #include "threads/flags.h"
@@ -377,42 +393,42 @@ diff -u src/threads/thread.c~ src/threads/thread.c
  #include "threads/vaddr.h"
  #ifdef USERPROG
  #include "userprog/process.h"
- #endif
-@@ -24,6 +26,9 @@
-    that are ready to run but not actually running. */
- static struct list ready_list;
- 
-+/* List of all threads. */
-+static struct list all_threads_list;
-+
- /* Idle thread. */
- static struct thread *idle_thread;
- 
-@@ -49,6 +54,7 @@ static long long user_ticks;    /* # of 
+@@ -53,6 +55,7 @@
  /* Scheduling. */
  #define TIME_SLICE 4            /* # of timer ticks to give each thread. */
  static unsigned thread_ticks;   /* # of timer ticks since last yield. */
 +static fixed_point_t load_avg;  /* Load average. */
  
- static void kernel_thread (thread_func *, void *aux);
- 
-@@ -79,12 +85,15 @@ thread_init (void) 
- 
+ /* If false (default), use round-robin scheduler.
+    If true, use multi-level feedback queue scheduler.
+@@ -92,6 +95,7 @@
    lock_init (&tid_lock);
    list_init (&ready_list);
-+  list_init (&all_threads_list);
+   list_init (&all_list);
 +  load_avg = fix_int (0);
  
    /* Set up a thread structure for the running thread. */
    initial_thread = running_thread ();
-   init_thread (initial_thread, "main", PRI_DEFAULT);
-   initial_thread->status = THREAD_RUNNING;
-   initial_thread->tid = allocate_tid ();
-+  list_push_front (&all_threads_list, &initial_thread->all_elem);
+@@ -117,6 +121,18 @@
+   sema_down (&idle_started);
  }
  
- /* Starts preemptive thread scheduling by enabling interrupts.
-@@ -101,9 +110,48 @@ void
++/* Adjust recent CPU of a thread based on load factor
++   and recompute its priority. */
++static void
++adjust_recent_cpu (struct thread *t, void *aux)
++{
++  fixed_point_t load_factor = *(fixed_point_t *)aux;
++
++  t->recent_cpu = fix_add (fix_mul (load_factor, t->recent_cpu),
++                           fix_int (t->nice));
++  thread_recompute_priority (t);
++}
++
+ /* Called by the timer interrupt handler at each timer tick.
+    Thus, this function runs in an external interrupt context. */
+ void
+@@ -134,9 +150,41 @@
    else
      kernel_ticks++;
  
@@ -439,18 +455,11 @@ diff -u src/threads/thread.c~ src/threads/thread.c
 +      /* Update recent_cpu and thread priorities once per second. */
 +      if (timer_ticks () % TIMER_FREQ == 0) 
 +        {
-+          struct list_elem *e;
 +          fixed_point_t twice_load = fix_scale (load_avg, 2);
 +          fixed_point_t twice_load_plus_1 = fix_add (twice_load, fix_int (1));
 +          fixed_point_t load_factor = fix_div (twice_load, twice_load_plus_1);
-+          for (e = list_begin (&all_threads_list);
-+               e != list_end (&all_threads_list); e = list_next (e)) 
-+            {
-+              struct thread *t = list_entry (e, struct thread, all_elem);
-+              t->recent_cpu = fix_add (fix_mul (load_factor, t->recent_cpu),
-+                                       fix_int (t->nice));
-+              thread_recompute_priority (t);
-+            }
++
++          thread_foreach (adjust_recent_cpu, &load_factor);
 +        }
 +    }
 +
@@ -464,7 +473,7 @@ diff -u src/threads/thread.c~ src/threads/thread.c
  }
  
  /* Prints thread statistics. */
-@@ -143,10 +191,12 @@ tid_t
+@@ -166,12 +214,13 @@
  thread_create (const char *name, int priority,
                 thread_func *function, void *aux) 
  {
@@ -473,11 +482,13 @@ diff -u src/threads/thread.c~ src/threads/thread.c
    struct kernel_thread_frame *kf;
    struct switch_entry_frame *ef;
    struct switch_threads_frame *sf;
-+  enum intr_level old_level;
-   tid_t tid;
+-  tid_t tid;
+   enum intr_level old_level;
++  tid_t tid;
  
    ASSERT (function != NULL);
-@@ -157,8 +207,10 @@ thread_create (const char *name, int pri
+ 
+@@ -181,8 +230,10 @@
      return TID_ERROR;
  
    /* Initialize thread. */
@@ -487,17 +498,10 @@ diff -u src/threads/thread.c~ src/threads/thread.c
 +  t->nice = cur->nice;
 +  t->recent_cpu = cur->recent_cpu;
  
-   /* Stack frame for kernel_thread(). */
-   kf = alloc_frame (t, sizeof *kf);
-@@ -174,8 +226,15 @@ thread_create (const char *name, int pri
-   sf = alloc_frame (t, sizeof *sf);
-   sf->eip = switch_entry;
+   /* Prepare thread for first run by initializing its stack.
+      Do this atomically so intermediate values for the 'stack' 
+@@ -208,6 +259,8 @@
  
-+  /* Add to list of all threads. */
-+  old_level = intr_disable ();
-+  list_push_front (&all_threads_list, &t->all_elem);
-+  intr_set_level (old_level);
-+
    /* Add to run queue. */
    thread_unblock (t);
 +  if (priority > thread_get_priority ())
@@ -505,7 +509,7 @@ diff -u src/threads/thread.c~ src/threads/thread.c
  
    return tid;
  }
-@@ -196,6 +255,19 @@ thread_block (void) 
+@@ -228,6 +281,19 @@
    schedule ();
  }
  
@@ -524,17 +528,9 @@ diff -u src/threads/thread.c~ src/threads/thread.c
 +
  /* Transitions a blocked thread T to the ready-to-run state.
     This is an error if T is not blocked.  (Use thread_yield() to
-    make the running thread ready.) */
-@@ -260,6 +332,7 @@ thread_exit (void) 
-   /* Just set our status to dying and schedule another process.
-      We will be destroyed during the call to schedule_tail(). */
-   intr_disable ();
-+  list_remove (&thread_current ()->all_elem);
-   thread_current ()->status = THREAD_DYING;
-   schedule ();
-   NOT_REACHED ();
-@@ -282,11 +355,26 @@ thread_yield (void) 
-   intr_set_level (old_level);
+    make the running thread ready.)
+@@ -339,11 +405,26 @@
+     }
  }
  
 -/* Sets the current thread's priority to NEW_PRIORITY. */
@@ -563,7 +559,7 @@ diff -u src/threads/thread.c~ src/threads/thread.c
  }
  
  /* Returns the current thread's priority. */
-@@ -298,33 +386,98 @@ thread_get_priority (void) 
+@@ -355,33 +436,98 @@
  
  /* Sets the current thread's nice value to NICE. */
  void
@@ -671,8 +667,8 @@ diff -u src/threads/thread.c~ src/threads/thread.c
 +  intr_set_level (old_level);
  }
  
- /* Idle thread.  Executes when no other thread is ready to run. */
-@@ -399,8 +547,10 @@ init_thread (struct thread *t, const cha
+ /* Idle thread.  Executes when no other thread is ready to run.
+@@ -467,8 +613,10 @@
    t->status = THREAD_BLOCKED;
    strlcpy (t->name, name, sizeof t->name);
    t->stack = (uint8_t *) t + PGSIZE;
@@ -681,10 +677,10 @@ diff -u src/threads/thread.c~ src/threads/thread.c
    t->magic = THREAD_MAGIC;
 +  sema_init (&t->timer_sema, 0);
 +  list_init (&t->donors);
+   list_push_back (&all_list, &t->allelem);
  }
  
- /* Allocates a SIZE-byte frame at the top of thread T's stack and
-@@ -426,8 +576,14 @@ next_thread_to_run (void) 
+@@ -495,8 +643,14 @@
  {
    if (list_empty (&ready_list))
      return idle_thread;
@@ -701,10 +697,9 @@ diff -u src/threads/thread.c~ src/threads/thread.c
  }
  
  /* Completes a thread switch by activating the new thread's page
-Index: src/threads/thread.h
-diff -u src/threads/thread.h~ src/threads/thread.h
---- src/threads/thread.h~
-+++ src/threads/thread.h
+diff -Nur ../../src/threads/thread.h src/threads/thread.h
+--- ../../src/threads/thread.h	2008-08-27 08:45:26.000000000 -0400
++++ src/threads/thread.h	2008-08-27 12:45:31.000000000 -0400
 @@ -4,6 +4,8 @@
  #include <debug.h>
  #include <list.h>
@@ -714,7 +709,7 @@ diff -u src/threads/thread.h~ src/threads/thread.h
  
  /* States in a thread's life cycle. */
  enum thread_status
-@@ -87,11 +89,26 @@ struct thread
+@@ -87,12 +89,26 @@
      enum thread_status status;          /* Thread state. */
      char name[16];                      /* Name (for debugging purposes). */
      uint8_t *stack;                     /* Saved stack pointer. */
@@ -729,7 +724,7 @@ diff -u src/threads/thread.h~ src/threads/thread.h
 +    struct lock *want_lock;             /* Lock we're waiting to acquire. */
 +    int nice;                           /* Niceness. */
 +    fixed_point_t recent_cpu;           /* Recent amount of CPU time. */    
-+    struct list_elem all_elem;          /* all_threads list element. */
+     struct list_elem allelem;           /* List element for all threads list. */
  
      /* Shared between thread.c and synch.c. */
      struct list_elem elem;              /* List element. */
@@ -738,11 +733,11 @@ diff -u src/threads/thread.h~ src/threads/thread.h
 +    int64_t wakeup_time;                /* Time to wake this thread up. */
 +    struct list_elem timer_elem;        /* Element in wait_list. */
 +    struct semaphore timer_sema;        /* Semaphore. */
-+
++ 
  #ifdef USERPROG
      /* Owned by userprog/process.c. */
      uint32_t *pagedir;                  /* Page directory. */
-@@ -118,6 +135,10 @@ const char *thread_name (void);
+@@ -125,6 +141,10 @@
  
  void thread_exit (void) NO_RETURN;
  void thread_yield (void);
@@ -751,5 +746,5 @@ diff -u src/threads/thread.h~ src/threads/thread.h
 +bool thread_lower_priority (const struct list_elem *, const struct list_elem *,
 +                            void *aux);
  
- int thread_get_priority (void);
- void thread_set_priority (int);
+ /* Performs some operation on thread t, given auxiliary data AUX. */
+ typedef void thread_action_func (struct thread *t, void *aux);
