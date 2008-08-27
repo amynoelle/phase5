@@ -10,12 +10,10 @@ diff -u src/threads/thread.c~ src/threads/thread.c
  #endif
  
  /* Random value for struct thread's `magic' member.
-@@ -251,16 +252,19 @@ thread_tid (void) 
+@@ -251,18 +252,19 @@ thread_tid (void) 
  void
  thread_exit (void) 
  {
-+  struct thread *t = thread_current ();
-+
    ASSERT (!intr_context ());
  
  #ifdef USERPROG
@@ -24,11 +22,12 @@ diff -u src/threads/thread.c~ src/threads/thread.c
 -
 +  syscall_exit ();
 +  
-   /* Just set our status to dying and schedule another process.
-      We will be destroyed during the call to schedule_tail(). */
+   /* Remove thread from all threads list, set our status to dying,
+      and schedule another process.  That process will destroy us
+      when it call schedule_tail(). */
    intr_disable ();
--  thread_current ()->status = THREAD_DYING;
-+  t->status = THREAD_DYING;
+   list_remove (&thread_current()->allelem);
+   thread_current ()->status = THREAD_DYING;
    schedule ();
    NOT_REACHED ();
  }
