@@ -79,20 +79,6 @@ diff -Nur ../../src/devices/timer.c src/devices/timer.c
  }
  
  /* Returns true if LOOPS iterations waits for more than one timer
-diff -Nur ../../src/tests/Make.tests src/tests/Make.tests
---- ../../src/tests/Make.tests	2007-01-11 22:07:10.000000000 -0500
-+++ src/tests/Make.tests	2008-08-27 13:00:45.000000000 -0400
-@@ -51,6 +51,10 @@
- # Prevent an environment variable VERBOSE from surprising us.
- VERBOSE =
- 
-+# Append utils directory to fall back to pintos script in source tree
-+# unless user places a different script in their path.
-+export PATH := $(PATH):$(SRCDIR)/utils
-+
- TESTCMD = pintos -v -k -T $(TIMEOUT)
- TESTCMD += $(SIMULATOR)
- TESTCMD += $(PINTOSOPTS)
 diff -Nur ../../src/threads/fixed-point.h src/threads/fixed-point.h
 --- ../../src/threads/fixed-point.h	1969-12-31 19:00:00.000000000 -0500
 +++ src/threads/fixed-point.h	2008-08-27 12:42:33.000000000 -0400
