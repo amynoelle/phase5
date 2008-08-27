@@ -1,0 +1,192 @@
+\section{Assignments}
+\label{sec:assignments}
+
+%
+% Not sure if we need that.
+%
+\subsection{Project 0}
+If Pintos is used in a semester-long course, project 0 serves as a ``warm-up'' project.
+In this project, students will gain familiarity with the Pintos source tree and some
+supporting classes, in particular its implementation of doubly-linked lists.
+In OS, doubly-linked lists are frequently used because they allow $O(1)$ insertion and
+removal operations.  Moreover, they are often used in a style in which the list cell
+containing the next and prev pointers is embedded in some larger structure, such as
+a thread control block, rather than having separately allocated list cells.
+In project 0, students use Pintos's list implementation to implement a simple, first-fit 
+memory allocator.  
+
+\subsection{Project 1 -- Threads}
+% intro
+Project 1 centers around threads.  The baseline Pintos code boots into a kernel that
+supports multiple in-kernel threads.  It provides code for initialization, thread creation and
+destruction, context switches, thread blocking and unblocking as well as a simple but
+preemptive round-robin scheduler.
+Students study the existing, barebones threading system (about 600 lines of C code) to 
+understand how threads are created and destroyed, and to understand the transitioning of 
+threads between the READY, RUNNING, and BLOCKED states.  They also study how a thread's
+internal memory is managed, which is used to store its runtime stack and thread control block.
+Student can examine the context switch code, but the projects do not involve any modifications
+to it.
+
+After reading the baseline code, the projects ask students to implement several features
+that exercise thread state transitions.  The first part of this project includes a simple
+alarm clock, which requires maintaining a timer queue of sleeping threads and changing 
+the timer interrupt handler to unblock those threads whose wakeup time has arrived.
+Students learn how to protect data structures that are shared between a thread and an
+interrupt handler.  The second part of the project constitutes a strict priority-based
+uniprocessor scheduler.  In this model, one of the threads with the highest priority
+always runs.  When a thread's priority changes, or when threads block or unblock,  
+a scheduling decision must be triggered to ensure this invariant.  Students learn about
+the different ways in which such situations occur.  
+Project 1 also introduces synchronization primitives such as semaphores, locks,
+and condition variables.  The project explores the interaction between such primitives,
+thread states, and the scheduler.
+
+Based on the priority scheduler, students implement two additional tasks: priority 
+inheritance and a multi-level feedback queue scheduler.  Priority inheritance is a way
+to avoid priority inversion, a phenonemon that most famously led to an almost-failure
+of the Mars Pathfinder Mission~\cite{MarsPathFinder}.  We use this example to motivate
+the problem.  Implementing priority inheritance correctly requires a deep understanding of the 
+interaction of threads and locks.
+Separately, students build a multi-level feedback queue scheduler on top of the strict
+priority scheduler.  This scheduler adjusts threads' priority based on a sampling  of how
+much CPU time a thread has received recently.
+
+\paragraph{Testing and Grading.}
+Project 1 is accompanied by about $XX$ tests, which are run using the Bochs simulator by
+a grading script.  Most tests are designed to test a single aspect, but some tests 
+test more involved scenarios.  Most of the tests are designed to produce a deterministic 
+output; the grading script will point out differences between the expected and the actual output. 
+Usually, a test failure leads students to study the documented source code of the test
+and understand how the expected output derives from it.
+
+The MLFQS scheduler tests are graded in a different way. Since those tests rely on estimating CPU
+usage, they depend on how much CPU time a specific implementation uses, which in turn depends on how
+efficient it is.  We compute the expected CPU consumption values by simulation and provide an
+envelope within which we accept the output.  The envelope is large enough to allow for minor
+inefficiencies, but major inefficiencies will usually lead to test failures.  Such failures
+convey the importance of using efficient algorithms and data structures within a kernel,
+because wasting CPU cycles in the kernel reduces the amount available to applications.
+
+% intro
+\paragraph{Learning Objectives.}
+Project 1 has three learning objectives.  First, students will understand how
+the illusion that ``computers can do multiple things at once'' is created by a sequence
+of thread state transitions and context switches.  Second, they will understand how
+a simple underlying mechanism - such as priority-based scheduling - can lead to more
+sophisticated scheduling policies.  Third, having seen the mechanisms a preemptive scheduler
+uses to create apparent concurrency, students gain a better intuition of the non-determinism
+inherent in concurrent systems. 
+
+%
+%
+%
+\subsection{Project 2 -- User Programs}
+The second project illustrates how OS implements protection and isolation between user processes,
+how user processes gain access to kernel services, and how user processes lay out the virtual
+address space in which their program and data is contained.
+The project adds support to Pintos to load and execute user programs that make use
+of kernel services.  We kept the provided code purposefully minimal, consisting of
+only a library that reads the program and data segments of ELF binaries.   These binaries
+are loaded into a new address space; the baseline code includes functionality to allocate
+physical memory and set up a page directory to establish the process's virtual address
+mappings.
+
+Students implement support for a small set of system calls that allow processes to perform
+I/O, start new processes, wait for their termination, and exit.  Both the Pintos user 
+process model and system call API are modeled after traditional Unix, with the exception 
+that Pintos processes do not separate process creation (i.e., fork()) from program loading
+(i.e., exec) - instead, Pintos's exec() system call combines these two pieces of functionality 
+into one.  The implementation of these calls requires the students to keep track of
+per-process resources such as file descriptors, deepening their understanding of how
+an operating system provides the abstraction of a process.
+
+Like most current OS, Pintos exploits dual-mode operation in which user processes run
+in a nonprivileged mode that prevents access to kernel resources and to resources allocated
+to other processes.  Processes attempting to bypass these restrictions are terminated.
+Students implement the system call handling code, a key aspect of which includes the
+careful examination of arguments passed by user processes.
+
+Project 2 also illustrates parallel programming techniques, notably fork/join
+parallelism, which students implement when providing support for the exec()/wait()/exit() 
+system calls.  The rendezvous-style synchronization necessary to support this model
+can be implemented using semaphores, providing a practical example of this style
+synchronization presented in accompanying lectures.
+
+% How threads extend into processes.
+
+\paragraph{Testing and Grading.}
+The tests for project 2 exclusively consist of user programs written in C.
+They are divided into functionality and robustness tests.  Functionality tests check that
+the operating system provides the expected set of services when it is used as
+expected.  A set of robustness tests checks that the OS rejects all attempts at passing
+invalid input to system calls.  To pass those tests, the student's kernel must be 
+``bullet-proof.'' We include a stress test in which we artificially induce low memory
+conditions by creating a large number of processes and pseudo-randomly introducing
+failures in some of them.  We expect the kernel to fully recover from such situations.
+
+\paragraph{Learning Objectives.}
+In project 2, students learn how the thread abstraction introduced in project 1 is 
+extended into the process abstraction, which combines a thread, a virtual address space, 
+and its associated resources.
+Project 2 enables students to understand how operating systems employ dual-mode
+operation to implement isolation between processes and to protect system resources
+even in the presence of failing or misbehaving processes.  
+Students understand how processes transition into the kernel to access its services,
+and how kernels implement such services in a robust way.
+The principles learned in this exercise carry over to all scenarios
+in which applications must be robust in the face of input coming from untrusted 
+sources and uncertain resource availability, as is the case in many server systems.
+
+\subsection{Project 3}
+Project 3 asks students to implement several virtual memory techniques, including
+on-demand paging of programs, stack growth, page replacement, and memory-mapped files.
+This functionality is implemented in a page fault service handler and during the
+program loading process.
+We provide supporting code to create and maintain page directories, which hide
+the x86-specifics of how to program the memory management unit (MMU) and how
+to ensure consistency with the CPU's translation look-aside buffer (TLB).  
+As a result, students can treat the MMU as an abstract device in which to 
+install, update, or remove virtual to physical address mappings.
+Consequently, they are free to choose any design for the data structures needed to
+keep track of the state of each page or region in a process's virtual address 
+space.
+
+In early offerings, this significant creative freedom came at the cost that 
+some students were lost as how to accomplish set goals.  We added an intermediate
+design review stage to this projects using a structured questionnaire in which students 
+outline their planned design.  We also provide a suggested order of implementation.
+
+Like project 2, project 3 requires reasoning using parallel programming strategies.  
+Since the Pintos kernel is fully preemptive, students must consider which data structures
+require locking, and the must design a locking strategy that both avoids deadlock
+and reduces unnecessary serialization.
+
+\paragraph{Testing and Grading.}
+Project 3 relies on project 2, therefore, we include all tests provided with project 2
+as regression tests to ensure that system call functionality does not break in the
+presence of virtual memory.  Furthermore, we provide functionality tests for the
+added functionality that lends itself to such testing, namely, memory-mapped files
+and stack growth.  Some of the project tasks, such as on-demand paging, are 
+performance-enhancing techniques that do not directly add functionality that is
+apparent to user programs, which are graded by inspection.  We test the students
+page replacement code by varying the amount of physical memory available to
+the kernel when run under emulation, relative to the amount of memory that is 
+accessed by our test programs.  Timeouts are used to detect grossly inefficient 
+page replacement schemes.
+
+\paragraph{Learning Objectives.}
+In project 3, students learn how an OS creates the environment in which a user
+program executes, specifically as it relates to code and variables used in a program.
+It provides a deep understanding of how OS use fault resumption to
+to virtualize a process's interaction with physical memory.
+In addition, students gain hands-on experience with page replacement algorithms
+and have the opportunity to observe their performance impact.
+
+%
+%
+%
+\subsection{Project 4}
+\paragraph{Testing and Grading.}
+\paragraph{Learning Objectives.}
+

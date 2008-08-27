@@ -1,0 +1,72 @@
+\section{Introduction}
+\label{sec:intro}
+
+Despite the wide use of higher-level languages and environments, gaining a robust
+understanding of operating systems (OS) fundamentals and training in the current design and
+implementation practices of operating systems remains a cornerstone goal of 
+undergraduate computer science education.
+
+% abstract/concrete
+% internal/external
+Approaches to teaching such a course generally fall along two axes: 
+whether the treatment of the material is abstract or 
+concrete~\cite{Hovemeyer2004Running}, and whether they adopt an
+internal or external perspective~\cite{Deitel2003Operating}.
+An abstract approach discusses algorithms and techniques used in operating 
+systems and may include partial implementation or simulation exercises,
+whereas a concrete approach stresses the design and creation of 
+realistic artifacts.
+When adopting the internal perspective, an operating system is considered
+from the point of view of the OS designer, whereas the external perspective 
+assumes the role of a user or programmer using an OS's 
+facilities~\cite{Bryant2002Computer}.
+
+% is this too controversial for this audience?
+The approach advocated in this paper adopts a concrete approach and the internal
+perspective.  Students who have been in the role of an
+OS designer bring a better understanding of how to use one; and students
+who have both studied, implemented, and evaluated core OS techniques obtain 
+a deeper understanding than those who have merely studied them.
+Finally, adopting a concrete approach brings significant secondary
+benefits, including training in modern software development techniques
+and tools.  The C language remains the implementation language of choice
+for operating system kernels and for many embedded systems.
+Practice and debugging skills in C, particularly using modern tools,
+not only increases students' ``market value,'' but provides students with
+the insight that a low-level programming and runtime model is not incompatible
+with high-level tools.
+
+Designing course material for the internal and concrete 
+approach is challenging for several reasons.  While realistic, assignments should be
+relatively simple and doable within a realistic time frame.  
+Whereas assignments should use current hardware architectures, 
+they must not impart too much knowledge that is transient.
+Assignments should include and emphasize the use of modern software 
+engineering practices and tools, such as dynamic program analysis.
+
+This paper introduces Pintos, an instructional operating system kernel that 
+has been in use at several institutions for about 4 years.  Pintos provides 
+a bootable kernel for standard personal computers.  We provide several
+structured assignments in which students implement a basic priority
+scheduler, a multi-level feedback queue scheduler, the ability to
+load programs and support a set of system calls, page-based virtual memory
+including on-demand paging, memory-mapped files, and swapping, and a
+simple hierarchical file system.  
+
+Although Pintos follows in the tradition of instructional operating systems 
+such as Nachos~\cite{Christopher1993Nachos}, 
+GeekOS~\cite{Hovemeyer2004Running}, 
+and OS/161~\cite{Holland2002New}, we believe that it is unique in two
+aspects.  First, Pintos runs on both real hardware and in emulated and
+simulated environments.  Second, we have created a set of analysis tools
+for the emulated environment that allows students to detect programming
+mistakes such as race conditions.
+
+This paper reports on the design philosophy that underlies Pintos,
+details its structure, and outline the nature and learning goals of each
+assignment.
+ 
+% Challenges.
+% How to embed principles?
+% How to teach software engineering?
+% Realism vs. Simplification
