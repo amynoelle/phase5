@@ -3,12 +3,12 @@
 
 Despite the wide use of higher-level languages and environments, gaining a robust
 understanding of operating systems (OS) fundamentals and training in the current design and
-implementation practices of operating systems remains a cornerstone goal of 
+implementation practices of OS remains a cornerstone goal of 
 undergraduate computer science education.
 
 % abstract/concrete
 % internal/external
-Approaches to teaching such a course generally fall along two axes: 
+Approaches to teaching OS courses generally fall along two axes: 
 whether the treatment of the material is abstract or 
 concrete~\cite{Hovemeyer2004Running}, and whether they adopt an
 internal or external perspective~\cite{Deitel2003Operating}.
@@ -40,7 +40,7 @@ Designing course material for the internal and concrete
 approach is challenging for several reasons.  While realistic, 
 assignments should be relatively simple and doable within a realistic time frame.  
 Whereas assignments should use current hardware architectures, 
-they must not impart too much knowledge that is transient.
+they must not impart too much transient knowledge.
 Assignments should include and emphasize the use of modern software 
 engineering practices and tools, such as dynamic program analysis.
 
@@ -48,13 +48,13 @@ This paper introduces Pintos, an instructional operating system kernel that
 has been in use at several institutions for about 4 years.  Pintos provides 
 a bootable kernel for standard personal computers.  We provide several
 structured assignments in which students implement a basic priority
-scheduler, a multi-level feedback queue scheduler, the ability to
-load programs and support a set of system calls, page-based virtual memory
+scheduler, a multi-level feedback queue scheduler, a process-based 
+multi-programming system, page-based virtual memory
 including on-demand paging, memory-mapped files, and swapping, and a
 simple hierarchical file system.  An overview of the projects enabled
 by Pintos is given in Figure~\ref{fig:pintosdetail}, which shows which
-software is provided, which is created by students, and the relative 
-relationship of test cases to Pintos modules.
+software is provided as support code and test cases,
+the parts that are created by students, and their relationship. 
 
 Although Pintos follows in the tradition of instructional operating systems 
 such as Nachos~\cite{Christopher1993Nachos}, OS/161~\cite{Holland2002New}, and
@@ -75,7 +75,7 @@ mistakes such as race conditions.  Figure~\ref{fig:pintosenvs} shows
 the three environments in which the same kernel can be run.
 
 Others have used Linux, either on dedicated devices (e.g., iPodLinux~\cite{1352199}),
-or in virtualizated environments~\cite{1008027,1352648,Nieh2005Experiences}, to provide
+or in virtualized environments~\cite{1008027,1352648,Nieh2005Experiences}, to provide
 an internal, concrete perspective.  Compared to those approaches, Pintos provides
 a similar level of realism to students in that they can see the result of their
 work on concrete or virtualized hardware, but does not require that students 
@@ -89,7 +89,7 @@ Pintos code is written to be studied by students.
 
 \pintosenvfigure{}
 
-\pintosdetailfigure{}
+\pintosdetailfiguretwo{}
 
 % Challenges.
 % How to embed principles?

@@ -19,7 +19,7 @@
 
 \subsection{Project 1 -- Threads}
 % intro
-Project 1 centers around threads.  The baseline Pintos code boots into a kernel that
+Project 1 revolves around threads.  The baseline Pintos code boots into a kernel that
 supports multiple in-kernel threads.  It provides code for initialization, thread creation and
 destruction, context switches, thread blocking and unblocking as well as a simple but
 preemptive round-robin scheduler.
@@ -27,7 +27,7 @@ Students study the existing, barebones threading system (about 600 lines of C co
 understand how threads are created and destroyed, and to understand the transitioning of 
 threads between the READY, RUNNING, and BLOCKED states.  They also study how a thread's
 internal memory is managed, which is used to store its runtime stack and thread control block.
-Student can examine the context switch code, but the projects do not involve any modifications
+Students can examine the context switch code, but the projects do not involve any modifications
 to it.
 
 After reading the baseline code, the project asks students to implement several features
@@ -178,7 +178,7 @@ page replacement schemes.
 \paragraph{Learning Objectives}
 In project 3, students learn how an OS creates the environment in which a user
 program executes as it relates to the program's code and variables.
-It also provides a deep understanding of how OS use fault resumption to
+It also provides a deep understanding of how OS use fault resumption
 to virtualize a process's use of physical memory.
 In addition, students gain hands-on experience with page replacement algorithms
 and have the opportunity to observe their performance impact.
@@ -200,17 +200,17 @@ we use an intermediate ``scratch'' disk or partition that is attached to the
 physical or virtual computer on which Pintos runs, and use the student's kernel
 to copy files in and out of their filesystems.
 Similarly, we encourage students to experiment with different replacement
-strategies for their buffercache (though we require that their algorithm
+strategies for their buffer cache (though we require that their algorithm
 behaves at least as good as a least-recently-used (LRU) strategy.
 
 As with all projects, this assignment includes additional parallel programming 
-tasks: in this project, we include a requirement that students a multiple-reader, 
-single-writer access scheme for individual buffer cache blocks.
+tasks: in this project, we suggest that students implement 
+a multiple-reader, single-writer access scheme for individual buffer cache blocks.
 
 \paragraph{Testing and Grading}
 Project 4 adds a new set of test cases that test the extended functionality.
-Project 4 does not require the virtual memory functionality, so can be built
-either on project 2 or 3 depending on the instructor's judgment.
+Project 4 does not require the virtual memory functionality, so it can be built
+on either project 2 or 3, depending on the instructor's judgment.
 For each functionality test, we provide a sibling persistence test that verifies 
 that the changes done to the filesystem survive a shutdown and restart.
 

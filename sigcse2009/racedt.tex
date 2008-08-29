@@ -16,7 +16,7 @@ call stacks for the racing threads is generated.
 
 Invalid memory accesses, such as a read from newly allocated but uninitialized data, are detected by
 tracking all memory accesses.  Heap allocation calls are instrumented to map a range of addresses as
-uninitialized. When data is written to a memory address, it is marked as initialized. If a address
+uninitialized. When data is written to a memory address, it is marked as initialized. If an address
 marked as uninitialized is read from, the error is reported and the address is marked as
 uninitialized to mask spurious reports. 
 % More sophisticated analysis may be implemented in the future.

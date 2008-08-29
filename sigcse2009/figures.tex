@@ -21,6 +21,27 @@
     \end{figure*}
 }
 
+% these are needed to use \fbox{} to surround includegraphics with so we can see the borders
+\setlength\fboxsep{0pt}
+\setlength\fboxrule{0.5pt}
+
+\newcommand{\pintosdetailfiguretwo}{
+    \begin{figure*}[htp]
+    % \centering
+    \begin{tabular}{cc}
+        % left bottom right top
+            \includegraphics[trim=.0in .4in .25in .1in, width=.7\textwidth]{pintosoverviewnolegend.pdf}
+        &
+            \includegraphics[trim=.0in 3.3in 7.3in .0in, width=1.6in]{pintosoverviewlegend.pdf}
+        \\
+    \end{tabular}
+    \caption{Components of Pintos split in provided support code, test cases, 
+        and components created in assignments.  Overlapping components indicate
+        when students have to replace parts of the support code.}
+    \label{fig:pintosdetail}
+    \end{figure*}
+}
+
 \newcommand{\pintostestcounttable}{
 \begin{table}
     \begin{tabular}{lccc}

@@ -1,21 +1,24 @@
 \section{Design Principles}
 \label{sec:designprinciples}
 
-The Pintos series of projects are built on a number of principles.
+Pintos's projects are built on a number of principles.
 
 \paragraph{Read before you Code}
 Each project involves a significant amount of reading code before
-students write the first line of their code.  
+students write the first line of code.
 Because software maintenance constitutes the vast majority of all
 software development efforts~\cite{Boehm1981Software}, this setup mirrors the 
 environment in which most software engineers work.
+Simultaneously, we limit the amount students have to read
+by encapsulating lower layers, such as device drivers.
 We went to great lengths to write the entire Pintos baseline code,
-and in particular the portions students will read, in a style that shows,
-by example, the coding style we expect from students.  This style
-includes purely syntactical convention such as the choice of the
-GNU indentation style, and extends to commenting style and naming 
-conventions.  During the semesters in which Pintos was used, we
-continuously refined the internal code documentation, focusing on those 
+and in particular the portions students must read, in a style that shows,
+by example, the coding style we expect from students.  
+% cut for length
+%This style includes purely syntactical convention such as the choice of the
+%GNU indentation style, and extends to commenting style and naming conventions.
+We continuously refined the internal code documentation over several
+semesters, focusing on those 
 portions that initially proved difficult to understand or confusing.
 
 \paragraph{Maximize Creative Freedom}
@@ -28,42 +31,42 @@ own data structures and associated algorithms as much as possible.
 \paragraph{Practice Test-driven Development}
 %Test-driven development~\cite{Edwards}
 Each project includes a large number of test cases that is accessible
-to students.  
-They must implement the API that is exercised by these test cases.  An overview is provided in Table~\ref{table:tests}.
+to students, as shown in  Table~\ref{table:tests}.  
+They must implement the API that is exercised by these test cases.  
 Students are encouraged to add their own test cases.
 
 \paragraph{Work in a Team}
 The projects presented in this paper are designed to be accomplished by teams of 
 2-4 students.  Working in a team provides an environment that more closely resembles
-industrial software development, and it provides a way for students brainstorm and
+industrial software development, and it provides a way for students to brainstorm and
 implement together.  In addition, we teach and require the use of group collaboration tools,
 notably shared source code version control systems such as CVS.
 
 \paragraph{Justify your Design}
 Design justification and rationale is as important for learning as creating an artifact 
-that fulfill a set of given requirements.  We designed a set of structured questionnaires 
+that fulfills a set of given requirements.  We designed a set of structured questionnaires 
 in which students describe their design and discuss choices and trade-offs they made.
 
 \paragraph{Provide a Reproducible, Manageable Environment}
 Operating Systems are inherently concurrent environments, which can be difficult
 to debug.  For educational use, we must provide an environment that is
-manageable and reproducible, which is given by the option
-of running Pintos in a simulated environment eliminates this
-non-determinism.  As a result, Pintos kernels can be debugged in a manner that
+manageable and reproducible, which we do by providing the option
+of running Pintos in a simulated, fully deterministic environment.  
+As a result, Pintos kernels can be debugged in a manner that
 is substantially similar to how user programs are being debugged.
 
 \paragraph{Include Analysis Tools}
-Static and dynamic analysis tools are now widely being used; an OS course should
-be no exception.  We have extended the Qemu emulator that perform tailored
-analyses that can point out errors such as race conditions.
+Static and dynamic analysis tools are now being widely used; an OS course should
+be no exception.  We have extended the QEMU emulator~\cite{Bellard2005QEMU} to 
+perform tailored analyses that point out errors such as race conditions.
 
 \paragraph{Provide Extensive and Structured Documentation}
-Instructional systems often are not shared, or fall in disuse because the expertise to use them
-in a teaching setting relies on too much undocumented knowledge, making training of
-teaching assistants difficult and providing a steep learning curve for instructors
-wishing to use.  Pintos includes an extensive 129 page manual, a sample solution,
-and instructions for teaching assistants.  The assignment documentation separates those parts
-students must read from those parts that merely provide supplemental information.
+If using an instructional system requires too much undocumented knowledge,
+the system is often not shared, or falls into disuse, because the learning curve
+for instructors wishing to use it is too steep and training teaching assistants is difficult.
+Pintos includes an extensive 129 page manual, a sample solution,
+and instructions for teaching assistants.  The assignment documentation separates sections 
+students must read from sections that merely provide supplemental information.
 %Even though Pintos uses an existing and complex architecture, our experience indicates
 %that the manual is sufficient for most students.
 
