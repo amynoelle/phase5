@@ -36,23 +36,20 @@ alarm clock, which requires maintaining a timer queue of sleeping threads and ch
 the timer interrupt handler to unblock those threads whose wakeup time has arrived.
 Students learn how to protect data structures that are shared between a thread and an
 interrupt handler.  The second part of the project constitutes a strict priority-based
-uniprocessor scheduler.  In this model, one of the threads with the highest priority
-always runs.  When a thread's priority changes, or when threads block or unblock,  
-a scheduling decision must be triggered to ensure this invariant.  Students learn about
-the different ways in which such situations occur.  
-Project 1 also introduces synchronization primitives such as semaphores, locks,
-and condition variables.  The project explores the interaction between such primitives,
-thread states, and the scheduler.
+uniprocessor scheduler; students learn about the different ways in which 
+such a scheduler must react to thread state changes.
+% cut for length
+%Project 1 also introduces synchronization primitives such as semaphores, locks,
+%and condition variables and explores the interaction between such primitives,
+%thread states, and the scheduler.
 
-Based on the priority scheduler, students implement two additional tasks: priority 
-inheritance and a multi-level feedback queue scheduler.  Priority inheritance is a way
-to avoid priority inversion, a phenonemon that most famously led to an almost-failure
-of the Mars Pathfinder Mission.  We use this example to motivate
-the problem.  Implementing priority inheritance correctly requires a deep understanding of the 
-interaction of threads and locks.
+Based on the priority scheduler, students implement priority inheritance, 
+which deepens their understanding of the interaction of threads and locks.
+We use the example of the near-failure of the Mars PathFinder mission to motivate
+the need for priority inheritance.  
 Separately, students build a multi-level feedback queue scheduler on top of the strict
-priority scheduler.  This scheduler adjusts threads' priority based on a sampling  of how
-much CPU time a thread has received recently.
+priority scheduler.  This scheduler adjusts threads' priorities based on a sampling  
+of how much CPU time a thread has received recently.
 
 \paragraph{Testing and Grading}
 Project 1 is accompanied by 27 tests as shown in Table~\ref{table:tests}, which are 
@@ -63,10 +60,10 @@ output; the grading script will point out differences between the expected and t
 Usually, a test failure leads students to study the documented source code of the test
 and understand how the expected output derives from it.
 
-The MLFQS scheduler tests are graded in a different way. Since those tests rely on estimating CPU
+The MLFQS scheduler tests are graded differently. Since those tests rely on estimating CPU
 usage, they depend on how much CPU time a specific implementation uses, which in turn depends on how
 efficient it is.  We compute the expected CPU consumption values by simulation and provide an
-envelope within which we accept the output.  The envelope is large enough to allow for minor
+envelope within which the output is accepted.  The envelope is large enough to allow for minor
 inefficiencies, but major inefficiencies will usually lead to test failures.  Such failures
 convey the importance of using efficient algorithms and data structures within a kernel,
 because wasting CPU cycles in the kernel reduces the amount available to applications.

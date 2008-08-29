@@ -59,14 +59,16 @@ relationship of test cases to Pintos modules.
 Although Pintos follows in the tradition of instructional operating systems 
 such as Nachos~\cite{Christopher1993Nachos}, OS/161~\cite{Holland2002New}, and
 GeekOS~\cite{Hovemeyer2004Running}, 
-PortOS~\cite{Atkin2002PortOS},
+PortOS~\cite{Atkin2002PortOS}),
 BLITZ~\cite{PorterOverview},
 JOS~\cite{1088822}, or Yalnix~\cite{1088822},
 we believe that it is unique in two
 aspects.  First, Pintos runs on both real hardware and in emulated and
-simulated environments.\footnote{GeekOS claims to also run on real hardware, it requires,
-however, a dedicated disk and does not support running off USB devices, making
-it impractical for many lab settings.}
+simulated environments.\footnote{\small GeekOS is the only other system that claims to 
+also run on real PC hardware; it requires, however, a dedicated disk and 
+does not support running off USB devices, making it impractical for many 
+laboratory settings.}  We believe that having the ability to see the outcome
+of their project interact with actual hardware increases student engagement.
 Second, we have created a set of analysis tools
 for the emulated environment that allows students to detect programming
 mistakes such as race conditions.  Figure~\ref{fig:pintosenvs} shows
@@ -78,11 +80,12 @@ an internal, concrete perspective.  Compared to those approaches, Pintos provide
 a similar level of realism to students in that they can see the result of their
 work on concrete or virtualized hardware, but does not require that students 
 understand the often arcane and ill-documented interfaces of the Linux kernel,
-which were not designed from an educational perspective.
+which were not designed from an educational perspective.  By contrast, all
+Pintos code is written to be studied by students.
 
-This paper summarizes the design philosophy that underlies Pintos,
-details its structure, and outlines the nature and learning goals of each
-assignment.
+%This paper summarizes the design philosophy that underlies Pintos,
+%details its structure, and outlines the nature and learning goals of each
+%assignment.
 
 \pintosenvfigure{}
 
