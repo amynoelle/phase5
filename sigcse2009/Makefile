@@ -9,4 +9,4 @@ $(BASE).pdf:	$(BASE).tex introduction.tex abstract.tex $(BASE).bib principles.te
 	-bibtex $(BASE)
 	pdflatex $(BASE).tex
 	pdflatex $(BASE).tex
-
+	test -d /home/gback/public_html && /bin/cp -f $(BASE).pdf /home/gback/public_html
