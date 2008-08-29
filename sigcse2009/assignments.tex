@@ -54,29 +54,28 @@ of how much CPU time a thread has received recently.
 \paragraph{Testing and Grading}
 Project 1 is accompanied by 27 tests as shown in Table~\ref{table:tests}, which are 
 run using the Bochs simulator by a grading script.  
-Most tests are designed to test a single aspect, but some tests 
-test more involved scenarios.  Most of the tests are designed to produce a deterministic 
-output; the grading script will point out differences between the expected and the actual output. 
+Most of the tests are designed to produce deterministic output; 
+the grading script will point out differences between expected and actual output. 
 Usually, a test failure leads students to study the documented source code of the test
 and understand how the expected output derives from it.
 
-The MLFQS scheduler tests are graded differently. Since those tests rely on estimating CPU
+The MLFQS scheduler tests require a different approach.  Since those tests rely on estimating CPU
 usage, they depend on how much CPU time a specific implementation uses, which in turn depends on how
 efficient it is.  We compute the expected CPU consumption values by simulation and provide an
 envelope within which the output is accepted.  The envelope is large enough to allow for minor
 inefficiencies, but major inefficiencies will usually lead to test failures.  Such failures
-convey the importance of using efficient algorithms and data structures within a kernel,
-because wasting CPU cycles in the kernel reduces the amount available to applications.
+convey the importance of using efficient algorithms and data structures within a OS kernel.
+% cfl: because wasting CPU cycles in the kernel reduces the amount available to applications.
 
 % intro
 \paragraph{Learning Objectives}
 Project 1 has three learning objectives.  First, students will understand how
 the illusion that ``computers can do multiple things at once'' is created by a sequence
 of thread state transitions and context switches.  Second, they will understand how
-a simple underlying mechanism - such as priority-based scheduling - can lead to more
-sophisticated scheduling policies.  Third, having seen the mechanisms a preemptive scheduler
-uses to create apparent concurrency, students gain a better intuition of the non-determinism
-inherent in concurrent systems. 
+sophisticated scheduling policies can be built on top of a simple priority-based scheduler.
+Third, having seen the mechanisms a preemptive scheduler uses to create apparent 
+concurrency, students gain a better intuition of the non-determinism inherent 
+in concurrent systems. 
 
 %
 %
