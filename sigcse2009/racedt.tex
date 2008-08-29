@@ -7,7 +7,7 @@ system emulator~\cite{Bellard2005QEMU} to help detect these mistakes.
 Since these tools do not require additional support from the Pintos kernel; 
 students can use them without complicating their code.
 
-Data races are found by using a semaphore-aware modification of the RaceTrack algorithm~\cite{RaceTrack}. 
+Data races are found by using a semaphore-aware modification of the RaceTrack algorithm~\cite{Yu2005RaceTrack}. 
 Calls to Pintos's synchronization primitives are instrumented at runtime to track every thread's data
 sharing pattern.  Meanwhile, every memory access records synchronization information to shadow memory
 maintained by the analysis tool. When the synchronization information for a memory address

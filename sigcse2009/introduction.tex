@@ -63,13 +63,21 @@ PortOS~\cite{Atkin2002PortOS},
 JOS~\cite{1088822}, or Yalnix~\cite{1088822} 
 we believe that it is unique in two
 aspects.  First, Pintos runs on both real hardware and in emulated and
-simulated environments.~\footnote{GeekOS claims to also run on real hardware, it requires,
+simulated environments.\footnote{GeekOS claims to also run on real hardware, it requires,
 however, a dedicated disk and does not support running off USB devices, making
 it impractical for many lab settings.}
 Second, we have created a set of analysis tools
 for the emulated environment that allows students to detect programming
 mistakes such as race conditions.  Figure~\ref{fig:pintosenvs} shows
 the three environments in which the same kernel can be run.
+
+Others have used Linux, either on dedicated devices (e.g., iPodLinux~\cite{1352199}),
+or in virtualizated environments~\cite{1008027,1352648,Nieh2005Experiences}, to provide
+an internal, concrete perspective.  Compared to those approaches, Pintos provides
+a similar level of realism to students in that they can see the result of their
+work on concrete or virtualized hardware, but does not require that students 
+understand the often arcane and ill-documented interfaces of the Linux kernel,
+which were not designed from an educational perspective.
 
 This paper reports on the design philosophy that underlies Pintos,
 details its structure, and outlines the nature and learning goals of each
@@ -79,12 +87,12 @@ assignments.
 
 \pintosdetailfigure{}
 
-To be discussed:
-User-Mode Linux\cite{1008027}
-iPodLinux~\cite{1352199}
-Linux in VM\cite{Nieh2005Experiences}
-
 % Challenges.
 % How to embed principles?
 % How to teach software engineering?
 % Realism vs. Simplification
+
+%User-Mode Linux\cite{1008027}
+%Virtualization\cite{1352648}
+%Linux in VM\cite{Nieh2005Experiences}
+
