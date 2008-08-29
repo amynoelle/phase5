@@ -47,6 +47,10 @@
 
 \documentclass{sig-alternate}
 
+% force letter size (default is A4)
+\pdfpagewidth=8.5in
+\pdfpageheight=11in
+
 \usepackage{graphicx}
 
 % from http://mintaka.sdsu.edu/GF/bibliog/latex/floats.html
@@ -111,9 +115,12 @@
 %A category including the fourth, optional field follows...
 %\category{D.2.8}{Software Engineering}{Metrics}[complexity measures, performance measures]
 
-%\terms{Fill in terms here if we need them}
+% http://www.cs.arizona.edu/groups/sigcse09/format.html#reqs suggests
+\category{K.3.2}{Computers and Education}{Computer and Information Science Education}
 
-%\keywords{Fill in keywords here if we need them}
+\terms{Design, Experimentation}
+
+\keywords{Pintos, instructional operating system, instructional kernel}
 
 \input{figures}
 
@@ -135,5 +142,8 @@
 
 %
 %
+{ \small
+\vskip .2in
 \bibliography{sigcse2009}  % sigproc.bib is the name of the Bibliography in this case
+}
 \end{document}
