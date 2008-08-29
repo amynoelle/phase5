@@ -7,7 +7,7 @@ The Pintos series of projects are built on a number of principles.
 Each project involves a significant amount of reading code before
 students write the first line of their code.  
 Because software maintenance constitutes the vast majority of all
-software development efforts~\cite{askEliforcite}, this setup mirrors the 
+software development efforts~\cite{Boehm1981Software}, this setup mirrors the 
 environment in which most software engineers work.
 We went to great lengths to write the entire Pintos baseline code,
 and in particular the portions students will read, in a style that shows,
@@ -28,9 +28,9 @@ own data structures and associated algorithms as much as possible.
 \paragraph{Practice Test-driven Development}
 %Test-driven development~\cite{Edwards}
 Each project includes a large number of test cases that is accessible
-to students.  In keeping with us adopting an internal perspective, students 
-do not develop test cases, rather, they must implement the API that is exercised
-by these test cases.
+to students.  
+They must implement the API that is exercised by these test cases.
+Students are encouraged to add their own test cases.
 
 \paragraph{Work in a Team}
 The projects presented in this paper are designed to be accomplished by teams of 
@@ -44,11 +44,16 @@ Design justification and rationale is as important for learning as creating an a
 that fulfill a set of given requirements.  We designed a set of structured questionnaires 
 in which students describe their design and discuss choices and trade-offs they made.
 
-\paragraph{Provide a reproducible, manageable environment.}
-Some concurrent environments are difficult to manage and debug.  
-
-Teaching OS involves teaching concurrency
-
-Operating systems are fundamentally
+\paragraph{Provide a Reproducible, Manageable Environment}
+Operating Systems are inherently concurrent environments, which can be difficult
+to debug.  For educational use, we must provide an environment that is
+manageable and reproducible, which is given by the option
+of running Pintos in a simulated environment eliminates this
+non-determinism.  As a result, Pintos kernels can be debugged in a manner that
+is substantially similar to how user programs are being debugged.
 
 \paragraph{Provide analysis tools.}
+Static and dynamic analysis tools are now widely being used; an OS course should
+be no exception.  We have extended the Qemu emulator that perform tailored
+analyses that can point out errors such as race conditions.
+

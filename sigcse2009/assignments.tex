@@ -4,16 +4,16 @@
 %
 % Not sure if we need that.
 %
-\subsection{Project 0}
-If Pintos is used in a semester-long course, project 0 serves as a ``warm-up'' project.
-In this project, students will gain familiarity with the Pintos source tree and some
-supporting classes, in particular its implementation of doubly-linked lists.
-In OS, doubly-linked lists are frequently used because they allow $O(1)$ insertion and
-removal operations.  Moreover, they are often used in a style in which the list cell
-containing the next and prev pointers is embedded in some larger structure, such as
-a thread control block, rather than having separately allocated list cells.
-In project 0, students use Pintos's list implementation to implement a simple, first-fit 
-memory allocator.  
+% \subsection{Project 0}
+% If Pintos is used in a semester-long course, project 0 serves as a ``warm-up'' project.
+% In this project, students will gain familiarity with the Pintos source tree and some
+% supporting classes, in particular its implementation of doubly-linked lists.
+% In OS, doubly-linked lists are frequently used because they allow $O(1)$ insertion and
+% removal operations.  Moreover, they are often used in a style in which the list cell
+% containing the next and prev pointers is embedded in some larger structure, such as
+% a thread control block, rather than having separately allocated list cells.
+% In project 0, students use Pintos's list implementation to implement a simple, first-fit 
+% memory allocator.  
 
 \subsection{Project 1 -- Threads}
 % intro
@@ -28,7 +28,7 @@ internal memory is managed, which is used to store its runtime stack and thread 
 Student can examine the context switch code, but the projects do not involve any modifications
 to it.
 
-After reading the baseline code, the projects ask students to implement several features
+After reading the baseline code, the project asks students to implement several features
 that exercise thread state transitions.  The first part of this project includes a simple
 alarm clock, which requires maintaining a timer queue of sleeping threads and changing 
 the timer interrupt handler to unblock those threads whose wakeup time has arrived.
@@ -45,14 +45,14 @@ thread states, and the scheduler.
 Based on the priority scheduler, students implement two additional tasks: priority 
 inheritance and a multi-level feedback queue scheduler.  Priority inheritance is a way
 to avoid priority inversion, a phenonemon that most famously led to an almost-failure
-of the Mars Pathfinder Mission~\cite{MarsPathFinder}.  We use this example to motivate
+of the Mars Pathfinder Mission.  We use this example to motivate
 the problem.  Implementing priority inheritance correctly requires a deep understanding of the 
 interaction of threads and locks.
 Separately, students build a multi-level feedback queue scheduler on top of the strict
 priority scheduler.  This scheduler adjusts threads' priority based on a sampling  of how
 much CPU time a thread has received recently.
 
-\paragraph{Testing and Grading.}
+\paragraph{Testing and Grading}
 Project 1 is accompanied by about $XX$ tests, which are run using the Bochs simulator by
 a grading script.  Most tests are designed to test a single aspect, but some tests 
 test more involved scenarios.  Most of the tests are designed to produce a deterministic 
@@ -69,7 +69,7 @@ convey the importance of using efficient algorithms and data structures within a
 because wasting CPU cycles in the kernel reduces the amount available to applications.
 
 % intro
-\paragraph{Learning Objectives.}
+\paragraph{Learning Objectives}
 Project 1 has three learning objectives.  First, students will understand how
 the illusion that ``computers can do multiple things at once'' is created by a sequence
 of thread state transitions and context switches.  Second, they will understand how
@@ -115,7 +115,7 @@ synchronization presented in accompanying lectures.
 
 % How threads extend into processes.
 
-\paragraph{Testing and Grading.}
+\paragraph{Testing and Grading}
 The tests for project 2 exclusively consist of user programs written in C.
 They are divided into functionality and robustness tests.  Functionality tests check that
 the operating system provides the expected set of services when it is used as
@@ -125,7 +125,7 @@ invalid input to system calls.  To pass those tests, the student's kernel must b
 conditions by creating a large number of processes and pseudo-randomly introducing
 failures in some of them.  We expect the kernel to fully recover from such situations.
 
-\paragraph{Learning Objectives.}
+\paragraph{Learning Objectives}
 In project 2, students learn how the thread abstraction introduced in project 1 is 
 extended into the process abstraction, which combines a thread, a virtual address space, 
 and its associated resources.
@@ -154,15 +154,15 @@ space.
 
 In early offerings, this significant creative freedom came at the cost that 
 some students were lost as how to accomplish set goals.  We added an intermediate
-design review stage to this projects using a structured questionnaire in which students 
+design review stage to this project using a structured questionnaire in which students 
 outline their planned design.  We also provide a suggested order of implementation.
 
-Like project 2, project 3 requires reasoning using parallel programming strategies.  
+Like project 2, project 3 requires the use of parallel programming techniques.  
 Since the Pintos kernel is fully preemptive, students must consider which data structures
-require locking, and the must design a locking strategy that both avoids deadlock
+require locking, and they must design a locking strategy that both avoids deadlock
 and reduces unnecessary serialization.
 
-\paragraph{Testing and Grading.}
+\paragraph{Testing and Grading}
 Project 3 relies on project 2, therefore, we include all tests provided with project 2
 as regression tests to ensure that system call functionality does not break in the
 presence of virtual memory.  Furthermore, we provide functionality tests for the
@@ -175,11 +175,11 @@ the kernel when run under emulation, relative to the amount of memory that is
 accessed by our test programs.  Timeouts are used to detect grossly inefficient 
 page replacement schemes.
 
-\paragraph{Learning Objectives.}
+\paragraph{Learning Objectives}
 In project 3, students learn how an OS creates the environment in which a user
-program executes, specifically as it relates to code and variables used in a program.
-It provides a deep understanding of how OS use fault resumption to
-to virtualize a process's interaction with physical memory.
+program executes as it relates to the program's code and variables.
+It also provides a deep understanding of how OS use fault resumption to
+to virtualize a process's use of physical memory.
 In addition, students gain hands-on experience with page replacement algorithms
 and have the opportunity to observe their performance impact.
 
@@ -187,6 +187,39 @@ and have the opportunity to observe their performance impact.
 %
 %
 \subsection{Project 4}
-\paragraph{Testing and Grading.}
-\paragraph{Learning Objectives.}
+Project 4 asks the students to design and implement a hierarchical, multi-threaded
+filesystem and buffer cache.  In projects 2 and 3, students use a basic filesystem
+to access the disk, which supports only fixed-size files, no subdirectories,
+and which lacks a buffer cache.  
+Though we suggest a traditional, Unix-like filesystem design, which stores file
+metadata in inodes and in which directories are treated as files, students have
+complete freedom in designing the layout of their filesystem's metadata as long
+as their design does not suffer from external fragmentation.
+Since our host tools will not know how to interpret the student's filesystems,
+we use an intermediate ``scratch'' disk or partition that is attached to the 
+physical or virtual computer on which Pintos runs, and use the student's kernel
+to copy files in and out of their filesystems.
+Similarly, we encourage students to experiment with different replacement
+strategies for their buffercache (though we require that their algorithm
+behaves at least as good as a least-recently-used (LRU) strategy.
+
+As with all projects, this assignment includes additional parallel programming 
+tasks: in this project, we include a requirement that students a multiple-reader, 
+single-writer access scheme for individual buffer cache blocks.
+
+\paragraph{Testing and Grading}
+Project 4 adds a new set of test cases that test the extended functionality.
+Project 4 does not require the virtual memory functionality, so can be built
+either on project 2 or 3 depending on the instructor's judgment.
+For each functionality test, we provide a sibling persistence test that verifies 
+that the changes done to the filesystem survive a shutdown and restart.
+
+\paragraph{Learning Objectives}
+This project provides a deeper understanding of how OS's manage secondary storage
+while avoiding fragmentation and providing efficiency for commonly occurring 
+disk access patterns.  
+Students learn how the use of a buffer cache helps absorb disk requests and
+improve performance.
+They also gain insight into filesystem semantics in the presence of simultaneously
+occurring requests.
 

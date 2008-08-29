@@ -32,13 +32,13 @@ benefits, including training in modern software development techniques
 and tools.  The C language remains the implementation language of choice
 for operating system kernels and for many embedded systems.
 Practice and debugging skills in C, particularly using modern tools,
-not only increases students' ``market value,'' but provides students with
+not only increases students' ``market value,''~\cite{1292450} but provides students with
 the insight that a low-level programming and runtime model is not incompatible
 with high-level tools.
 
 Designing course material for the internal and concrete 
-approach is challenging for several reasons.  While realistic, assignments should be
-relatively simple and doable within a realistic time frame.  
+approach is challenging for several reasons.  While realistic, 
+assignments should be relatively simple and doable within a realistic time frame.  
 Whereas assignments should use current hardware architectures, 
 they must not impart too much knowledge that is transient.
 Assignments should include and emphasize the use of modern software 
@@ -51,21 +51,39 @@ structured assignments in which students implement a basic priority
 scheduler, a multi-level feedback queue scheduler, the ability to
 load programs and support a set of system calls, page-based virtual memory
 including on-demand paging, memory-mapped files, and swapping, and a
-simple hierarchical file system.  
+simple hierarchical file system.  An overview of the projects enabled
+by Pintos is given in Figure~\ref{fig:pintosdetail}, which shows which
+software is provided, which is created by students, and the relative 
+relationship of test cases to Pintos modules.
 
 Although Pintos follows in the tradition of instructional operating systems 
-such as Nachos~\cite{Christopher1993Nachos}, 
+such as Nachos~\cite{Christopher1993Nachos}, OS/161~\cite{Holland2002New}, and
 GeekOS~\cite{Hovemeyer2004Running}, 
-and OS/161~\cite{Holland2002New}, we believe that it is unique in two
+PortOS~\cite{Atkin2002PortOS},
+JOS~\cite{1088822}, or Yalnix~\cite{1088822} 
+we believe that it is unique in two
 aspects.  First, Pintos runs on both real hardware and in emulated and
-simulated environments.  Second, we have created a set of analysis tools
+simulated environments.~\footnote{GeekOS claims to also run on real hardware, it requires,
+however, a dedicated disk and does not support running off USB devices, making
+it impractical for many lab settings.}
+Second, we have created a set of analysis tools
 for the emulated environment that allows students to detect programming
-mistakes such as race conditions.
+mistakes such as race conditions.  Figure~\ref{fig:pintosenvs} shows
+the three environments in which the same kernel can be run.
 
 This paper reports on the design philosophy that underlies Pintos,
-details its structure, and outline the nature and learning goals of each
-assignment.
- 
+details its structure, and outlines the nature and learning goals of each
+assignments.
+
+\pintosenvfigure{}
+
+\pintosdetailfigure{}
+
+To be discussed:
+User-Mode Linux\cite{1008027}
+iPodLinux~\cite{1352199}
+Linux in VM\cite{Nieh2005Experiences}
+
 % Challenges.
 % How to embed principles?
 % How to teach software engineering?
