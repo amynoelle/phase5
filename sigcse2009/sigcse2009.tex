@@ -52,6 +52,7 @@
 \pdfpageheight=11in
 
 \usepackage{graphicx}
+\def\com#1{ }
 
 % from http://mintaka.sdsu.edu/GF/bibliog/latex/floats.html
 % Alter some LaTeX defaults for better treatment of figures:
@@ -104,6 +105,25 @@
        \affaddr{Blacksburg}\\
        \email{gback@cs.vt.edu}
 }
+\com{
+\author{
+% 1st. author
+\alignauthor AnonAuthor1\\
+       \affaddr{Affiliation1}\\
+       \affaddr{City, State}\\
+       \email{email1@edu}
+% 2nd. author
+\alignauthor AnonAuthor2\\
+       \affaddr{Affiliation2}\\
+       \affaddr{City, State}\\
+       \email{email2@edu}
+% 3rd. author
+\alignauthor AnonAuthor3\\
+       \affaddr{Affiliation3}\\
+       \affaddr{City, State}\\
+       \email{email3@edu}
+}
+}
 
 \maketitle
 \begin{abstract}
@@ -137,13 +157,10 @@
 % remove the following line before submitting!
 % \nocite{*}
 
-
-\bibliographystyle{abbrv}
-
 %
 %
 { \small
-\vskip .3in
+\bibliographystyle{abbrv}
 \bibliography{sigcse2009}  % sigproc.bib is the name of the Bibliography in this case
 }
 \end{document}
