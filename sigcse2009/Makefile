@@ -5,7 +5,7 @@
 BASE=sigcse2009
 
 $(BASE).pdf:	$(BASE).tex introduction.tex abstract.tex $(BASE).bib principles.tex assignments.tex figures.tex \
-		rest.tex
+		rest.tex racedt.tex
 	pdflatex $(BASE).tex
 	-bibtex $(BASE)
 	pdflatex $(BASE).tex
