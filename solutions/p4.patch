@@ -2120,12 +2120,10 @@ diff -u src/threads/thread.c~ src/threads/thread.c
  
    /* Stack frame for kernel_thread(). */
    kf = alloc_frame (t, sizeof *kf);
-@@ -253,16 +254,19 @@ thread_tid (void) 
+@@ -288,10 +289,11 @@ thread_tid (void) 
  void
  thread_exit (void) 
  {
-+  struct thread *t = thread_current ();
-+
    ASSERT (!intr_context ());
  
 +  syscall_exit ();
@@ -2133,14 +2131,7 @@ diff -u src/threads/thread.c~ src/threads/thread.c
    process_exit ();
  #endif
  
-   /* Just set our status to dying and schedule another process.
-      We will be destroyed during the call to schedule_tail(). */
-   intr_disable ();
--  thread_current ()->status = THREAD_DYING;
-+  t->status = THREAD_DYING;
-   schedule ();
-   NOT_REACHED ();
- }
+   /* Remove thread from all threads list, set our status to dying,
 @@ -406,17 +410,29 @@ is_thread (struct thread *t)
  /* Does basic initialization of T as a blocked thread named
     NAME. */
