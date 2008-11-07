@@ -2266,7 +2266,7 @@ diff -u src/userprog/pagedir.c~ src/userprog/pagedir.c
 --- src/userprog/pagedir.c~
 +++ src/userprog/pagedir.c
 @@ -35,15 +35,7 @@ pagedir_destroy (uint32_t *pd) 
-   ASSERT (pd != base_page_dir);
+   ASSERT (pd != init_page_dir);
    for (pde = pd; pde < pd + pd_no (PHYS_BASE); pde++)
      if (*pde & PTE_P) 
 -      {
