@@ -2052,7 +2052,7 @@ diff -u src/threads/init.c~ src/threads/init.c
 +#include "vm/swap.h"
  
  /* Amount of physical memory, in 4 kB pages. */
- size_t ram_pages;
+ size_t init_ram_pages;
 @@ -124,6 +126,9 @@ main (void)
    filesys_init (format_filesys);
  #endif
@@ -3491,7 +3491,7 @@ diff -u src/vm/frame.c~ src/vm/frame.c
 +
 +  lock_init (&scan_lock);
 +  
-+  frames = malloc (sizeof *frames * ram_pages);
++  frames = malloc (sizeof *frames * init_ram_pages);
 +  if (frames == NULL)
 +    PANIC ("out of memory allocating page frames");
 +
