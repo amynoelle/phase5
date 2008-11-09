@@ -2761,7 +2761,7 @@ Index: src/userprog/syscall.c
 diff -u src/userprog/syscall.c~ src/userprog/syscall.c
 --- src/userprog/syscall.c~
 +++ src/userprog/syscall.c
-@@ -1,20 +1,684 @@
+@@ -1,20 +1,685 @@
  #include "userprog/syscall.h"
  #include <stdio.h>
 +#include <string.h>
@@ -2769,6 +2769,7 @@ diff -u src/userprog/syscall.c~ src/userprog/syscall.c
 +#include "userprog/process.h"
 +#include "userprog/pagedir.h"
 +#include "devices/input.h"
++#include "devices/shutdown.h"
 +#include "filesys/directory.h"
 +#include "filesys/filesys.h"
 +#include "filesys/file.h"
@@ -2974,7 +2975,7 @@ diff -u src/userprog/syscall.c~ src/userprog/syscall.c
 +static int
 +sys_halt (void)
 +{
-+  power_off ();
++  shutdown_power_off ();
 +}
 + 
 +/* Exit system call. */

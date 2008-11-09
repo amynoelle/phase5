@@ -809,10 +809,10 @@ diff -u src/userprog/syscall.c~ src/userprog/syscall.c
 +#include "userprog/process.h"
 +#include "userprog/pagedir.h"
 +#include "devices/input.h"
++#include "devices/shutdown.h"
 +#include "filesys/directory.h"
 +#include "filesys/filesys.h"
 +#include "filesys/file.h"
-+#include "threads/init.h"
  #include "threads/interrupt.h"
 +#include "threads/malloc.h"
 +#include "threads/palloc.h"
@@ -979,7 +979,7 @@ diff -u src/userprog/syscall.c~ src/userprog/syscall.c
 +static int
 +sys_halt (void)
 +{
-+  power_off ();
++  shutdown_power_off ();
 +}
 + 
 +/* Exit system call. */
