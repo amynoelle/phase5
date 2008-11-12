@@ -106,15 +106,16 @@ Index: src/filesys/Make.vars
 diff -u src/filesys/Make.vars~ src/filesys/Make.vars
 --- src/filesys/Make.vars~
 +++ src/filesys/Make.vars
-@@ -6,7 +6,7 @@ TEST_SUBDIRS = tests/userprog tests/file
+@@ -6,8 +6,8 @@ TEST_SUBDIRS = tests/userprog tests/file
  GRADING_FILE = $(SRCDIR)/tests/filesys/Grading.no-vm
+ SIMULATOR = --qemu
  
  # Uncomment the lines below to enable VM.
--#os.dsk: DEFINES += -DVM
+-#kernel.bin: DEFINES += -DVM
 -#KERNEL_SUBDIRS += vm
 -#TEST_SUBDIRS += tests/vm
 -#GRADING_FILE = $(SRCDIR)/tests/filesys/Grading.with-vm
-+os.dsk: DEFINES += -DVM
++kernel.bin: DEFINES += -DVM
 +KERNEL_SUBDIRS += vm
 +TEST_SUBDIRS += tests/vm
 +GRADING_FILE = $(SRCDIR)/tests/filesys/Grading.with-vm
@@ -122,18 +123,17 @@ Index: src/filesys/cache.c
 diff -u src/filesys/cache.c~ src/filesys/cache.c
 --- src/filesys/cache.c~
 +++ src/filesys/cache.c
-@@ -0,0 +1,473 @@
+@@ -0,0 +1,472 @@
 +#include "filesys/cache.h"
 +#include <debug.h>
 +#include <string.h>
 +#include "filesys/filesys.h"
-+#include "devices/disk.h"
 +#include "devices/timer.h"
 +#include "threads/malloc.h"
 +#include "threads/synch.h"
 +#include "threads/thread.h"
 +
-+#define INVALID_SECTOR ((disk_sector_t) -1)
++#define INVALID_SECTOR ((block_sector_t) -1)
 +
 +/* A cached block. */
 +struct cache_block 
@@ -152,7 +152,7 @@ diff -u src/filesys/cache.c~ src/filesys/cache.c
 +       Changing from allocated to free requires block_lock, block
 +       must be up-to-date and not dirty, and no one may be
 +       waiting on it. */
-+    disk_sector_t sector;
++    block_sector_t sector;
 +
 +    /* Is data[] correct?
 +       Requires write lock or data_lock. */
@@ -167,7 +167,7 @@ diff -u src/filesys/cache.c~ src/filesys/cache.c
 +       Access to data[] requires up-to-date and read or write lock.
 +       Bringing up-to-date requires write lock or data_lock. */
 +    struct lock data_lock;              /* Protects fields in group. */
-+    uint8_t data[DISK_SECTOR_SIZE];     /* Disk data. */
++    uint8_t data[BLOCK_SECTOR_SIZE];    /* Disk data. */
 +  };
 +
 +/* Cache. */
@@ -191,7 +191,7 @@ diff -u src/filesys/cache.c~ src/filesys/cache.c
 +
 +static void flushd_init (void);
 +static void readaheadd_init (void);
-+static void readaheadd_submit (disk_sector_t sector);
++static void readaheadd_submit (block_sector_t sector);
 +
 +/* Initializes cache. */
 +void
@@ -225,7 +225,7 @@ diff -u src/filesys/cache.c~ src/filesys/cache.c
 +  for (i = 0; i < CACHE_CNT; i++)
 +    {
 +      struct cache_block *b = &cache[i];
-+      disk_sector_t sector;
++      block_sector_t sector;
 +      
 +      lock_acquire (&b->block_lock);
 +      sector = b->sector;
@@ -237,7 +237,7 @@ diff -u src/filesys/cache.c~ src/filesys/cache.c
 +      b = cache_lock (sector, EXCLUSIVE);
 +      if (b->up_to_date && b->dirty) 
 +        {
-+          disk_write (filesys_disk, b->sector, b->data);
++          block_write (fs_device, b->sector, b->data);
 +          b->dirty = false; 
 +        }
 +      cache_unlock (b);
@@ -253,7 +253,7 @@ diff -u src/filesys/cache.c~ src/filesys/cache.c
 +   any number of other callers.  The calling thread may already
 +   have any number of non-exclusive locks on the block. */
 +struct cache_block *
-+cache_lock (disk_sector_t sector, enum lock_type type) 
++cache_lock (block_sector_t sector, enum lock_type type) 
 +{
 +  int i;
 +
@@ -359,7 +359,7 @@ diff -u src/filesys/cache.c~ src/filesys/cache.c
 +      /* Write block to disk if dirty. */
 +      if (b->up_to_date && b->dirty) 
 +        {
-+          disk_write (filesys_disk, b->sector, b->data);
++          block_write (fs_device, b->sector, b->data);
 +          b->dirty = false;
 +        }
 +
@@ -402,7 +402,7 @@ diff -u src/filesys/cache.c~ src/filesys/cache.c
 +  lock_acquire (&b->data_lock);
 +  if (!b->up_to_date) 
 +    {
-+      disk_read (filesys_disk, b->sector, b->data);
++      block_read (fs_device, b->sector, b->data);
 +      b->up_to_date = true;
 +      b->dirty = false; 
 +    }
@@ -418,7 +418,7 @@ diff -u src/filesys/cache.c~ src/filesys/cache.c
 +cache_zero (struct cache_block *b) 
 +{
 +  ASSERT (b->writers);
-+  memset (b->data, 0, DISK_SECTOR_SIZE);
++  memset (b->data, 0, BLOCK_SECTOR_SIZE);
 +  b->up_to_date = true;
 +  b->dirty = true;
 +
@@ -468,7 +468,7 @@ diff -u src/filesys/cache.c~ src/filesys/cache.c
 +   writing it back to disk (even if dirty).
 +   The block must be entirely unused. */
 +void
-+cache_free (disk_sector_t sector) 
++cache_free (block_sector_t sector) 
 +{
 +  int i;
 +  
@@ -499,7 +499,7 @@ diff -u src/filesys/cache.c~ src/filesys/cache.c
 +}
 +
 +void
-+cache_readahead (disk_sector_t sector) 
++cache_readahead (block_sector_t sector) 
 +{
 +  readaheadd_submit (sector);
 +}
@@ -530,7 +530,7 @@ diff -u src/filesys/cache.c~ src/filesys/cache.c
 +struct readahead_block 
 +  {
 +    struct list_elem list_elem;         /* readahead_list element. */
-+    disk_sector_t sector;               /* Sector to read. */
++    block_sector_t sector;              /* Sector to read. */
 +  };
 +
 +/* Protects readahead_list.
@@ -557,7 +557,7 @@ diff -u src/filesys/cache.c~ src/filesys/cache.c
 +
 +/* Adds SECTOR to the read-ahead queue. */
 +static void
-+readaheadd_submit (disk_sector_t sector) 
++readaheadd_submit (block_sector_t sector) 
 +{
 +  /* Allocate readahead block. */
 +  struct readahead_block *block = malloc (sizeof *block);
@@ -604,7 +604,7 @@ diff -u src/filesys/cache.h~ src/filesys/cache.h
 +#ifndef FILESYS_CACHE_H
 +#define FILESYS_CACHE_H
 +
-+#include "devices/disk.h"
++#include "devices/block.h"
 +
 +/* Type of block lock. */
 +enum lock_type 
@@ -615,13 +615,13 @@ diff -u src/filesys/cache.h~ src/filesys/cache.h
 +
 +void cache_init (void);
 +void cache_flush (void);
-+struct cache_block *cache_lock (disk_sector_t, enum lock_type);
++struct cache_block *cache_lock (block_sector_t, enum lock_type);
 +void *cache_read (struct cache_block *);
 +void *cache_zero (struct cache_block *);
 +void cache_dirty (struct cache_block *);
 +void cache_unlock (struct cache_block *);
-+void cache_free (disk_sector_t);
-+void cache_readahead (disk_sector_t);
++void cache_free (block_sector_t);
++void cache_readahead (block_sector_t);
 +
 +#endif /* filesys/cache.h */
 Index: src/filesys/directory.c
@@ -647,8 +647,8 @@ diff -u src/filesys/directory.c~ src/filesys/directory.c
 +   On failure, SECTOR is released in the free map. */
 -bool
 +struct inode *
--dir_create (disk_sector_t sector, size_t entry_cnt) 
-+dir_create (disk_sector_t sector, disk_sector_t parent_sector) 
+-dir_create (block_sector_t sector, size_t entry_cnt)
++dir_create (block_sector_t sector, block_sector_t parent_sector)
  {
 -  return inode_create (sector, entry_cnt * sizeof (struct dir_entry));
 +  struct inode *inode = inode_create (sector, DIR_INODE);
@@ -816,8 +816,8 @@ diff -u src/filesys/directory.h~ src/filesys/directory.h
  struct inode;
  
  /* Opening and closing directories. */
--bool dir_create (disk_sector_t sector, size_t entry_cnt);
-+struct inode *dir_create (disk_sector_t sector, disk_sector_t parent_sector);
+-bool dir_create (block_sector_t sector, size_t entry_cnt);
++struct inode *dir_create (block_sector_t sector, block_sector_t parent_sector);
  struct dir *dir_open (struct inode *);
  struct dir *dir_open_root (void);
  struct dir *dir_reopen (struct dir *);
@@ -840,7 +840,7 @@ diff -u src/filesys/file.c~ src/filesys/file.c
 +   Returns inode for the file on success, null pointer on failure.
 +   On failure, SECTOR is released in the free map. */
 +struct inode *
-+file_create (disk_sector_t sector, off_t length) 
++file_create (block_sector_t sector, off_t length) 
 +{
 +  struct inode *inode = inode_create (sector, FILE_INODE);
 +  if (inode != NULL && length > 0
@@ -874,13 +874,13 @@ diff -u src/filesys/file.h~ src/filesys/file.h
  #define FILESYS_FILE_H
  
 +#include <stdbool.h>
-+#include "devices/disk.h"
++#include "devices/block.h"
  #include "filesys/off_t.h"
  
  struct inode;
  
  /* Opening and closing files. */
-+struct inode *file_create (disk_sector_t sector, off_t length);
++struct inode *file_create (block_sector_t sector, off_t length);
  struct file *file_open (struct inode *);
  struct file *file_reopen (struct file *);
  void file_close (struct file *);
@@ -888,7 +888,7 @@ Index: src/filesys/filesys.c
 diff -u src/filesys/filesys.c~ src/filesys/filesys.c
 --- src/filesys/filesys.c~
 +++ src/filesys/filesys.c
-@@ -2,11 +2,13 @@
+@@ -2,10 +2,12 @@
  #include <debug.h>
  #include <stdio.h>
  #include <string.h>
@@ -897,11 +897,10 @@ diff -u src/filesys/filesys.c~ src/filesys/filesys.c
  #include "filesys/free-map.h"
  #include "filesys/inode.h"
  #include "filesys/directory.h"
- #include "devices/disk.h"
 +#include "threads/thread.h"
  
  /* The disk that contains the file system. */
- struct disk *filesys_disk;
+ struct disk *fs_device;
 @@ -23,6 +25,7 @@ filesys_init (bool format) 
      PANIC ("hd0:1 (hdb) not present, file system initialization failed");
  
@@ -1048,7 +1047,7 @@ diff -u src/filesys/filesys.c~ src/filesys/filesys.c
 -filesys_create (const char *name, off_t initial_size) 
 +filesys_create (const char *name, off_t initial_size, enum inode_type type) 
  {
--  disk_sector_t inode_sector = 0;
+-  block_sector_t inode_sector = 0;
 -  struct dir *dir = dir_open_root ();
 -  bool success = (dir != NULL
 -                  && free_map_allocate (1, &inode_sector)
@@ -1058,7 +1057,7 @@ diff -u src/filesys/filesys.c~ src/filesys/filesys.c
 -    free_map_release (inode_sector, 1);
 +  struct dir *dir;
 +  char base_name[NAME_MAX + 1];
-+  disk_sector_t inode_sector;
++  block_sector_t inode_sector;
 +
 +  bool success = (resolve_name_to_entry (name, &dir, base_name)
 +                  && free_map_allocate (&inode_sector));
@@ -1174,7 +1173,7 @@ diff -u src/filesys/filesys.h~ src/filesys/filesys.h
  
  /* Sectors of system file inodes. */
  #define FREE_MAP_SECTOR 0       /* Free map file inode sector. */
-@@ -13,9 +14,10 @@ extern struct disk *filesys_disk;
+@@ -13,9 +14,10 @@ extern struct disk *fs_device;
  
  void filesys_init (bool format);
  void filesys_done (void);
@@ -1199,7 +1198,7 @@ diff -u src/filesys/free-map.c~ src/filesys/free-map.c
 +#include "threads/synch.h"
  
  static struct file *free_map_file;   /* Free map file. */
- static struct bitmap *free_map;      /* Free map, one bit per disk sector. */
+ static struct bitmap *free_map;      /* Free map, one bit per sector. */
 +static struct lock free_map_lock;    /* Mutual exclusion. */
  
  /* Initializes the free map. */
@@ -1208,9 +1207,9 @@ diff -u src/filesys/free-map.c~ src/filesys/free-map.c
  {
 +  lock_init (&free_map_lock);
 +
-   free_map = bitmap_create (disk_size (filesys_disk));
+   free_map = bitmap_create (block_size (fs_device));
    if (free_map == NULL)
-     PANIC ("bitmap creation failed--disk is too large");
+     PANIC ("bitmap creation failed--device is too large");
 @@ -19,33 +22,32 @@ free_map_init (void) 
    bitmap_mark (free_map, ROOT_DIR_SECTOR);
  }
@@ -1223,10 +1222,10 @@ diff -u src/filesys/free-map.c~ src/filesys/free-map.c
 +   Return true if successful, false if all sectors were
     available. */
  bool
--free_map_allocate (size_t cnt, disk_sector_t *sectorp) 
-+free_map_allocate (disk_sector_t *sectorp) 
+-free_map_allocate (size_t cnt, block_sector_t *sectorp)
++free_map_allocate (block_sector_t *sectorp)
  {
--  disk_sector_t sector = bitmap_scan_and_flip (free_map, 0, cnt, false);
+-  block_sector_t sector = bitmap_scan_and_flip (free_map, 0, cnt, false);
 -  if (sector != BITMAP_ERROR
 -      && free_map_file != NULL
 -      && !bitmap_write (free_map, free_map_file))
@@ -1249,8 +1248,8 @@ diff -u src/filesys/free-map.c~ src/filesys/free-map.c
 -/* Makes CNT sectors starting at SECTOR available for use. */
 +/* Makes SECTOR available for use. */
  void
--free_map_release (disk_sector_t sector, size_t cnt)
-+free_map_release (disk_sector_t sector)
+-free_map_release (block_sector_t sector, size_t cnt)
++free_map_release (block_sector_t sector)
  {
 -  ASSERT (bitmap_all (free_map, sector, cnt));
 -  bitmap_set_multiple (free_map, sector, cnt, false);
@@ -1271,7 +1270,7 @@ diff -u src/filesys/free-map.c~ src/filesys/free-map.c
    file_close (free_map_file);
  }
  
-@@ -72,5 +76,9 @@ void
+@@ -72,7 +76,11 @@ void
  free_map_create (void) 
  {
 +  struct inode *inode;
@@ -1282,7 +1281,7 @@ diff -u src/filesys/free-map.c~ src/filesys/free-map.c
 +  if (inode == NULL)   
      PANIC ("free map creation failed");
 +  inode_close (inode);
-
+ 
    /* Write bitmap to file. */
 Index: src/filesys/free-map.h
 diff -u src/filesys/free-map.h~ src/filesys/free-map.h
@@ -1292,10 +1291,10 @@ diff -u src/filesys/free-map.h~ src/filesys/free-map.h
  void free_map_open (void);
  void free_map_close (void);
  
--bool free_map_allocate (size_t, disk_sector_t *);
--void free_map_release (disk_sector_t, size_t);
-+bool free_map_allocate (disk_sector_t *);
-+void free_map_release (disk_sector_t);
+-bool free_map_allocate (size_t, block_sector_t *);
+-void free_map_release (block_sector_t, size_t);
++bool free_map_allocate (block_sector_t *);
++void free_map_release (block_sector_t);
  
  #endif /* filesys/free-map.h */
 Index: src/filesys/fsutil.c
@@ -1358,18 +1357,18 @@ diff -u src/filesys/inode.c~ src/filesys/inode.c
 +#define DBL_INDIRECT_CNT 1
 +#define SECTOR_CNT (DIRECT_CNT + INDIRECT_CNT + DBL_INDIRECT_CNT)
 +
-+#define PTRS_PER_SECTOR ((off_t) (DISK_SECTOR_SIZE / sizeof (disk_sector_t))) 
++#define PTRS_PER_SECTOR ((off_t) (BLOCK_SECTOR_SIZE / sizeof (block_sector_t)))
 +#define INODE_SPAN ((DIRECT_CNT                                              \
 +                     + PTRS_PER_SECTOR * INDIRECT_CNT                        \
 +                     + PTRS_PER_SECTOR * PTRS_PER_SECTOR * DBL_INDIRECT_CNT) \
-+                    * DISK_SECTOR_SIZE)
++                    * BLOCK_SECTOR_SIZE)
 +
  /* On-disk inode.
-    Must be exactly DISK_SECTOR_SIZE bytes long. */
+    Must be exactly BLOCK_SECTOR_SIZE bytes long. */
  struct inode_disk
    {
--    disk_sector_t start;                /* First data sector. */
-+    disk_sector_t sectors[SECTOR_CNT];  /* Sectors. */
+-    block_sector_t start;               /* First data sector. */
++    block_sector_t sectors[SECTOR_CNT]; /* Sectors. */
 +    enum inode_type type;               /* FILE_INODE or DIR_INODE. */
      off_t length;                       /* File size in bytes. */
      unsigned magic;                     /* Magic number. */
@@ -1378,7 +1377,7 @@ diff -u src/filesys/inode.c~ src/filesys/inode.c
  
  /* Returns the number of sectors to allocate for an inode SIZE
 @@ -35,74 +50,59 @@ struct inode 
-     disk_sector_t sector;               /* Sector number of disk location. */
+     block_sector_t sector;              /* Sector number of disk location. */
      int open_cnt;                       /* Number of openers. */
      bool removed;                       /* True if deleted, false otherwise. */
 +    struct lock lock;                   /* Protects the inode. */
@@ -1391,16 +1390,16 @@ diff -u src/filesys/inode.c~ src/filesys/inode.c
 +    int writer_cnt;                     /* Number of writers. */
    };
  
--/* Returns the disk sector that contains byte offset POS within
--   INODE.
+-/* Returns the block device sector that contains byte offset POS
+-   within INODE.
 -   Returns -1 if INODE does not contain data for a byte at offset
 -   POS. */
--static disk_sector_t
+-static block_sector_t
 -byte_to_sector (const struct inode *inode, off_t pos) 
 -{
 -  ASSERT (inode != NULL);
 -  if (pos < inode->data.length)
--    return inode->data.start + pos / DISK_SECTOR_SIZE;
+-    return inode->data.start + pos / BLOCK_SECTOR_SIZE;
 -  else
 -    return -1;
 -}
@@ -1424,17 +1423,17 @@ diff -u src/filesys/inode.c~ src/filesys/inode.c
  
 -/* Initializes an inode with LENGTH bytes of data and
 -   writes the new inode to sector SECTOR on the file system
--   disk.
+-   device.
 -   Returns true if successful.
 -   Returns false if memory or disk allocation fails. */
 -bool
--inode_create (disk_sector_t sector, off_t length)
+-inode_create (block_sector_t sector, off_t length)
 +/* Initializes an inode of the given TYPE, writes the new inode
-+   to sector SECTOR on the file system disk, and returns the
++   to sector SECTOR on the file system device, and returns the
 +   inode thus created.  Returns a null pointer if unsuccessful,
 +   in which case SECTOR is released in the free map. */  
 +struct inode *
-+inode_create (disk_sector_t sector, enum inode_type type) 
++inode_create (block_sector_t sector, enum inode_type type) 
  {
 -  struct inode_disk *disk_inode = NULL;
 -  bool success = false;
@@ -1447,7 +1446,7 @@ diff -u src/filesys/inode.c~ src/filesys/inode.c
  
    /* If this assertion fails, the inode structure is not exactly
       one sector in size, and you should fix that. */
-   ASSERT (sizeof *disk_inode == DISK_SECTOR_SIZE);
+   ASSERT (sizeof *disk_inode == BLOCK_SECTOR_SIZE);
 +  disk_inode = cache_zero (block);
 +  disk_inode->type = type;
 +  disk_inode->length = 0;
@@ -1461,16 +1460,16 @@ diff -u src/filesys/inode.c~ src/filesys/inode.c
 -      size_t sectors = bytes_to_sectors (length);
 -      disk_inode->length = length;
 -      disk_inode->magic = INODE_MAGIC;
--      if (free_map_allocate (sectors, &disk_inode->start))
+-      if (free_map_allocate (sectors, &disk_inode->start)) 
 -        {
--          disk_write (filesys_disk, sector, disk_inode);
+-          block_write (fs_device, sector, disk_inode);
 -          if (sectors > 0) 
 -            {
--              static char zeros[DISK_SECTOR_SIZE];
+-              static char zeros[BLOCK_SECTOR_SIZE];
 -              size_t i;
 -              
 -              for (i = 0; i < sectors; i++) 
--                disk_write (filesys_disk, disk_inode->start + i, zeros); 
+-                block_write (fs_device, disk_inode->start + i, zeros);
 -            }
 -          success = true; 
 -        } 
@@ -1484,7 +1483,7 @@ diff -u src/filesys/inode.c~ src/filesys/inode.c
  }
  
  /* Reads an inode from SECTOR
-@@ -115,29 +110,35 @@ inode_open (disk_sector_t sector) 
+@@ -115,29 +110,35 @@ inode_open (block_sector_t sector) 
    struct inode *inode;
  
    /* Check whether this inode is already open. */
@@ -1517,7 +1516,7 @@ diff -u src/filesys/inode.c~ src/filesys/inode.c
 +  lock_init (&inode->deny_write_lock);
 +  cond_init (&inode->no_writers_cond);
    inode->removed = false;
--  disk_read (filesys_disk, inode->sector, &inode->data);
+-  block_read (fs_device, inode->sector, &inode->data);
 +  
 + done:
 +  lock_release (&open_inodes_lock);
@@ -1549,7 +1548,7 @@ diff -u src/filesys/inode.c~ src/filesys/inode.c
 +}
 +
  /* Returns INODE's inode number. */
- disk_sector_t
+ block_sector_t
 @@ -161,21 +183,60 @@ inode_close (struct inode *inode) 
      return;
  
@@ -1581,12 +1580,12 @@ diff -u src/filesys/inode.c~ src/filesys/inode.c
 +   or 1 if SECTOR is indirect,
 +   or 0 if SECTOR is a data sector. */
 +static void
-+deallocate_recursive (disk_sector_t sector, int level) 
++deallocate_recursive (block_sector_t sector, int level) 
 +{
 +  if (level > 0) 
 +    {
 +      struct cache_block *block = cache_lock (sector, EXCLUSIVE);
-+      disk_sector_t *pointers = cache_read (block);
++      block_sector_t *pointers = cache_read (block);
 +      int i;
 +      for (i = 0; i < PTRS_PER_SECTOR; i++)
 +        if (pointers[i])
@@ -1616,7 +1615,7 @@ diff -u src/filesys/inode.c~ src/filesys/inode.c
  }
  
  /* Marks INODE to be deleted when it is closed by the last caller who
-@@ -187,6 +248,156 @@ inode_remove (struct inode *inode) 
+@@ -187,6 +248,157 @@ inode_remove (struct inode *inode) 
    inode->removed = true;
  }
  
@@ -1669,14 +1668,14 @@ diff -u src/filesys/inode.c~ src/filesys/inode.c
 +get_data_block (struct inode *inode, off_t offset, bool allocate,
 +                struct cache_block **data_block) 
 +{
-+  disk_sector_t this_level_sector;
++  block_sector_t this_level_sector;
 +  size_t offsets[3];
 +  size_t offset_cnt;
 +  size_t level;
 +
 +  ASSERT (offset >= 0);
 +
-+  calculate_indices (offset / DISK_SECTOR_SIZE, offsets, &offset_cnt);
++  calculate_indices (offset / BLOCK_SECTOR_SIZE, offsets, &offset_cnt);
 +  level = 0;
 +  this_level_sector = inode->sector;
 +  for (;;) 
@@ -1702,7 +1701,8 @@ diff -u src/filesys/inode.c~ src/filesys/inode.c
 +                  || (level > 0 && offsets[level] + 1 < PTRS_PER_SECTOR)) 
 +                {
 +                  uint32_t next_sector = this_level_data[offsets[level] + 1];
-+                  if (next_sector && next_sector < disk_size (filesys_disk))
++                  if (next_sector
++                      && next_sector < block_size (fs_device))
 +                    cache_readahead (next_sector); 
 +                }
 +              cache_unlock (this_level_block);
@@ -1782,9 +1782,9 @@ diff -u src/filesys/inode.c~ src/filesys/inode.c
    while (size > 0) 
      {
 -      /* Disk sector to read, starting byte offset within sector. */
--      disk_sector_t sector_idx = byte_to_sector (inode, offset);
+-      block_sector_t sector_idx = byte_to_sector (inode, offset);
 +      /* Sector to read, starting byte offset within sector, sector data. */
-       int sector_ofs = offset % DISK_SECTOR_SIZE;
+       int sector_ofs = offset % BLOCK_SECTOR_SIZE;
 +      struct cache_block *block;
  
        /* Bytes left in inode, bytes left in sector, lesser of the two. */
@@ -1797,10 +1797,10 @@ diff -u src/filesys/inode.c~ src/filesys/inode.c
 +      if (chunk_size <= 0 || !get_data_block (inode, offset, false, &block))
          break;
  
--      if (sector_ofs == 0 && chunk_size == DISK_SECTOR_SIZE) 
+-      if (sector_ofs == 0 && chunk_size == BLOCK_SECTOR_SIZE)
 -        {
 -          /* Read full sector directly into caller's buffer. */
--          disk_read (filesys_disk, sector_idx, buffer + bytes_read); 
+-          block_read (fs_device, sector_idx, buffer + bytes_read);
 -        }
 +      if (block == NULL) 
 +        memset (buffer + bytes_read, 0, chunk_size);
@@ -1810,11 +1810,11 @@ diff -u src/filesys/inode.c~ src/filesys/inode.c
 -             into caller's buffer. */
 -          if (bounce == NULL) 
 -            {
--              bounce = malloc (DISK_SECTOR_SIZE);
+-              bounce = malloc (BLOCK_SECTOR_SIZE);
 -              if (bounce == NULL)
 -                break;
 -            }
--          disk_read (filesys_disk, sector_idx, bounce);
+-          block_read (fs_device, sector_idx, bounce);
 -          memcpy (buffer + bytes_read, bounce + sector_ofs, chunk_size);
 +          const uint8_t *sector_data = cache_read (block);
 +          memcpy (buffer + bytes_read, sector_data + sector_ofs, chunk_size);
@@ -1877,9 +1877,9 @@ diff -u src/filesys/inode.c~ src/filesys/inode.c
    while (size > 0) 
      {
 -      /* Sector to write, starting byte offset within sector. */
--      disk_sector_t sector_idx = byte_to_sector (inode, offset);
+-      block_sector_t sector_idx = byte_to_sector (inode, offset);
 +      /* Sector to write, starting byte offset within sector, sector data. */
-       int sector_ofs = offset % DISK_SECTOR_SIZE;
+       int sector_ofs = offset % BLOCK_SECTOR_SIZE;
 +      struct cache_block *block;
 +      uint8_t *sector_data;
  
@@ -1887,7 +1887,7 @@ diff -u src/filesys/inode.c~ src/filesys/inode.c
 -      off_t inode_left = inode_length (inode) - offset;
 +      /* Bytes to max inode size, bytes left in sector, lesser of the two. */
 +      off_t inode_left = INODE_SPAN - offset;
-       int sector_left = DISK_SECTOR_SIZE - sector_ofs;
+       int sector_left = BLOCK_SECTOR_SIZE - sector_ofs;
        int min_left = inode_left < sector_left ? inode_left : sector_left;
  
        /* Number of bytes to actually write into this sector. */
@@ -1895,17 +1895,17 @@ diff -u src/filesys/inode.c~ src/filesys/inode.c
 -      if (chunk_size <= 0)
 -        break;
  
--      if (sector_ofs == 0 && chunk_size == DISK_SECTOR_SIZE) 
+-      if (sector_ofs == 0 && chunk_size == BLOCK_SECTOR_SIZE)
 -        {
 -          /* Write full sector directly to disk. */
--          disk_write (filesys_disk, sector_idx, buffer + bytes_written); 
+-          block_write (fs_device, sector_idx, buffer + bytes_written);
 -        }
 -      else 
 -        {
 -          /* We need a bounce buffer. */
 -          if (bounce == NULL) 
 -            {
--              bounce = malloc (DISK_SECTOR_SIZE);
+-              bounce = malloc (BLOCK_SECTOR_SIZE);
 -              if (bounce == NULL)
 -                break;
 -            }
@@ -1916,11 +1916,11 @@ diff -u src/filesys/inode.c~ src/filesys/inode.c
 -             we're writing, then we need to read in the sector
 -             first.  Otherwise we start with a sector of all zeros. */
 -          if (sector_ofs > 0 || chunk_size < sector_left) 
--            disk_read (filesys_disk, sector_idx, bounce);
+-            block_read (fs_device, sector_idx, bounce);
 -          else
--            memset (bounce, 0, DISK_SECTOR_SIZE);
+-            memset (bounce, 0, BLOCK_SECTOR_SIZE);
 -          memcpy (bounce + sector_ofs, buffer + bytes_written, chunk_size);
--          disk_write (filesys_disk, sector_idx, bounce); 
+-          block_write (fs_device, sector_idx, bounce);
 -        }
 +      sector_data = cache_read (block);
 +      memcpy (sector_data + sector_ofs, buffer + bytes_written, chunk_size);
@@ -2022,12 +2022,12 @@ diff -u src/filesys/inode.h~ src/filesys/inode.h
 +  };
 +
  void inode_init (void);
--bool inode_create (disk_sector_t, off_t);
-+struct inode *inode_create (disk_sector_t, enum inode_type);
- struct inode *inode_open (disk_sector_t);
+-bool inode_create (block_sector_t, off_t);
++struct inode *inode_create (block_sector_t, enum inode_type);
+ struct inode *inode_open (block_sector_t);
  struct inode *inode_reopen (struct inode *);
 +enum inode_type inode_get_type (const struct inode *);
- disk_sector_t inode_get_inumber (const struct inode *);
+ block_sector_t inode_get_inumber (const struct inode *);
  void inode_close (struct inode *);
  void inode_remove (struct inode *);
  off_t inode_read_at (struct inode *, void *, off_t size, off_t offset);
@@ -3733,7 +3733,7 @@ diff -u src/vm/page.c~ src/vm/page.c
 +    return false;
 +
 +  /* Copy data into the frame. */
-+  if (p->sector != (disk_sector_t) -1) 
++  if (p->sector != (block_sector_t) -1) 
 +    {
 +      /* Get data from swap. */
 +      swap_in (p); 
@@ -3871,7 +3871,7 @@ diff -u src/vm/page.c~ src/vm/page.c
 +
 +      p->frame = NULL;
 +
-+      p->sector = (disk_sector_t) -1;
++      p->sector = (block_sector_t) -1;
 +
 +      p->file = NULL;
 +      p->file_offset = 0;
@@ -3964,7 +3964,7 @@ diff -u src/vm/page.h~ src/vm/page.h
 +#define VM_PAGE_H
 +
 +#include <hash.h>
-+#include "devices/disk.h"
++#include "devices/block.h"
 +#include "filesys/off_t.h"
 +#include "threads/synch.h"
 +
@@ -3984,7 +3984,7 @@ diff -u src/vm/page.h~ src/vm/page.h
 +    struct frame *frame;        /* Page frame. */
 +
 +    /* Swap information, protected by frame->frame_lock. */
-+    disk_sector_t sector;       /* Starting sector of swap area, or -1. */
++    block_sector_t sector;       /* Starting sector of swap area, or -1. */
 +    
 +    /* Memory-mapped file information, protected by frame->frame_lock. */
 +    bool private;               /* False to write back to file,
@@ -4014,19 +4014,19 @@ Index: src/vm/swap.c
 diff -u src/vm/swap.c~ src/vm/swap.c
 --- src/vm/swap.c~
 +++ src/vm/swap.c
-@@ -0,0 +1,85 @@
+@@ -0,0 +1,86 @@
 +#include "vm/swap.h"
 +#include <bitmap.h>
 +#include <debug.h>
 +#include <stdio.h>
 +#include "vm/frame.h"
 +#include "vm/page.h"
-+#include "devices/disk.h"
++#include "devices/block.h"
 +#include "threads/synch.h"
 +#include "threads/vaddr.h"
 +
-+/* The swap disk. */
-+static struct disk *swap_disk;
++/* The swap partition. */
++static struct block *swap_device;
 +
 +/* Used swap pages. */
 +static struct bitmap *swap_bitmap;
@@ -4035,20 +4035,21 @@ diff -u src/vm/swap.c~ src/vm/swap.c
 +static struct lock swap_lock;
 +
 +/* Number of sectors per page. */
-+#define PAGE_SECTORS (PGSIZE / DISK_SECTOR_SIZE)
++#define PAGE_SECTORS (PGSIZE / BLOCK_SECTOR_SIZE)
 +
 +/* Sets up swap. */
 +void
 +swap_init (void) 
 +{
-+  swap_disk = disk_get (1, 1);
-+  if (swap_disk == NULL) 
++  swap_device = block_get_role (BLOCK_SWAP);
++  if (swap_device == NULL) 
 +    {
-+      printf ("no swap disk--swap disabled\n");
++      printf ("no swap device--swap disabled\n");
 +      swap_bitmap = bitmap_create (0);
 +    }
 +  else
-+    swap_bitmap = bitmap_create (disk_size (swap_disk) / PAGE_SECTORS);
++    swap_bitmap = bitmap_create (block_size (swap_device)
++                                 / PAGE_SECTORS);
 +  if (swap_bitmap == NULL)
 +    PANIC ("couldn't create swap bitmap");
 +  lock_init (&swap_lock);
@@ -4063,13 +4064,13 @@ diff -u src/vm/swap.c~ src/vm/swap.c
 +  
 +  ASSERT (p->frame != NULL);
 +  ASSERT (lock_held_by_current_thread (&p->frame->lock));
-+  ASSERT (p->sector != (disk_sector_t) -1);
++  ASSERT (p->sector != (block_sector_t) -1);
 +
 +  for (i = 0; i < PAGE_SECTORS; i++)
-+    disk_read (swap_disk, p->sector + i,
-+               p->frame->base + i * DISK_SECTOR_SIZE);
++    block_read (swap_device, p->sector + i,
++                p->frame->base + i * BLOCK_SECTOR_SIZE);
 +  bitmap_reset (swap_bitmap, p->sector / PAGE_SECTORS);
-+  p->sector = (disk_sector_t) -1;
++  p->sector = (block_sector_t) -1;
 +}
 +
 +/* Swaps out page P, which must have a locked frame. */
@@ -4090,8 +4091,8 @@ diff -u src/vm/swap.c~ src/vm/swap.c
 +
 +  p->sector = slot * PAGE_SECTORS;
 +  for (i = 0; i < PAGE_SECTORS; i++)
-+    disk_write (swap_disk, p->sector + i,
-+                p->frame->base + i * DISK_SECTOR_SIZE);
++    block_write (swap_device, p->sector + i,
++                 p->frame->base + i * BLOCK_SECTOR_SIZE);
 +  
 +  p->private = false;
 +  p->file = NULL;
