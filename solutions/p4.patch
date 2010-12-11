@@ -1209,18 +1209,18 @@ diff -u src/filesys/free-map.c~ src/filesys/free-map.c
 +
    free_map = bitmap_create (block_size (fs_device));
    if (free_map == NULL)
-     PANIC ("bitmap creation failed--device is too large");
-@@ -19,33 +22,32 @@ free_map_init (void) 
+     PANIC ("bitmap creation failed--file system device is too large");
+@@ -19,34 +22,33 @@
    bitmap_mark (free_map, ROOT_DIR_SECTOR);
  }
  
 -/* Allocates CNT consecutive sectors from the free map and stores
 -   the first into *SECTORP.
--   Returns true if successful, false if all sectors were
 +/* Allocates a sector from the free map and stores it into
 +   *SECTORP.
-+   Return true if successful, false if all sectors were
-    available. */
+    Returns true if successful, false if not enough consecutive
+    sectors were available or if the free_map file could not be
+    written. */
  bool
 -free_map_allocate (size_t cnt, block_sector_t *sectorp)
 +free_map_allocate (block_sector_t *sectorp)
@@ -1261,7 +1261,7 @@ diff -u src/filesys/free-map.c~ src/filesys/free-map.c
  }
  
  /* Opens the free map file and reads it from disk. */
-@@ -63,6 +65,8 @@ free_map_open (void) 
+@@ -64,6 +66,8 @@
  void
  free_map_close (void) 
  {
@@ -1270,7 +1270,8 @@ diff -u src/filesys/free-map.c~ src/filesys/free-map.c
    file_close (free_map_file);
  }
  
-@@ -72,7 +76,11 @@ void
+@@ -72,9 +76,13 @@
+ void
  free_map_create (void) 
  {
 +  struct inode *inode;
@@ -1283,6 +1284,7 @@ diff -u src/filesys/free-map.c~ src/filesys/free-map.c
 +  inode_close (inode);
  
    /* Write bitmap to file. */
+   free_map_file = file_open (inode_open (FREE_MAP_SECTOR));
 Index: src/filesys/free-map.h
 diff -u src/filesys/free-map.h~ src/filesys/free-map.h
 --- src/filesys/free-map.h~
