@@ -459,7 +459,7 @@ diff -Nur ../../src/threads/thread.c src/threads/thread.c
  }
  
  /* Prints thread statistics. */
-@@ -166,12 +214,13 @@
+@@ -166,11 +214,12 @@
  thread_create (const char *name, int priority,
                 thread_func *function, void *aux) 
  {
@@ -468,9 +468,7 @@ diff -Nur ../../src/threads/thread.c src/threads/thread.c
    struct kernel_thread_frame *kf;
    struct switch_entry_frame *ef;
    struct switch_threads_frame *sf;
--  tid_t tid;
-   enum intr_level old_level;
-+  tid_t tid;
+   tid_t tid;
  
    ASSERT (function != NULL);
  
