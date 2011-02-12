@@ -186,13 +186,15 @@ diff -u src/threads/thread.c~ src/threads/thread.c
  #endif
  
    /* Remove thread from all threads list, set our status to dying,
-@@ -406,17 +410,28 @@ is_thread (struct thread *t)
+@@ -406,23 +410,34 @@ is_thread (struct thread *t)
  /* Does basic initialization of T as a blocked thread named
     NAME. */
  static void
 -init_thread (struct thread *t, const char *name, int priority)
 +init_thread (struct thread *t, const char *name, int priority, tid_t tid)
  {
+   enum intr_level old_level;
+ 
    ASSERT (t != NULL);
    ASSERT (PRI_MIN <= priority && priority <= PRI_MAX);
    ASSERT (name != NULL);
@@ -214,6 +216,10 @@ diff -u src/threads/thread.c~ src/threads/thread.c
 +  list_init (&t->mappings);
 +  t->next_handle = 2;
    t->magic = THREAD_MAGIC;
+ 
+   old_level = intr_disable ();
+   list_push_back (&all_list, &t->allelem);
+   intr_set_level (old_level);
  }
  
 Index: src/threads/thread.h

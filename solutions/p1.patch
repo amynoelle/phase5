@@ -654,7 +654,7 @@ diff -Nur ../../src/threads/thread.c src/threads/thread.c
  }
  
  /* Idle thread.  Executes when no other thread is ready to run.
-@@ -467,8 +613,10 @@
+@@ -467,11 +613,13 @@
    t->status = THREAD_BLOCKED;
    strlcpy (t->name, name, sizeof t->name);
    t->stack = (uint8_t *) t + PGSIZE;
@@ -663,7 +663,10 @@ diff -Nur ../../src/threads/thread.c src/threads/thread.c
    t->magic = THREAD_MAGIC;
 +  sema_init (&t->timer_sema, 0);
 +  list_init (&t->donors);
+ 
+   old_level = intr_disable ();
    list_push_back (&all_list, &t->allelem);
+   intr_set_level (old_level);
  }
  
 @@ -495,8 +643,14 @@
