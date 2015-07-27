@@ -99,11 +99,17 @@ shutdown_power_off (void)
   printf ("Powering off...\n");
   serial_flush ();
 
+  /* ACPI shutdown sequence supported by newer QEMU.
+     Based on work by Jin Suk Park to port Pintos to Homebrew/MacOS X.
+     See also https://github.com/maojie/pintos_mac/pull/2 and
+     http://forum.osdev.org/viewtopic.php?t=16990. */
+  outw(0x604, 0x0 | 0x2000);
+
   /* ACPI power-off */
   outw (0xB004, 0x2000);
 
   /* This is a special power-off sequence supported by Bochs and
-     QEMU, but not by physical hardware. */
+     older versions of QEMU, but not by physical hardware. */
   for (p = s; *p != '\0'; p++)
     outb (0x8900, *p);
 
