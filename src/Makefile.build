@@ -2,11 +2,17 @@
 
 SRCDIR = ../..
 
-all: kernel.bin loader.bin
-
 include ../../Make.config
 include ../Make.vars
 include ../../tests/Make.tests
+include ../../examples/Make.vars
+
+# Build disk image if compiling filesys subsystem into kernel.
+ifeq ($(findstring filesys,$(KERNEL_SUBDIRS)),filesys)
+all: kernel.bin loader.bin filesys.dsk
+else
+all: kernel.bin loader.bin
+endif
 
 # Compiler and assembler options.
 kernel.bin: CPPFLAGS += -I$(SRCDIR)/lib/kernel
@@ -62,7 +68,7 @@ userprog_SRC += userprog/gdt.c		# GDT initialization.
 userprog_SRC += userprog/tss.c		# TSS management.
 
 # No virtual memory code yet.
-#vm_SRC = vm/file.c			# Some file.
+#vm_SRC = vm/file.c                     # Some file.
 
 # Filesystem code.
 filesys_SRC  = filesys/filesys.c	# Filesystem core.
@@ -94,12 +100,26 @@ loader.bin: threads/loader.o
 os.dsk: kernel.bin
 	cat $^ > $@
 
+filesys.dsk:
+	rm -f filesys.dsk.tmp
+	../../utils/pintos-mkdisk filesys.dsk.tmp --filesys-size=2
+	@for i in $(PROGS); do \
+		if [ ! -f ../../examples/$$i ]; then \
+			echo "==> Could not find ../../examples/$$i <=="; \
+			echo "==> Please run \"make\" in ../examples before building kernel, etc. <=="; \
+			exit 1; \
+		fi; \
+	done
+	../../utils/pintos -v --disk filesys.dsk.tmp $(shell for i in $(PROGS); do echo \-p ../../examples/$$i -a $$i; done) -- -f -q
+	mv filesys.dsk.tmp filesys.dsk
+
 clean::
 	rm -f $(OBJECTS) $(DEPENDS) 
 	rm -f threads/loader.o threads/kernel.lds.s threads/loader.d
 	rm -f kernel.bin.tmp
 	rm -f kernel.o kernel.lds.s
 	rm -f kernel.bin loader.bin
+	rm -f filesys.dsk.tmp filesys.dsk
 	rm -f bochsout.txt bochsrc.txt
 	rm -f results grade
 
