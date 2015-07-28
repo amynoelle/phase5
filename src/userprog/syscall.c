@@ -157,7 +157,7 @@ copy_in_string (const char *us)
  
   for (length = 0; length < PGSIZE; length++)
     {
-      if (us >= (char *) PHYS_BASE || !get_user (ks + length, us++)) 
+      if (us >= (char *) PHYS_BASE || !get_user ((uint8_t *) ks + length, (uint8_t *) us++)) 
         {
           palloc_free_page (ks);
           thread_exit (); 

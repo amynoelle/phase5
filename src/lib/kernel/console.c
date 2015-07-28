@@ -150,7 +150,7 @@ puts (const char *s)
 
 /* Writes the N characters in BUFFER to the console. */
 void
-putbuf (const char *buffer, size_t n) 
+putbuf (const uint8_t *buffer, size_t n) 
 {
   acquire_console ();
   while (n-- > 0)
