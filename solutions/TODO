@@ -1,6 +1,0 @@
-- p4 can be simplified significantly.
-
-- We should add a knob to p4 that controls whether open directories
-  may be removed.  Then we can test both cases.
-
-- p3, p4 can just panic if memory+swap runs out.
