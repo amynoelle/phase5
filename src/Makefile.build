@@ -110,7 +110,7 @@ filesys.dsk:
 			exit 1; \
 		fi; \
 	done
-	../../utils/pintos -v --disk filesys.dsk.tmp $(shell for i in $(PROGS); do echo \-p ../../examples/$$i -a $$i; done) -- -f -q
+	../../utils/pintos -v --disk filesys.dsk.tmp $(shell for i in $(PROGS) $(FILES); do echo \-p ../../examples/$$i -a $$i; done) -- -f -q
 	mv filesys.dsk.tmp filesys.dsk
 
 clean::
