@@ -11,6 +11,9 @@ src							-*- text -*-
   Nachos C++ code into C.  These files bear the original UCB license
   notice.
 
+* W. Michael Petullo <mike@flyn.org> subsequently modified the Pintos
+  source code for use at the United States Military Academy.
+
 projects
 --------
 
