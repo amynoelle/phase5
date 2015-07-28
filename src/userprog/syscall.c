@@ -107,11 +107,11 @@ verify_user (const void *uaddr)
 static bool
 verify_user_range (const void *uaddr, size_t size)
 {
-  bool ok   = true;
-  bool more = true;
+  bool ok    = true;
+  size_t offset = 0;
 
-  while (more) {
-    ok = verify_user (uaddr);
+  while (true) {
+    ok = verify_user (uaddr + offset);
     if (! ok)
       {
         goto done;
@@ -120,18 +120,18 @@ verify_user_range (const void *uaddr, size_t size)
     /* More to check because remaining size > page size. */
     if (size >= PGSIZE)
       {
-        more = true;
-        size -= PGSIZE;
+        offset += PGSIZE;
+        size   -= PGSIZE;
       }
     /* One more check because remaining size < page size but spans page boundary. */
     else if (size > PGSIZE - pg_ofs (uaddr))
       {
-        more = true;
-        size = 0;
+        offset += PGSIZE;
+        size    = 0;
       }
     else
       {
-        more = false;
+        break;
       }
   }
 
