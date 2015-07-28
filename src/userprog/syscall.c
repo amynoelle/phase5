@@ -102,6 +102,43 @@ verify_user (const void *uaddr)
           && pagedir_get_page (thread_current ()->pagedir, uaddr) != NULL);
 }
  
+/* Returns true if UADDR--UADDR + SIZE are valid, mapped user addresses,
+   false otherwise. */
+static bool
+verify_user_range (const void *uaddr, size_t size)
+{
+  bool ok   = true;
+  bool more = true;
+
+  while (more) {
+    ok = verify_user (uaddr);
+    if (! ok)
+      {
+        goto done;
+      }
+
+    /* More to check because remaining size > page size. */
+    if (size >= PGSIZE)
+      {
+        more = true;
+        size -= PGSIZE;
+      }
+    /* One more check because remaining size < page size but spans page boundary. */
+    else if (size > PGSIZE - pg_ofs (uaddr))
+      {
+        more = true;
+        size = 0;
+      }
+    else
+      {
+        more = false;
+      }
+  }
+
+done:
+  return ok;
+}
+
 /* Copies a byte from user address USRC to kernel address DST.
    USRC must be below PHYS_BASE.
    Returns true if successful, false if a segfault occurred. */
@@ -320,51 +357,35 @@ sys_read (int handle, void *udst_, unsigned size)
   struct file_descriptor *fd;
   int bytes_read = 0;
 
+  /* We might want to wait until we actually try to store into an unmapped
+   * page before terminating the process (i.e., read into one page at a time).
+   * It is possible that the process would have gotten lucky and encountered
+   * a short read. But the code here is simpler for students to reason about,
+   * and we have not yet covered the details of paging in class.
+   */
+  if (! verify_user_range (udst, size))
+    {
+      thread_exit ();
+    }
+
   /* Handle keyboard reads. */
   if (handle == STDIN_FILENO) 
     {
       for (bytes_read = 0; (size_t) bytes_read < size; bytes_read++)
         if (udst >= (uint8_t *) PHYS_BASE || !put_user (udst++, input_getc ()))
           thread_exit ();
-      return bytes_read;
     }
-
-  /* Handle all other reads. */
-  fd = lookup_fd (handle);
-  lock_acquire (&fs_lock);
-  while (size > 0) 
+  else
     {
-      /* How much to read into this page? */
-      size_t page_left = PGSIZE - pg_ofs (udst);
-      size_t read_amt = size < page_left ? size : page_left;
-      off_t retval;
+      /* Handle all other reads. */
+      fd = lookup_fd (handle);
+      lock_acquire (&fs_lock);
 
-      /* Check that touching this page is okay. */
-      if (!verify_user (udst)) 
-        {
-          lock_release (&fs_lock);
-          thread_exit ();
-        }
+      /* Read from file into memory. */
+      bytes_read = file_read (fd->file, udst, size);
 
-      /* Read from file into page. */
-      retval = file_read (fd->file, udst, read_amt);
-      if (retval < 0)
-        {
-          if (bytes_read == 0)
-            bytes_read = -1; 
-          break;
-        }
-      bytes_read += retval;
-
-      /* If it was a short read we're done. */
-      if (retval != (off_t) read_amt)
-        break;
-
-      /* Advance. */
-      udst += retval;
-      size -= retval;
+      lock_release (&fs_lock);
     }
-  lock_release (&fs_lock);
    
   return bytes_read;
 }
@@ -377,49 +398,34 @@ sys_write (int handle, void *usrc_, unsigned size)
   struct file_descriptor *fd = NULL;
   int bytes_written = 0;
 
+  /* We might want to wait until we actually try to load from an unmapped
+   * page before terminating the process (i.e., write one page at a time).
+   * It is possible that the process would have gotten lucky and encountered
+   * a short write. But the code here is simpler for students to reason about,
+   * and we have not yet covered the details of paging in class.
+   */
+  if (! verify_user_range (usrc, size))
+    {
+      thread_exit ();
+    }
+
   /* Lookup up file descriptor. */
   if (handle != STDOUT_FILENO)
     fd = lookup_fd (handle);
 
   lock_acquire (&fs_lock);
-  while (size > 0) 
+
+  /* Do the write. */
+  if (handle == STDOUT_FILENO)
     {
-      /* How much bytes to write to this page? */
-      size_t page_left = PGSIZE - pg_ofs (usrc);
-      size_t write_amt = size < page_left ? size : page_left;
-      off_t retval;
-
-      /* Check that we can touch this user page. */
-      if (!verify_user (usrc)) 
-        {
-          lock_release (&fs_lock);
-          thread_exit ();
-        }
-
-      /* Do the write. */
-      if (handle == STDOUT_FILENO)
-        {
-          putbuf (usrc, write_amt);
-          retval = write_amt;
-        }
-      else
-        retval = file_write (fd->file, usrc, write_amt);
-      if (retval < 0) 
-        {
-          if (bytes_written == 0)
-            bytes_written = -1;
-          break;
-        }
-      bytes_written += retval;
-
-      /* If it was a short write we're done. */
-      if (retval != (off_t) write_amt)
-        break;
-
-      /* Advance. */
-      usrc += retval;
-      size -= retval;
+      putbuf (usrc, size);
+      bytes_written = size;
     }
+  else
+    {
+      bytes_written = file_write (fd->file, usrc, size);
+    }
+
   lock_release (&fs_lock);
  
   return bytes_written;
