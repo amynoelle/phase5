@@ -19,6 +19,12 @@ enum
     SYS_TELL,                   /* Report current position in a file. */
     SYS_CLOSE,                  /* Close a file. */
 
+    /* USMA additions. */
+    SYS_SEMCREATE,              /* Create a new semaphore. */
+    SYS_SEMDESTROY,             /* Destroy the named semaphore. */
+    SYS_SEMWAIT,                /* Wait on semaphore. */
+    SYS_SEMSIGNAL,              /* Signal semaphore. */
+
     /* Project 3 and optionally project 4. */
     SYS_MMAP,                   /* Map a file into memory. */
     SYS_MUNMAP,                 /* Remove a memory mapping. */
@@ -28,7 +34,7 @@ enum
     SYS_MKDIR,                  /* Create a directory. */
     SYS_READDIR,                /* Reads a directory entry. */
     SYS_ISDIR,                  /* Tests if a fd represents a directory. */
-    SYS_INUMBER                 /* Returns the inode number for a fd. */
+    SYS_INUMBER,                /* Returns the inode number for a fd. */
   };
 
 #endif /* lib/syscall-nr.h */

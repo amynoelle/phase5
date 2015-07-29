@@ -141,6 +141,30 @@ close (int fd)
   syscall1 (SYS_CLOSE, fd);
 }
 
+int
+semcreate (const char *name, int initial_value)
+{
+  return syscall2 (SYS_SEMCREATE, name, initial_value);
+}
+
+int
+semdestroy (const char *name)
+{
+  return syscall1 (SYS_SEMDESTROY, name);
+}
+
+int
+semwait (const char *name)
+{
+  return syscall1 (SYS_SEMWAIT, name);
+}
+
+int
+semsignal (const char *name)
+{
+  return syscall1 (SYS_SEMSIGNAL, name);
+}
+
 mapid_t
 mmap (int fd, void *addr)
 {
