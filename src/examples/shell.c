@@ -12,33 +12,55 @@ main (void)
   printf ("Shell starting...\n");
   for (;;) 
     {
-      char command[80];
+      bool background = false;
+      char commands[80], *cptr = commands, *delim = NULL;
 
-      /* Read command. */
+      /* Read command(s). */
       printf ("$ ");
-      read_line (command, sizeof command);
-      
-      /* Execute command. */
-      if (!strcmp (command, "exit"))
-        break;
-      else if (!memcmp (command, "cd ", 3)) 
+      read_line (commands, sizeof commands);
+
+      do
         {
-          if (!chdir (command + 3))
-            printf ("\"%s\": chdir failed\n", command + 3);
-        }
-      else if (command[0] == '\0') 
-        {
-          /* Empty command. */
-        }
-      else
-        {
-          pid_t pid = exec (command);
-          if (pid != PID_ERROR)
-            printf ("\"%s\": exit code %d\n", command, wait (pid));
+          /* Tokenize next command. */
+          delim = strpbrk(cptr, "\r;&");
+          if (NULL != delim)
+            {
+              background = *delim == '&' ? true : false;
+              *delim = '\0';
+            }
+
+          /* Execute command. */
+          if (!strcmp (cptr, "exit"))
+            break;
+          else if (!memcmp (cptr, "cd ", 3))
+            {
+              if (!chdir (cptr + 3))
+                printf ("\"%s\": chdir failed\n", cptr + 3);
+            }
+          else if (cptr[0] == '\0')
+            {
+              /* An empty command. */
+            }
           else
-            printf ("exec failed\n");
-        }
-    }
+            {
+              pid_t pid = exec (cptr);
+              if (pid != PID_ERROR)
+                {
+                  if (! background)
+                    {
+                      printf ("\"%s\": exit code %d\n", cptr, wait (pid));
+                    }
+                }
+              else
+                {
+                  printf ("exec failed\n");
+                }
+            }
+          cptr = delim + 1; /* Will point to invalid address if cptr == NULL,
+                             * but the next line terminates the loop in this case.
+                             */
+        } while (NULL != delim);
+  }
 
   printf ("Shell exiting.");
   return EXIT_SUCCESS;
@@ -46,8 +68,8 @@ main (void)
 
 /* Reads a line of input from the user into LINE, which has room
    for SIZE bytes.  Handles backspace and Ctrl+U in the ways
-   expected by Unix users.  On return, LINE will always be
-   null-terminated and will not end in a new-line character. */
+   expected by Unix users.  On return, LINE will always
+   end in a new-line character and be null-terminated. */
 static void
 read_line (char line[], size_t size) 
 {
@@ -60,11 +82,13 @@ read_line (char line[], size_t size)
       switch (c) 
         {
         case '\r':
-          *pos = '\0';
           putchar ('\n');
+          *pos++ = c;
+          *pos = '\0';
           return;
 
         case '\b':
+        case 0x7f:
           backspace (&pos, line);
           break;
 
@@ -75,7 +99,7 @@ read_line (char line[], size_t size)
 
         default:
           /* Add character to line. */
-          if (pos < line + size - 1) 
+          if (pos < line + size - 2)
             {
               putchar (c);
               *pos++ = c;
