@@ -25,6 +25,9 @@ typedef int tid_t;
 #define PRI_DEFAULT 31                  /* Default priority. */
 #define PRI_MAX 63                      /* Highest priority. */
 
+/* Maximum number of open files per thread. */
+#define MAX_FILES 128
+
 /* A kernel thread or user process.
 
    Each thread structure is stored in its own 4 kB page.  The
@@ -105,8 +108,7 @@ struct thread
     struct file *bin_file;              /* Executable. */
 
     /* Owned by syscall.c. */
-    struct list fds;                    /* List of file descriptors. */
-    int next_handle;                    /* Next handle value. */
+    struct file *fds[MAX_FILES];        /* Array of open file descriptors. */
 
     /* Owned by thread.c. */
     unsigned magic;                     /* Detects stack overflow. */

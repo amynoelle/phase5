@@ -22,19 +22,19 @@ static int sys_wait (tid_t);
 static int sys_create (const char *ufile, unsigned initial_size);
 static int sys_remove (const char *ufile);
 static int sys_open (const char *ufile);
-static int sys_filesize (int handle);
-static int sys_read (int handle, void *udst_, unsigned size);
-static int sys_write (int handle, void *usrc_, unsigned size);
-static int sys_seek (int handle, unsigned position);
-static int sys_tell (int handle);
-static int sys_close (int handle);
+static int sys_filesize (int fd);
+static int sys_read (int fd, void *udst_, unsigned size);
+static int sys_write (int fd, void *usrc_, unsigned size);
+static int sys_seek (int fd, unsigned position);
+static int sys_tell (int fd);
+static int sys_close (int fd);
  
 static void syscall_handler (struct intr_frame *);
 static void copy_in (void *, const void *, size_t);
  
 /* Serializes file system operations. */
 static struct lock fs_lock;
- 
+
 void
 syscall_init (void) 
 {
@@ -278,84 +278,122 @@ sys_remove (const char *ufile)
   return ok;
 }
  
-/* A file descriptor, for binding a file handle to a file. */
-struct file_descriptor
-  {
-    struct list_elem elem;      /* List element. */
-    struct file *file;          /* File. */
-    int handle;                 /* File handle. */
-  };
- 
-/* Open system call. */
+/* Returns the next unused file descriptor or -1 if fds is full. */
 static int
-sys_open (const char *ufile) 
+next_fd (void) 
 {
-  char *kfile = copy_in_string (ufile);
-  struct file_descriptor *fd;
-  int handle = -1;
- 
-  fd = malloc (sizeof *fd);
-  if (fd != NULL)
+  int fd = MAX_FILES;
+
+  struct thread *cur = thread_current ();
+
+  /* Skip 0 and 1 which represent stdin and stdout. */
+  for (fd = STDOUT_FILENO + 1; fd < MAX_FILES; fd++)
     {
-      lock_acquire (&fs_lock);
-      fd->file = filesys_open (kfile);
-      if (fd->file != NULL)
+      if (NULL == cur->fds[fd])
         {
-          struct thread *cur = thread_current ();
-          handle = fd->handle = cur->next_handle++;
-          list_push_front (&cur->fds, &fd->elem);
+          break;
         }
-      else 
-        free (fd);
-      lock_release (&fs_lock);
     }
-  
-  palloc_free_page (kfile);
-  return handle;
-}
  
-/* Returns the file descriptor associated with the given handle.
-   Terminates the process if HANDLE is not associated with an
-   open file. */
-static struct file_descriptor *
-lookup_fd (int handle) 
+  return fd < MAX_FILES ? fd : -1;
+}
+
+/* Return file * corresponding to fd or NULL if fd is invalid. */
+static struct file *
+lookup_fd (int fd)
+{
+  struct file *f = NULL;
+
+  struct thread *cur = thread_current ();
+
+  if (fd >= MAX_FILES)
+    {
+      goto done;
+    }
+
+  f = cur->fds[fd];
+
+done:
+  return f;
+}
+
+static void
+close_fd (int fd)
 {
   struct thread *cur = thread_current ();
-  struct list_elem *e;
-   
-  for (e = list_begin (&cur->fds); e != list_end (&cur->fds);
-       e = list_next (e))
+
+  struct file *f = cur->fds[fd];
+  if (NULL == f)
     {
-      struct file_descriptor *fd;
-      fd = list_entry (e, struct file_descriptor, elem);
-      if (fd->handle == handle)
-        return fd;
+      goto done;
+    }
+
+  lock_acquire (&fs_lock);
+  file_close (f);
+  lock_release (&fs_lock);
+
+  cur->fds[fd] = NULL;
+
+done:
+  return;
+}
+
+/* Open system call. */
+static int
+sys_open (const char *ufile)
+{
+  char *kfile = copy_in_string (ufile);
+
+  int fd = next_fd();
+  if (-1 == fd)
+    {
+      goto done;
     }
  
-  thread_exit ();
+  lock_acquire (&fs_lock);
+
+  struct thread *cur = thread_current ();
+
+  cur->fds[fd] = filesys_open (kfile);
+  if (NULL == cur->fds[fd])
+    {
+      fd = -1;
+    }
+
+  lock_release (&fs_lock);
+
+  palloc_free_page (kfile);
+
+done:
+  return fd;
 }
  
 /* Filesize system call. */
 static int
-sys_filesize (int handle) 
+sys_filesize (int fd) 
 {
-  struct file_descriptor *fd = lookup_fd (handle);
-  int size;
+  int size = -1;
+
+  struct file *f = lookup_fd(fd);
+  if (NULL == f)
+    {
+      goto done;
+    }
  
   lock_acquire (&fs_lock);
-  size = file_length (fd->file);
+  size = file_length (f);
   lock_release (&fs_lock);
  
+done:
   return size;
 }
  
 /* Read system call. */
 static int
-sys_read (int handle, void *udst_, unsigned size) 
+sys_read (int fd, void *udst_, unsigned size) 
 {
   uint8_t *udst = udst_;
-  struct file_descriptor *fd;
-  int bytes_read = 0;
+  int bytes_read = -1;
 
   /* We might want to wait until we actually try to store into an unmapped
    * page before terminating the process (i.e., read into one page at a time).
@@ -369,34 +407,42 @@ sys_read (int handle, void *udst_, unsigned size)
     }
 
   /* Handle keyboard reads. */
-  if (handle == STDIN_FILENO) 
+  if (fd == STDIN_FILENO) 
     {
       for (bytes_read = 0; (size_t) bytes_read < size; bytes_read++)
         if (udst >= (uint8_t *) PHYS_BASE || !put_user (udst++, input_getc ()))
-          thread_exit ();
+          {
+            thread_exit ();
+          }
     }
   else
     {
       /* Handle all other reads. */
-      fd = lookup_fd (handle);
+      struct file *f = lookup_fd (fd);
+      if (NULL == f)
+        {
+          goto done;
+        }
+
       lock_acquire (&fs_lock);
 
       /* Read from file into memory. */
-      bytes_read = file_read (fd->file, udst, size);
+      bytes_read = file_read (f, udst, size);
 
       lock_release (&fs_lock);
     }
    
+done:
   return bytes_read;
 }
  
 /* Write system call. */
 static int
-sys_write (int handle, void *usrc_, unsigned size) 
+sys_write (int fd, void *usrc_, unsigned size) 
 {
   uint8_t *usrc = usrc_;
-  struct file_descriptor *fd = NULL;
-  int bytes_written = 0;
+  int bytes_written = -1;
+  struct file *f = NULL;
 
   /* We might want to wait until we actually try to load from an unmapped
    * page before terminating the process (i.e., write one page at a time).
@@ -409,84 +455,98 @@ sys_write (int handle, void *usrc_, unsigned size)
       thread_exit ();
     }
 
-  /* Lookup up file descriptor. */
-  if (handle != STDOUT_FILENO)
-    fd = lookup_fd (handle);
-
-  lock_acquire (&fs_lock);
-
   /* Do the write. */
-  if (handle == STDOUT_FILENO)
+  if (fd == STDOUT_FILENO)
     {
       putbuf (usrc, size);
       bytes_written = size;
     }
   else
     {
-      bytes_written = file_write (fd->file, usrc, size);
-    }
+      f = lookup_fd (fd);
+      if (NULL == f)
+        {
+          goto done;
+        }
 
-  lock_release (&fs_lock);
+      lock_acquire (&fs_lock);
+      bytes_written = file_write (f, usrc, size);
+      lock_release (&fs_lock);
+    }
  
+done:
   return bytes_written;
 }
  
 /* Seek system call. */
 static int
-sys_seek (int handle, unsigned position) 
+sys_seek (int fd, unsigned position) 
 {
-  struct file_descriptor *fd = lookup_fd (handle);
+  int fnval = -1;
+
+  struct file *f = lookup_fd (fd);
+  if (NULL == f)
+    {
+      goto done;
+    }
    
   lock_acquire (&fs_lock);
   if ((off_t) position >= 0)
-    file_seek (fd->file, position);
+    {
+      file_seek (f, position);
+    }
   lock_release (&fs_lock);
+
+  fnval = 0;
  
-  return 0;
+done:
+  return fnval;
 }
  
 /* Tell system call. */
 static int
-sys_tell (int handle) 
+sys_tell (int fd) 
 {
-  struct file_descriptor *fd = lookup_fd (handle);
-  unsigned position;
+  int position = -1;
+
+  struct file *f = lookup_fd (fd);
+  if (NULL == f)
+    {
+      goto done;
+    }
    
   lock_acquire (&fs_lock);
-  position = file_tell (fd->file);
+  position = file_tell (f);
   lock_release (&fs_lock);
  
+done:
   return position;
 }
  
 /* Close system call. */
 static int
-sys_close (int handle) 
+sys_close (int fd)
 {
-  struct file_descriptor *fd = lookup_fd (handle);
-  lock_acquire (&fs_lock);
-  file_close (fd->file);
-  lock_release (&fs_lock);
-  list_remove (&fd->elem);
-  free (fd);
-  return 0;
+  int fnval = -1;
+
+  struct file *f = lookup_fd (fd);
+  if (NULL == f)
+    {
+      goto done;
+    }
+
+  close_fd(fd);
+
+done:
+  return fnval;
 }
  
 /* On thread exit, close all open files. */
 void
 syscall_exit (void) 
 {
-  struct thread *cur = thread_current ();
-  struct list_elem *e, *next;
-   
-  for (e = list_begin (&cur->fds); e != list_end (&cur->fds); e = next)
+  for (int fd = 0; fd < MAX_FILES; fd++)
     {
-      struct file_descriptor *fd;
-      fd = list_entry (e, struct file_descriptor, elem);
-      next = list_next (e);
-      lock_acquire (&fs_lock);
-      file_close (fd->file);
-      lock_release (&fs_lock);
-      free (fd);
+      close_fd(fd);
     }
 }
