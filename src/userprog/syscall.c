@@ -586,11 +586,11 @@ semname_less (const struct hash_elem *a, const struct hash_elem *b, void *aux UN
 
 /* System call which creates a semaphore. */
 static int
-sys_semcreat (const char *_name, int initial_value)
+sys_semcreat (const char *uname, int initial_value)
 {
   int fnval = -1;
   struct semaphore_map_elem *s = NULL;
-  char *name = NULL;
+  char *kname = NULL;
 
   s = malloc (sizeof (*s));
   if (NULL == s)
@@ -598,15 +598,9 @@ sys_semcreat (const char *_name, int initial_value)
       goto done;
     }
 
-  size_t name_size = strlen (_name) + 1;
-  name = malloc (name_size);
-  if (NULL == name)
-    {
-      goto done;
-    }
+  kname = copy_in_string (uname);
 
-  strlcpy (name, _name, name_size);
-  s->name = name;
+  s->name = kname;
   sema_init (&s->semaphore, initial_value);
 
   if (NULL == semaphore_map)
@@ -631,9 +625,9 @@ done:
           free (s);
         }
 
-      if (NULL != name)
+      if (NULL != kname)
         {
-          free (name);
+          palloc_free_page (kname);
         }
     }
 
@@ -642,10 +636,13 @@ done:
 
 /* System call which destroys a semaphore. */
 static int
-sys_semdestroy (const char *name)
+sys_semdestroy (const char *uname)
 {
   int fnval = -1;
-  struct semaphore_map_elem s = { .name = name };
+  struct semaphore_map_elem s;
+
+  char *kname = copy_in_string (uname);
+  s.name = kname;
 
   struct hash_elem *hash_elem = hash_find (semaphore_map, &s.hash_elem);
   if (NULL == hash_elem)
@@ -664,21 +661,26 @@ sys_semdestroy (const char *name)
       goto done;
     }
 
-  free (e->name);
+  palloc_free_page (e->name);
   free (e);
 
   fnval = 0;
 
 done:
+  palloc_free_page (kname);
+
   return fnval;
 }
 
 /* System call which waits on a semaphore. */
 static int
-sys_semwait (const char *name)
+sys_semwait (const char *uname)
 {
   int fnval = -1;
-  struct semaphore_map_elem s = { .name = name };
+  struct semaphore_map_elem s;
+
+  char *kname = copy_in_string (uname);
+  s.name = kname;
 
   struct hash_elem *hash_elem = hash_find (semaphore_map, &s.hash_elem);
   if (NULL == hash_elem)
@@ -692,15 +694,20 @@ sys_semwait (const char *name)
   fnval = 0;
 
 done:
+  palloc_free_page (kname);
+
   return fnval;
 }
 
 /* System call which signals a semaphore. */
 static int
-sys_semsignal (const char *name)
+sys_semsignal (const char *uname)
 {
   int fnval = -1;
-  struct semaphore_map_elem s = { .name = name };
+  struct semaphore_map_elem s;
+
+  char *kname = copy_in_string (uname);
+  s.name = kname;
 
   struct hash_elem *hash_elem = hash_find (semaphore_map, &s.hash_elem);
   if (NULL == hash_elem)
@@ -714,5 +721,7 @@ sys_semsignal (const char *name)
   fnval = 0;
 
 done:
+  palloc_free_page (kname);
+
   return fnval;
 }
