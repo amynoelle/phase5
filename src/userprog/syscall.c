@@ -648,7 +648,7 @@ sys_semdestroy (const char *uname)
     }
 
   struct semaphore_map_elem *e = hash_entry (hash_elem, struct semaphore_map_elem, hash_elem);
-  if (! list_empty (&e->semaphore.waiters))
+  if (! sema_waiters_empty (&e->semaphore))
     {
       goto done;
     }

@@ -15,6 +15,7 @@ void sema_init (struct semaphore *, unsigned value);
 void sema_wait (struct semaphore *);
 bool sema_try_down (struct semaphore *);
 void sema_signal (struct semaphore *);
+bool sema_waiters_empty (struct semaphore *);
 void sema_self_test (void);
 
 /* Lock. */

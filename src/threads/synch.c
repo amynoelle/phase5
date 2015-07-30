@@ -120,6 +120,14 @@ sema_signal (struct semaphore *sema)
   intr_set_level (old_level);
 }
 
+/* Return true if at least one thread is waiting on SEMA; else false.
+   Caller must synchronize access to SEMA. */
+bool
+sema_waiters_empty (struct semaphore *sema)
+{
+  return list_empty (&sema->waiters);
+}
+
 static void sema_test_helper (void *sema_);
 
 /* Self-test for semaphores that makes control "ping-pong"
