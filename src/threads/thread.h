@@ -12,7 +12,7 @@ enum thread_status
     THREAD_RUNNING,     /* Running thread. */
     THREAD_READY,       /* Not running but ready to run. */
     THREAD_BLOCKED,     /* Waiting for an event to trigger. */
-    THREAD_DYING        /* About to be destroyed. */
+    THREAD_ZOMBIE       /* About to be destroyed. */
   };
 
 /* Thread identifier type.
@@ -96,15 +96,17 @@ struct thread
     struct list_elem allelem;           /* List element for all threads list. */
 
     /* Owned by process.c. */
-    struct wait_status *wait_status;    /* This process's completion status. */
+    int exit_code;                      /* This process's completion status. */
+    struct semaphore dead;              /* 1=I am alive, 0=I am dead. */
 
     /* Shared between thread.c and synch.c. */
     struct list_elem elem;              /* List element. */
 
 #ifdef USERPROG
     /* Owned by userprog/process.c. */
+    bool is_process;
     uint32_t *pagedir;                  /* Page directory. */
-    struct wait_status *children[MAX_CHILD]; /* This process' children. */
+    struct thread *children[MAX_CHILD]; /* This process' children. */
 #endif
     struct file *bin_file;              /* Executable. */
 
@@ -113,20 +115,6 @@ struct thread
 
     /* Owned by thread.c. */
     unsigned magic;                     /* Detects stack overflow. */
-  };
-
-/* Tracks the completion of a process.
-   Reference held by both the parent, in its `children' list,
-   and by the child, in its `wait_status' pointer. */
-struct wait_status
-  {
-    struct lock lock;                   /* Protects ref_cnt. */
-    int ref_cnt;                        /* 2=child and parent both alive,
-                                           1=either child or parent alive,
-                                           0=child and parent both dead. */
-    tid_t tid;                          /* Child thread id. */
-    int exit_code;                      /* Child exit code, if dead. */
-    struct semaphore dead;              /* 1=child alive, 0=child dead. */
   };
 
 /* If false (default), use round-robin scheduler.

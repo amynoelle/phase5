@@ -279,7 +279,7 @@ thread_tid (void)
 /* Deschedules the current thread and destroys it.  Never
    returns to the caller. */
 void
-thread_exit (void) 
+thread_exit ()
 {
   ASSERT (!intr_context ());
 
@@ -296,7 +296,13 @@ thread_exit (void)
 #ifdef USERPROG
   process_notify_parent ();
 #endif
-  thread_current ()->status = THREAD_DYING;
+
+  /* If this kernel thread represents a user-space process,
+     then our parent will free us when he waits. Otherwise,
+     the kernel will free us.
+     (Either process_wait or thread_schedule_tail) */
+  thread_current ()->status = THREAD_ZOMBIE;
+
   schedule ();
   NOT_REACHED ();
 }
@@ -467,7 +473,8 @@ init_thread (struct thread *t, const char *name, int priority)
   strlcpy (t->name, name, sizeof t->name);
   t->stack = (uint8_t *) t + PGSIZE;
   t->priority = priority;
-  t->wait_status = NULL;
+  t->exit_code = -1; /* In case kernel kills process without exit. */
+  sema_init (&t->dead, 0);
   t->magic = THREAD_MAGIC;
 
   old_level = intr_disable ();
@@ -536,13 +543,13 @@ thread_schedule_tail (struct thread *prev)
   process_activate ();
 #endif
 
-  /* If the thread we switched from is dying, destroy its struct
-     thread.  This must happen late so that thread_exit() doesn't
-     pull out the rug under itself.  (We don't free
-     initial_thread because its memory was not obtained via
-     palloc().) */
-  if (prev != NULL && prev->status == THREAD_DYING && prev != initial_thread) 
+  if (prev != NULL
+   && prev->status == THREAD_ZOMBIE
+   && prev->is_process == false
+   && prev != initial_thread)
     {
+      /* If zombie is not a user-space process and therefore has
+         no parent to free it, then we free it here. */
       ASSERT (prev != cur);
       palloc_free_page (prev);
     }

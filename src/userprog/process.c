@@ -29,7 +29,7 @@ struct exec_info
   {
     const char *file_name;              /* Program to load. */
     struct semaphore load_done;         /* "Up"ed when loading complete. */
-    struct wait_status *wait_status;    /* Child process. */
+    struct thread *thread;              /* Child process. */
     bool success;                       /* Program successfully loaded? */
   };
 
@@ -103,7 +103,7 @@ process_execute (const char *file_name)
   sema_down (&exec.load_done);
   if (exec.success)
     {
-      cur->children[slot] = exec.wait_status;
+      cur->children[slot] = exec.thread;
     }
   else
     {
@@ -119,9 +119,13 @@ done:
 static void
 start_process (void *exec_)
 {
+  struct thread *cur = thread_current ();
   struct exec_info *exec = exec_;
   struct intr_frame if_;
   bool success;
+
+  /* This kernel thread has a user-space process associated with it. */
+  cur->is_process = true;
 
   /* Initialize interrupt frame and load executable. */
   memset (&if_, 0, sizeof if_);
@@ -130,22 +134,10 @@ start_process (void *exec_)
   if_.eflags = FLAG_IF | FLAG_MBS;
   success = load (exec->file_name, &if_.eip, &if_.esp);
 
-  /* Allocate wait_status. */
+  /* Provide parent with pointer to this thread. */
   if (success)
     {
-      exec->wait_status = thread_current ()->wait_status
-        = malloc (sizeof *exec->wait_status);
-      success = exec->wait_status != NULL; 
-    }
-
-  /* Initialize wait_status. */
-  if (success) 
-    {
-      lock_init (&exec->wait_status->lock);
-      exec->wait_status->ref_cnt = 2;
-      exec->wait_status->tid = thread_current ()->tid;
-      exec->wait_status->exit_code = -1;
-      sema_init (&exec->wait_status->dead, 0);
+      exec->thread = cur;
     }
   
   /* Notify parent thread and clean up. */
@@ -164,21 +156,6 @@ start_process (void *exec_)
   NOT_REACHED ();
 }
 
-/* Releases one reference to CS and, if it is now unreferenced,
-   frees it. */
-static void
-release_child (struct wait_status *cs) 
-{
-  int new_ref_cnt;
-  
-  lock_acquire (&cs->lock);
-  new_ref_cnt = --cs->ref_cnt;
-  lock_release (&cs->lock);
-
-  if (new_ref_cnt == 0)
-    free (cs);
-}
-
 /* Waits for thread TID to die and returns its exit status.  If
    it was terminated by the kernel (i.e. killed due to an
    exception), returns -1.  If TID is invalid or if it was not a
@@ -189,7 +166,6 @@ int
 process_wait (tid_t child_tid) 
 {
   int exit_code = -1;
-  struct wait_status *cs = NULL;
   struct thread *cur = thread_current ();
 
   int slot = child_tid_slot(cur, child_tid);
@@ -198,11 +174,11 @@ process_wait (tid_t child_tid)
       goto done;
     }
 
-  cs = cur->children[slot];
+  struct thread *child = cur->children[slot];
   cur->children[slot] = NULL;
-  sema_down (&cs->dead);
-  exit_code = cs->exit_code;
-  release_child (cs);
+  sema_down (&child->dead);
+  exit_code = child->exit_code;
+  palloc_free_page (child);
 
 done:
   return exit_code;
@@ -223,7 +199,6 @@ process_exit (void)
     {
       if (NULL != cur->children[i])
         {
-          release_child (cur->children[i]);
           cur->children[i] = NULL;
         }
     }
@@ -252,13 +227,8 @@ process_notify_parent (void)
 {
   struct thread *cur = thread_current ();
 
-  if (cur->wait_status != NULL) 
-    {
-      struct wait_status *cs = cur->wait_status;
-      printf ("%s: exit(%d)\n", cur->name, cs->exit_code);
-      sema_up (&cs->dead);
-      release_child (cs);
-    }
+  printf ("%s: exit(%d)\n", cur->name, cur->exit_code);
+  sema_up (&cur->dead);
 }
 
 /* Sets up the CPU for running user code in the current
