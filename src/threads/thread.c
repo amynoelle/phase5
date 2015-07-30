@@ -285,8 +285,8 @@ thread_exit ()
 
 #ifdef USERPROG
   process_exit ();
-#endif
   syscall_exit ();
+#endif
   
   /* Remove thread from all threads list, set our status to dying,
      and schedule another process.  That process will destroy us
@@ -545,7 +545,9 @@ thread_schedule_tail (struct thread *prev)
 
   if (prev != NULL
    && prev->status == THREAD_ZOMBIE
+#ifdef USERPROG
    && prev->is_process == false
+#endif
    && prev != initial_thread)
     {
       /* If zombie is not a user-space process and therefore has
