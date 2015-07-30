@@ -9,6 +9,6 @@
 void
 test_main (void) 
 {
-  msg ("create(\"quux.dat\"): %d",
-       create (copy_string_across_boundary ("quux.dat"), 0));
+  msg ("creat(\"quux.dat\"): %d",
+       creat (copy_string_across_boundary ("quux.dat"), 0));
 }

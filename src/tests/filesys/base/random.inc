@@ -29,7 +29,7 @@ test_main (void)
   for (i = 0; i < BLOCK_CNT; i++)
     order[i] = i;
 
-  CHECK (create (file_name, TEST_SIZE), "create \"%s\"", file_name);
+  CHECK (creat (file_name, TEST_SIZE), "creat \"%s\"", file_name);
   CHECK ((fd = open (file_name)) > 1, "open \"%s\"", file_name);
 
   msg ("write \"%s\" in random order", file_name);

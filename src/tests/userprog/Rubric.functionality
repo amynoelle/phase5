@@ -6,11 +6,11 @@ Functionality of system calls:
 3	args-many
 3	args-dbl-space
 
-- Test "create" system call.
-3	create-empty
-3	create-long
-3	create-normal
-3	create-exists
+- Test "creat" system call.
+3	creat-empty
+3	creat-long
+3	creat-normal
+3	creat-exists
 
 - Test "open" system call.
 3	open-missing

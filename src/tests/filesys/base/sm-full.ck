@@ -4,7 +4,7 @@ use warnings;
 use tests::tests;
 check_expected (IGNORE_EXIT_CODES => 1, [<<'EOF']);
 (sm-full) begin
-(sm-full) create "quux"
+(sm-full) creat "quux"
 (sm-full) open "quux"
 (sm-full) writing "quux"
 (sm-full) close "quux"

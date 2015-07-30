@@ -1,4 +1,4 @@
-/* Tries to create a file with the null pointer as its name.
+/* Tries to creat a file with the null pointer as its name.
    The process must be terminated with exit code -1. */
 
 #include "tests/lib.h"
@@ -7,5 +7,5 @@
 void
 test_main (void) 
 {
-  msg ("create(NULL): %d", create (NULL, 0));
+  msg ("creat(NULL): %d", creat (NULL, 0));
 }

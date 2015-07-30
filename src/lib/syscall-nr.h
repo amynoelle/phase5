@@ -9,8 +9,8 @@ enum
     SYS_EXIT,                   /* Terminate this process. */
     SYS_EXEC,                   /* Start another process. */
     SYS_WAIT,                   /* Wait for a child process to die. */
-    SYS_CREATE,                 /* Create a file. */
-    SYS_REMOVE,                 /* Delete a file. */
+    SYS_CREAT,                  /* Create a file. */
+    SYS_UNLINK,                 /* Delete a file. */
     SYS_OPEN,                   /* Open a file. */
     SYS_FILESIZE,               /* Obtain a file's size. */
     SYS_READ,                   /* Read from a file. */
@@ -20,7 +20,7 @@ enum
     SYS_CLOSE,                  /* Close a file. */
 
     /* USMA additions. */
-    SYS_SEMCREATE,              /* Create a new semaphore. */
+    SYS_SEMCREAT,               /* Create a new semaphore. */
     SYS_SEMDESTROY,             /* Destroy the named semaphore. */
     SYS_SEMWAIT,                /* Wait on semaphore. */
     SYS_SEMSIGNAL,              /* Signal semaphore. */

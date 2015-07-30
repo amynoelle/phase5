@@ -4,7 +4,7 @@ use warnings;
 use tests::tests;
 check_expected (IGNORE_EXIT_CODES => 1, [<<'EOF']);
 (syn-write) begin
-(syn-write) create "stuff"
+(syn-write) creat "stuff"
 (syn-write) exec child 1 of 10: "child-syn-wrt 0"
 (syn-write) exec child 2 of 10: "child-syn-wrt 1"
 (syn-write) exec child 3 of 10: "child-syn-wrt 2"

@@ -4,7 +4,7 @@ use warnings;
 use tests::tests;
 check_expected (IGNORE_EXIT_CODES => 1, [<<'EOF']);
 (sm-seq-random) begin
-(sm-seq-random) create "nibble"
+(sm-seq-random) creat "nibble"
 (sm-seq-random) open "nibble"
 (sm-seq-random) writing "nibble"
 (sm-seq-random) close "nibble"

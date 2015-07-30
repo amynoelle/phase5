@@ -16,9 +16,9 @@ test_main (void)
   const char *file_name = "deleteme";
   int fd;
   
-  CHECK (create (file_name, sizeof buf1), "create \"%s\"", file_name);
+  CHECK (creat (file_name, sizeof buf1), "creat \"%s\"", file_name);
   CHECK ((fd = open (file_name)) > 1, "open \"%s\"", file_name);
-  CHECK (remove (file_name), "remove \"%s\"", file_name);
+  CHECK (unlink (file_name), "unlink \"%s\"", file_name);
   random_bytes (buf1, sizeof buf1);
   CHECK (write (fd, buf1, sizeof buf1) > 0, "write \"%s\"", file_name);
   msg ("seek \"%s\" to 0", file_name);

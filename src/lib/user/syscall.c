@@ -88,21 +88,21 @@ wait (pid_t pid)
 }
 
 bool
-create (const char *file, unsigned initial_size)
+creat (const char *path, unsigned initial_size)
 {
-  return syscall2 (SYS_CREATE, file, initial_size);
+  return syscall2 (SYS_CREAT, path, initial_size);
 }
 
 bool
-remove (const char *file)
+unlink (const char *path)
 {
-  return syscall1 (SYS_REMOVE, file);
+  return syscall1 (SYS_UNLINK, path);
 }
 
 int
-open (const char *file)
+open (const char *path)
 {
-  return syscall1 (SYS_OPEN, file);
+  return syscall1 (SYS_OPEN, path);
 }
 
 int
@@ -142,9 +142,9 @@ close (int fd)
 }
 
 int
-semcreate (const char *name, int initial_value)
+semcreat (const char *name, int initial_value)
 {
-  return syscall2 (SYS_SEMCREATE, name, initial_value);
+  return syscall2 (SYS_SEMCREAT, name, initial_value);
 }
 
 int

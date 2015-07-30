@@ -3,9 +3,9 @@ use strict;
 use warnings;
 use tests::tests;
 check_expected ([<<'EOF']);
-(create-normal) begin
-(create-normal) create quux.dat
-(create-normal) end
-create-normal: exit(0)
+(creat-long) begin
+(creat-long) creat("x..."): 0
+(creat-long) end
+creat-long: exit(0)
 EOF
 pass;

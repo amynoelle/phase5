@@ -20,16 +20,16 @@ static int sys_halt (void);
 static int sys_exit (int status);
 static int sys_exec (const char *ufile);
 static int sys_wait (tid_t);
-static int sys_create (const char *ufile, unsigned initial_size);
-static int sys_remove (const char *ufile);
-static int sys_open (const char *ufile);
+static int sys_creat (const char *upath, unsigned initial_size);
+static int sys_unlink (const char *upath);
+static int sys_open (const char *upath);
 static int sys_filesize (int fd);
 static int sys_read (int fd, void *udst_, unsigned size);
 static int sys_write (int fd, void *usrc_, unsigned size);
 static int sys_seek (int fd, unsigned position);
 static int sys_tell (int fd);
 static int sys_close (int fd);
-static int sys_semcreate (const char *name, int initial_value);
+static int sys_semcreat (const char *name, int initial_value);
 static int sys_semdestroy (const char *name);
 static int sys_semwait (const char *name);
 static int sys_semsignal (const char *name);
@@ -67,8 +67,8 @@ syscall_handler (struct intr_frame *f)
       {1, (syscall_function *) sys_exit},
       {1, (syscall_function *) sys_exec},
       {1, (syscall_function *) sys_wait},
-      {2, (syscall_function *) sys_create},
-      {1, (syscall_function *) sys_remove},
+      {2, (syscall_function *) sys_creat},
+      {1, (syscall_function *) sys_unlink},
       {1, (syscall_function *) sys_open},
       {1, (syscall_function *) sys_filesize},
       {3, (syscall_function *) sys_read},
@@ -76,7 +76,7 @@ syscall_handler (struct intr_frame *f)
       {2, (syscall_function *) sys_seek},
       {1, (syscall_function *) sys_tell},
       {1, (syscall_function *) sys_close},
-      {2, (syscall_function *) sys_semcreate},
+      {2, (syscall_function *) sys_semcreat},
       {1, (syscall_function *) sys_semdestroy},
       {1, (syscall_function *) sys_semwait},
       {1, (syscall_function *) sys_semsignal},
@@ -257,32 +257,32 @@ sys_wait (tid_t child)
  
 /* Create system call. */
 static int
-sys_create (const char *ufile, unsigned initial_size) 
+sys_creat (const char *upath, unsigned initial_size) 
 {
-  char *kfile = copy_in_string (ufile);
+  char *kpath = copy_in_string (upath);
   bool ok;
    
   lock_acquire (&fs_lock);
-  ok = filesys_create (kfile, initial_size);
+  ok = filesys_create (kpath, initial_size);
   lock_release (&fs_lock);
  
-  palloc_free_page (kfile);
+  palloc_free_page (kpath);
  
   return ok;
 }
  
-/* Remove system call. */
+/* Unlink system call. */
 static int
-sys_remove (const char *ufile) 
+sys_unlink (const char *upath) 
 {
-  char *kfile = copy_in_string (ufile);
+  char *kpath = copy_in_string (upath);
   bool ok;
    
   lock_acquire (&fs_lock);
-  ok = filesys_remove (kfile);
+  ok = filesys_remove (kpath);
   lock_release (&fs_lock);
  
-  palloc_free_page (kfile);
+  palloc_free_page (kpath);
  
   return ok;
 }
@@ -349,9 +349,9 @@ done:
 
 /* Open system call. */
 static int
-sys_open (const char *ufile)
+sys_open (const char *upath)
 {
-  char *kfile = copy_in_string (ufile);
+  char *kpath = copy_in_string (upath);
 
   int fd = next_fd();
   if (-1 == fd)
@@ -363,7 +363,7 @@ sys_open (const char *ufile)
 
   struct thread *cur = thread_current ();
 
-  cur->fds[fd] = filesys_open (kfile);
+  cur->fds[fd] = filesys_open (kpath);
   if (NULL == cur->fds[fd])
     {
       fd = -1;
@@ -371,7 +371,7 @@ sys_open (const char *ufile)
 
   lock_release (&fs_lock);
 
-  palloc_free_page (kfile);
+  palloc_free_page (kpath);
 
 done:
   return fd;
@@ -586,7 +586,7 @@ semname_less (const struct hash_elem *a, const struct hash_elem *b, void *aux UN
 
 /* System call which creates a semaphore. */
 static int
-sys_semcreate (const char *_name, int initial_value)
+sys_semcreat (const char *_name, int initial_value)
 {
   int fnval = -1;
   struct semaphore_map_elem *s = NULL;

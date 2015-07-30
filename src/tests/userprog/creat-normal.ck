@@ -3,7 +3,9 @@ use strict;
 use warnings;
 use tests::tests;
 check_expected ([<<'EOF']);
-(create-bad-ptr) begin
-create-bad-ptr: exit(-1)
+(creat-normal) begin
+(creat-normal) creat quux.dat
+(creat-normal) end
+creat-normal: exit(0)
 EOF
 pass;

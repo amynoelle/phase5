@@ -1,4 +1,4 @@
-/* Tries to create a file with a name that is much too long,
+/* Tries to creat a file with a name that is much too long,
    which must fail. */
 
 #include <string.h>
@@ -13,5 +13,5 @@ test_main (void)
   memset (name, 'x', sizeof name);
   name[sizeof name - 1] = '\0';
   
-  msg ("create(\"x...\"): %d", create (name, 0));
+  msg ("creat(\"x...\"): %d", creat (name, 0));
 }

@@ -24,9 +24,9 @@ void halt (void) NO_RETURN;
 void exit (int status) NO_RETURN;
 pid_t exec (const char *file);
 int wait (pid_t);
-bool create (const char *file, unsigned initial_size);
-bool remove (const char *file);
-int open (const char *file);
+bool creat (const char *path, unsigned initial_size);
+bool unlink (const char *path);
+int open (const char *path);
 int filesize (int fd);
 int read (int fd, void *buffer, unsigned length);
 int write (int fd, const void *buffer, unsigned length);
@@ -35,7 +35,7 @@ unsigned tell (int fd);
 void close (int fd);
 
 /* USMA additions. */
-int semcreate (const char *name, int initial_value);
+int semcreat (const char *name, int initial_value);
 int semdestroy (const char *name);
 int semwait (const char *name);
 int semsignal (const char *name);
