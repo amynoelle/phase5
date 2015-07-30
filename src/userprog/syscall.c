@@ -590,15 +590,13 @@ sys_semcreat (const char *uname, int initial_value)
 {
   int fnval = -1;
   struct semaphore_map_elem *s = NULL;
-  char *kname = NULL;
+  char *kname = copy_in_string (uname);
 
   s = malloc (sizeof (*s));
   if (NULL == s)
     {
       goto done;
     }
-
-  kname = copy_in_string (uname);
 
   s->name = kname;
   sema_init (&s->semaphore, initial_value);
@@ -639,10 +637,8 @@ static int
 sys_semdestroy (const char *uname)
 {
   int fnval = -1;
-  struct semaphore_map_elem s;
-
   char *kname = copy_in_string (uname);
-  s.name = kname;
+  struct semaphore_map_elem s = { .name = kname };
 
   struct hash_elem *hash_elem = hash_find (semaphore_map, &s.hash_elem);
   if (NULL == hash_elem)
@@ -677,10 +673,8 @@ static int
 sys_semwait (const char *uname)
 {
   int fnval = -1;
-  struct semaphore_map_elem s;
-
   char *kname = copy_in_string (uname);
-  s.name = kname;
+  struct semaphore_map_elem s = { .name = kname };
 
   struct hash_elem *hash_elem = hash_find (semaphore_map, &s.hash_elem);
   if (NULL == hash_elem)
@@ -704,9 +698,9 @@ static int
 sys_semsignal (const char *uname)
 {
   int fnval = -1;
-  struct semaphore_map_elem s;
-
   char *kname = copy_in_string (uname);
+  struct semaphore_map_elem s = { .name = kname };
+
   s.name = kname;
 
   struct hash_elem *hash_elem = hash_find (semaphore_map, &s.hash_elem);
