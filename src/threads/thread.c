@@ -293,6 +293,9 @@ thread_exit (void)
      when it calls thread_schedule_tail(). */
   intr_disable ();
   list_remove (&thread_current()->allelem);
+#ifdef USERPROG
+  process_notify_parent ();
+#endif
   thread_current ()->status = THREAD_DYING;
   schedule ();
   NOT_REACHED ();

@@ -218,15 +218,6 @@ process_exit (void)
   /* Close executable (and allow writes). */
   file_close (cur->bin_file);
 
-  /* Notify parent that we're dead. */
-  if (cur->wait_status != NULL) 
-    {
-      struct wait_status *cs = cur->wait_status;
-      printf ("%s: exit(%d)\n", cur->name, cs->exit_code);
-      sema_up (&cs->dead);
-      release_child (cs);
-    }
-
   /* Free entries of children list. */
   for (int i = 0; i < MAX_CHILD; i++)
     {
@@ -252,6 +243,21 @@ process_exit (void)
       cur->pagedir = NULL;
       pagedir_activate (NULL);
       pagedir_destroy (pd);
+    }
+}
+
+/* Notify parent that we are dead. */
+void
+process_notify_parent (void)
+{
+  struct thread *cur = thread_current ();
+
+  if (cur->wait_status != NULL) 
+    {
+      struct wait_status *cs = cur->wait_status;
+      printf ("%s: exit(%d)\n", cur->name, cs->exit_code);
+      sema_up (&cs->dead);
+      release_child (cs);
     }
 }
 
