@@ -81,7 +81,7 @@ sema_wait (struct semaphore *sema)
 
    This function may be called from an interrupt handler. */
 bool
-sema_try_down (struct semaphore *sema) 
+sema_try_wait (struct semaphore *sema)
 {
   enum intr_level old_level;
   bool success;
@@ -222,7 +222,7 @@ lock_try_acquire (struct lock *lock)
   ASSERT (lock != NULL);
   ASSERT (!lock_held_by_current_thread (lock));
 
-  success = sema_try_down (&lock->semaphore);
+  success = sema_try_wait (&lock->semaphore);
   if (success)
     lock->holder = thread_current ();
   return success;
