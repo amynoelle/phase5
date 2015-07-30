@@ -315,7 +315,7 @@ lookup_fd (int fd)
 
   struct thread *cur = thread_current ();
 
-  if (fd >= MAX_FILES)
+  if (fd < 0 || fd >= MAX_FILES)
     {
       goto done;
     }
