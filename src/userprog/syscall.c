@@ -637,10 +637,8 @@ static int
 sys_semdestroy (const char *uname)
 {
   int fnval = -1;
-  bool empty = false;
   char *kname = copy_in_string (uname);
   struct semaphore_map_elem s = { .name = kname };
-  struct hash_elem *elem = NULL;
 
   lock_acquire (&sem_lock);
   struct hash_elem *hash_elem = hash_find (&semaphore_map, &s.hash_elem);
@@ -650,14 +648,12 @@ sys_semdestroy (const char *uname)
     }
 
   struct semaphore_map_elem *e = hash_entry (hash_elem, struct semaphore_map_elem, hash_elem);
-  empty = list_empty (&e->semaphore.waiters);
-  if (! empty)
+  if (! list_empty (&e->semaphore.waiters))
     {
       goto done;
     }
 
-  elem = hash_delete (&semaphore_map, &e->hash_elem);
-  if (NULL == elem)
+  if (NULL == hash_delete (&semaphore_map, &e->hash_elem))
     {
       goto done;
     }
