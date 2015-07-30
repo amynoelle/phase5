@@ -6,6 +6,8 @@
 static void read_line (char line[], size_t);
 static bool backspace (char **pos, char line[]);
 
+#define PROMPT "pintos> "
+
 int
 main (void)
 {
@@ -16,7 +18,7 @@ main (void)
       char commands[80], *cptr = commands, *delim = NULL;
 
       /* Read command(s). */
-      printf ("$ ");
+      printf (PROMPT);
       read_line (commands, sizeof commands);
 
       do
