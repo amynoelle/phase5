@@ -58,7 +58,7 @@ sema_init (struct semaphore *sema, unsigned value)
    interrupts disabled, but if it sleeps then the next scheduled
    thread will probably turn interrupts back on. */
 void
-sema_down (struct semaphore *sema) 
+sema_wait (struct semaphore *sema) 
 {
   enum intr_level old_level;
 
@@ -106,7 +106,7 @@ sema_try_down (struct semaphore *sema)
 
    This function may be called from an interrupt handler. */
 void
-sema_up (struct semaphore *sema) 
+sema_signal (struct semaphore *sema) 
 {
   enum intr_level old_level;
 
@@ -137,8 +137,8 @@ sema_self_test (void)
   thread_create ("sema-test", PRI_DEFAULT, sema_test_helper, &sema);
   for (i = 0; i < 10; i++) 
     {
-      sema_up (&sema[0]);
-      sema_down (&sema[1]);
+      sema_signal (&sema[0]);
+      sema_wait (&sema[1]);
     }
   printf ("done.\n");
 }
@@ -152,8 +152,8 @@ sema_test_helper (void *sema_)
 
   for (i = 0; i < 10; i++) 
     {
-      sema_down (&sema[0]);
-      sema_up (&sema[1]);
+      sema_wait (&sema[0]);
+      sema_signal (&sema[1]);
     }
 }
 
@@ -196,7 +196,7 @@ lock_acquire (struct lock *lock)
   ASSERT (!intr_context ());
   ASSERT (!lock_held_by_current_thread (lock));
 
-  sema_down (&lock->semaphore);
+  sema_wait (&lock->semaphore);
   lock->holder = thread_current ();
 }
 
@@ -232,7 +232,7 @@ lock_release (struct lock *lock)
   ASSERT (lock_held_by_current_thread (lock));
 
   lock->holder = NULL;
-  sema_up (&lock->semaphore);
+  sema_signal (&lock->semaphore);
 }
 
 /* Returns true if the current thread holds LOCK, false
@@ -297,7 +297,7 @@ cond_wait (struct condition *cond, struct lock *lock)
   sema_init (&waiter.semaphore, 0);
   list_push_back (&cond->waiters, &waiter.elem);
   lock_release (lock);
-  sema_down (&waiter.semaphore);
+  sema_wait (&waiter.semaphore);
   lock_acquire (lock);
 }
 
@@ -317,7 +317,7 @@ cond_signal (struct condition *cond, struct lock *lock UNUSED)
   ASSERT (lock_held_by_current_thread (lock));
 
   if (!list_empty (&cond->waiters)) 
-    sema_up (&list_entry (list_pop_front (&cond->waiters),
+    sema_signal (&list_entry (list_pop_front (&cond->waiters),
                           struct semaphore_elem, elem)->semaphore);
 }
 

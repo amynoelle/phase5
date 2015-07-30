@@ -693,7 +693,7 @@ return from @func{schedule}.
 
 @itemize @minus
 @item
-@func{sema_down}, which restores the interrupt level before returning.
+@func{sema_wait}, which restores the interrupt level before returning.
 
 @item
 @func{idle}, which enables interrupts with an explicit assembly STI

@@ -687,7 +687,7 @@ sys_semwait (const char *name)
     }
 
   struct semaphore_map_elem *e = hash_entry (hash_elem, struct semaphore_map_elem, hash_elem);
-  sema_down(&e->semaphore);
+  sema_wait(&e->semaphore);
 
   fnval = 0;
 
@@ -709,7 +709,7 @@ sys_semsignal (const char *name)
     }
 
   struct semaphore_map_elem *e = hash_entry (hash_elem, struct semaphore_map_elem, hash_elem);
-  sema_up(&e->semaphore);
+  sema_signal(&e->semaphore);
 
   fnval = 0;
 

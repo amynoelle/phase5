@@ -377,7 +377,7 @@ be used to iterate over all threads.
 @deftypecv {Member} {@struct{thread}} {@struct{list_elem}} elem
 A ``list element'' used to put the thread into doubly linked lists,
 either @code{ready_list} (the list of threads ready to run) or a list of
-threads waiting on a semaphore in @func{sema_down}.  It can do double
+threads waiting on a semaphore in @func{sema_wait}.  It can do double
 duty because a thread waiting on a semaphore is not ready, and vice
 versa.
 @end deftypecv
@@ -706,7 +706,7 @@ Initializes @var{sema} as a new semaphore with the given initial
 @var{value}.
 @end deftypefun
 
-@deftypefun void sema_down (struct semaphore *@var{sema})
+@deftypefun void sema_wait (struct semaphore *@var{sema})
 Executes the ``down'' or ``P'' operation on @var{sema}, waiting for
 its value to become positive and then decrementing it by one.
 @end deftypefun
@@ -717,16 +717,16 @@ without waiting.  Returns true if @var{sema}
 was successfully decremented, or false if it was already
 zero and thus could not be decremented without waiting.  Calling this
 function in a
-tight loop wastes CPU time, so use @func{sema_down} or find a
+tight loop wastes CPU time, so use @func{sema_wait} or find a
 different approach instead.
 @end deftypefun
 
-@deftypefun void sema_up (struct semaphore *@var{sema})
+@deftypefun void sema_signal (struct semaphore *@var{sema})
 Executes the ``up'' or ``V'' operation on @var{sema},
 incrementing its value.  If any threads are waiting on
 @var{sema}, wakes one of them up.
 
-Unlike most synchronization primitives, @func{sema_up} may be called
+Unlike most synchronization primitives, @func{sema_signal} may be called
 inside an external interrupt handler (@pxref{External Interrupt
 Handling}).
 @end deftypefun

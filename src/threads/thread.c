@@ -115,7 +115,7 @@ thread_start (void)
   intr_enable ();
 
   /* Wait for the idle thread to initialize idle_thread. */
-  sema_down (&idle_started);
+  sema_wait (&idle_started);
 }
 
 /* Called by the timer interrupt handler at each timer tick.
@@ -401,7 +401,7 @@ idle (void *idle_started_ UNUSED)
 {
   struct semaphore *idle_started = idle_started_;
   idle_thread = thread_current ();
-  sema_up (idle_started);
+  sema_signal (idle_started);
 
   for (;;) 
     {

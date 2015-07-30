@@ -35,7 +35,7 @@ test_alarm_priority (void)
   thread_set_priority (PRI_MIN);
 
   for (i = 0; i < 10; i++)
-    sema_down (&wait_sema);
+    sema_wait (&wait_sema);
 }
 
 static void
@@ -54,5 +54,5 @@ alarm_priority_thread (void *aux UNUSED)
   /* Print a message on wake-up. */
   msg ("Thread %s woke up.", thread_name ());
 
-  sema_up (&wait_sema);
+  sema_signal (&wait_sema);
 }

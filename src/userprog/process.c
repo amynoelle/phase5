@@ -100,7 +100,7 @@ process_execute (const char *file_name)
       goto done;
     }
 
-  sema_down (&exec.load_done);
+  sema_wait (&exec.load_done);
   if (exec.success)
     {
       cur->children[slot] = exec.thread;
@@ -142,7 +142,7 @@ start_process (void *exec_)
   
   /* Notify parent thread and clean up. */
   exec->success = success;
-  sema_up (&exec->load_done);
+  sema_signal (&exec->load_done);
   if (!success) 
     thread_exit ();
 
@@ -176,7 +176,7 @@ process_wait (tid_t child_tid)
 
   struct thread *child = cur->children[slot];
   cur->children[slot] = NULL;
-  sema_down (&child->dead);
+  sema_wait (&child->dead);
   exit_code = child->exit_code;
   palloc_free_page (child);
 
@@ -228,7 +228,7 @@ process_notify_parent (void)
   struct thread *cur = thread_current ();
 
   printf ("%s: exit(%d)\n", cur->name, cur->exit_code);
-  sema_up (&cur->dead);
+  sema_signal (&cur->dead);
 }
 
 /* Sets up the CPU for running user code in the current
