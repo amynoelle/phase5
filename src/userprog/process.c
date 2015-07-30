@@ -33,6 +33,40 @@ struct exec_info
     bool success;                       /* Program successfully loaded? */
   };
 
+/* Returns that next unused slot in the children array or -1 if full. */
+static int
+next_child_slot (struct thread *thread)
+{
+  int slot = MAX_CHILD;
+
+  for (slot = 0; slot < MAX_CHILD; slot++)
+    {
+      if (NULL == thread->children[slot])
+        {
+          break;
+        }
+    }
+
+  return slot < MAX_CHILD ? slot : -1;
+}
+
+/* Return slot with given tid or -1 if tid not found. */
+static int
+child_tid_slot (struct thread *thread, tid_t tid)
+{
+  int slot = MAX_CHILD;
+
+  for (slot = 0; slot < MAX_CHILD; slot++)
+    {
+      if (NULL != thread->children[slot] && tid == thread->children[slot]->tid)
+        {
+          break;
+        }
+    }
+
+  return slot < MAX_CHILD ? slot : -1;
+}
+
 /* Starts a new thread running a user program loaded from
    FILENAME.  The new thread may be scheduled (and may even exit)
    before process_execute() returns.  Returns the new process's
@@ -43,25 +77,40 @@ process_execute (const char *file_name)
   struct exec_info exec;
   char thread_name[16];
   char *save_ptr;
-  tid_t tid;
+  tid_t tid = TID_ERROR;
+  struct thread *cur = thread_current ();
 
   /* Initialize exec_info. */
   exec.file_name = file_name;
   sema_init (&exec.load_done, 0);
 
+  /* Obtain a slot in which to store child status. */
+  int slot = next_child_slot (cur);
+  if (-1 == slot)
+    {
+      goto done;
+    }
+
   /* Create a new thread to execute FILE_NAME. */
   strlcpy (thread_name, file_name, sizeof thread_name);
   strtok_r (thread_name, " ", &save_ptr);
   tid = thread_create (thread_name, PRI_DEFAULT, start_process, &exec);
-  if (tid != TID_ERROR)
+  if (tid == TID_ERROR)
     {
-      sema_down (&exec.load_done);
-      if (exec.success)
-        list_push_back (&thread_current ()->children, &exec.wait_status->elem);
-      else
-        tid = TID_ERROR;
+      goto done;
     }
 
+  sema_down (&exec.load_done);
+  if (exec.success)
+    {
+      cur->children[slot] = exec.wait_status;
+    }
+  else
+    {
+      tid = TID_ERROR;
+    }
+
+done:
   return tid;
 }
 
@@ -139,24 +188,24 @@ release_child (struct wait_status *cs)
 int
 process_wait (tid_t child_tid) 
 {
+  int exit_code = -1;
+  struct wait_status *cs = NULL;
   struct thread *cur = thread_current ();
-  struct list_elem *e;
 
-  for (e = list_begin (&cur->children); e != list_end (&cur->children);
-       e = list_next (e)) 
+  int slot = child_tid_slot(cur, child_tid);
+  if (-1 == slot)
     {
-      struct wait_status *cs = list_entry (e, struct wait_status, elem);
-      if (cs->tid == child_tid) 
-        {
-          int exit_code;
-          list_remove (e);
-          sema_down (&cs->dead);
-          exit_code = cs->exit_code;
-          release_child (cs);
-          return exit_code;
-        }
+      goto done;
     }
-  return -1;
+
+  cs = cur->children[slot];
+  cur->children[slot] = NULL;
+  sema_down (&cs->dead);
+  exit_code = cs->exit_code;
+  release_child (cs);
+
+done:
+  return exit_code;
 }
 
 /* Free the current process's resources. */
@@ -164,7 +213,6 @@ void
 process_exit (void)
 {
   struct thread *cur = thread_current ();
-  struct list_elem *e, *next;
   uint32_t *pd;
 
   /* Close executable (and allow writes). */
@@ -180,12 +228,13 @@ process_exit (void)
     }
 
   /* Free entries of children list. */
-  for (e = list_begin (&cur->children); e != list_end (&cur->children);
-       e = next) 
+  for (int i = 0; i < MAX_CHILD; i++)
     {
-      struct wait_status *cs = list_entry (e, struct wait_status, elem);
-      next = list_remove (e);
-      release_child (cs);
+      if (NULL != cur->children[i])
+        {
+          release_child (cur->children[i]);
+          cur->children[i] = NULL;
+        }
     }
   
   /* Destroy the current process's page directory and switch back

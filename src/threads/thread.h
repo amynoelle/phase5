@@ -27,6 +27,7 @@ typedef int tid_t;
 
 /* Maximum number of open files per thread. */
 #define MAX_FILES 128
+#define MAX_CHILD 128
 
 /* A kernel thread or user process.
 
@@ -96,7 +97,6 @@ struct thread
 
     /* Owned by process.c. */
     struct wait_status *wait_status;    /* This process's completion status. */
-    struct list children;               /* Completion status of children. */
 
     /* Shared between thread.c and synch.c. */
     struct list_elem elem;              /* List element. */
@@ -104,6 +104,7 @@ struct thread
 #ifdef USERPROG
     /* Owned by userprog/process.c. */
     uint32_t *pagedir;                  /* Page directory. */
+    struct wait_status *children[MAX_CHILD]; /* This process' children. */
 #endif
     struct file *bin_file;              /* Executable. */
 
@@ -119,7 +120,6 @@ struct thread
    and by the child, in its `wait_status' pointer. */
 struct wait_status
   {
-    struct list_elem elem;              /* `children' list element. */
     struct lock lock;                   /* Protects ref_cnt. */
     int ref_cnt;                        /* 2=child and parent both alive,
                                            1=either child or parent alive,
