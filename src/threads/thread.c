@@ -553,6 +553,7 @@ thread_schedule_tail (struct thread *prev)
       /* If zombie is not a user-space process and therefore has
          no parent to free it, then we free it here. */
       ASSERT (prev != cur);
+      ASSERT (!prev->is_process);
       palloc_free_page (prev);
     }
 }

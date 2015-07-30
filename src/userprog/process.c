@@ -156,6 +156,28 @@ start_process (void *exec_)
   NOT_REACHED ();
 }
 
+/* Ensure thread no longer in thread.c's all_list. */
+static void
+panic_if_threads_same (struct thread *t, struct thread *zombie)
+{
+  if (&t->allelem == &zombie->allelem)
+    {
+      PANIC ("About to destroy kernel thread that we might later schedule");
+    }
+}
+
+/* Ensure thread no longer in thread.c's all_list. */
+static bool
+thread_cannot_schedule (struct thread *zombie)
+{
+  /* Bad performance, but should only be called from ASSERT (). */
+  enum intr_level old_level = intr_disable ();
+  thread_foreach ((thread_action_func *) panic_if_threads_same, &zombie->allelem);
+  intr_set_level (old_level);
+
+  return true;
+}
+
 /* Waits for thread TID to die and returns its exit status.  If
    it was terminated by the kernel (i.e. killed due to an
    exception), returns -1.  If TID is invalid or if it was not a
@@ -178,6 +200,14 @@ process_wait (tid_t child_tid)
   cur->children[slot] = NULL;
   sema_wait (&child->dead);
   exit_code = child->exit_code;
+
+  ASSERT (child->is_process);
+  ASSERT (thread_cannot_schedule (child)); /* A little healthy paranoia:
+                                              we do not want to free a thread
+                                              that could later run. Otherwise,
+                                              thread_schedule_tail might free it
+                                              again. */
+
   palloc_free_page (child);
 
 done:
