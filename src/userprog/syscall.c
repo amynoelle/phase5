@@ -10,7 +10,6 @@
 #include "filesys/filesys.h"
 #include "filesys/file.h"
 #include "threads/interrupt.h"
-#include "threads/malloc.h"
 #include "threads/palloc.h"
 #include "threads/thread.h"
 #include "threads/vaddr.h"
@@ -43,10 +42,12 @@ static struct lock fs_lock;
 static struct lock sem_lock;
 static struct hash semaphore_map;
 
+#define SEMAPHORE_NAME_SIZE 16
+
 struct semaphore_map_elem
   {
     struct hash_elem hash_elem;
-    char *name;
+    char name[SEMAPHORE_NAME_SIZE];
     struct semaphore semaphore;
   };
 
@@ -596,13 +597,13 @@ sys_semcreat (const char *uname, int initial_value)
   struct semaphore_map_elem *s = NULL;
   char *kname = copy_in_string (uname);
 
-  s = malloc (sizeof (*s));
+  s = palloc_get_page (0);
   if (NULL == s)
     {
       goto done;
     }
 
-  s->name = kname;
+  strlcpy (s->name, kname, SEMAPHORE_NAME_SIZE);
   sema_init (&s->semaphore, initial_value);
 
   lock_acquire (&sem_lock);
@@ -620,14 +621,11 @@ done:
     {
       if (NULL != s)
         {
-          free (s);
-        }
-
-      if (NULL != kname)
-        {
-          palloc_free_page (kname);
+          palloc_free_page (s);
         }
     }
+
+  palloc_free_page (kname);
 
   return fnval;
 }
@@ -638,7 +636,9 @@ sys_semdestroy (const char *uname)
 {
   int fnval = -1;
   char *kname = copy_in_string (uname);
-  struct semaphore_map_elem s = { .name = kname };
+  struct semaphore_map_elem s;
+
+  strlcpy (s.name, kname, SEMAPHORE_NAME_SIZE);
 
   lock_acquire (&sem_lock);
   struct hash_elem *hash_elem = hash_find (&semaphore_map, &s.hash_elem);
@@ -658,8 +658,7 @@ sys_semdestroy (const char *uname)
       goto done;
     }
 
-  palloc_free_page (e->name);
-  free (e);
+  palloc_free_page (e);
 
   fnval = 0;
 
@@ -677,8 +676,10 @@ sys_semwait (const char *uname)
   int fnval = -1;
   enum intr_level old_level;
   char *kname = copy_in_string (uname);
-  struct semaphore_map_elem s = { .name = kname };
+  struct semaphore_map_elem s;
   struct semaphore_map_elem *e;
+
+  strlcpy (s.name, kname, SEMAPHORE_NAME_SIZE);
 
   lock_acquire (&sem_lock);
   struct hash_elem *hash_elem = hash_find (&semaphore_map, &s.hash_elem);
@@ -711,9 +712,9 @@ sys_semsignal (const char *uname)
 {
   int fnval = -1;
   char *kname = copy_in_string (uname);
-  struct semaphore_map_elem s = { .name = kname };
+  struct semaphore_map_elem s;
 
-  s.name = kname;
+  strlcpy (s.name, kname, SEMAPHORE_NAME_SIZE);
 
   lock_acquire (&sem_lock);
   struct hash_elem *hash_elem = hash_find (&semaphore_map, &s.hash_elem);
