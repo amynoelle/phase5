@@ -14,8 +14,7 @@
 #include "threads/palloc.h"
 #include "threads/thread.h"
 #include "threads/vaddr.h"
- 
- 
+
 static int sys_halt (void);
 static int sys_exit (int status);
 static int sys_exec (const char *ufile);
@@ -40,11 +39,39 @@ static void copy_in (void *, const void *, size_t);
 /* Serializes file system operations. */
 static struct lock fs_lock;
 
+/* Supports semaphore operations. */
+static struct lock sem_lock;
+static struct hash semaphore_map;
+
+struct semaphore_map_elem
+  {
+    struct hash_elem hash_elem;
+    char *name;
+    struct semaphore semaphore;
+  };
+
+static unsigned
+semname_hash (const struct hash_elem *element, void *aux UNUSED)
+{
+  const char *name = hash_entry (element, struct semaphore_map_elem, hash_elem)->name;
+  return hash_string (name);
+}
+
+static bool
+semname_less (const struct hash_elem *a, const struct hash_elem *b, void *aux UNUSED)
+{
+  const char *name_a = hash_entry (a, struct semaphore_map_elem, hash_elem)->name;
+  const char *name_b = hash_entry (b, struct semaphore_map_elem, hash_elem)->name;
+  return strcmp(name_a, name_b) < 0;
+}
+
 void
 syscall_init (void) 
 {
   intr_register_int (0x30, 3, INTR_ON, syscall_handler, "syscall");
   lock_init (&fs_lock);
+  lock_init (&sem_lock);
+  hash_init (&semaphore_map, semname_hash, semname_less, NULL);
 }
  
 /* System call handler. */
@@ -560,35 +587,12 @@ syscall_exit (void)
     }
 }
 
-static struct hash *semaphore_map = NULL;
-
-struct semaphore_map_elem
-  {
-    struct hash_elem hash_elem;
-    const char *name; 
-    struct semaphore semaphore;
-  };
-
-static unsigned
-semname_hash (const struct hash_elem *element, void *aux UNUSED)
-{
-  const char *name = hash_entry (element, struct semaphore_map_elem, hash_elem)->name;
-  return hash_string (name);
-}
-
-static bool
-semname_less (const struct hash_elem *a, const struct hash_elem *b, void *aux UNUSED)
-{
-  const char *name_a = hash_entry (a, struct semaphore_map_elem, hash_elem)->name;
-  const char *name_b = hash_entry (b, struct semaphore_map_elem, hash_elem)->name;
-  return strcmp(name_a, name_b) < 0;
-}
-
 /* System call which creates a semaphore. */
 static int
 sys_semcreat (const char *uname, int initial_value)
 {
   int fnval = -1;
+  struct hash_elem *elem = NULL;
   struct semaphore_map_elem *s = NULL;
   char *kname = copy_in_string (uname);
 
@@ -601,14 +605,10 @@ sys_semcreat (const char *uname, int initial_value)
   s->name = kname;
   sema_init (&s->semaphore, initial_value);
 
-  if (NULL == semaphore_map)
-    {
-      static struct hash s;
-      semaphore_map = &s;
-      hash_init (semaphore_map, semname_hash, semname_less, NULL);
-    }
-
-  if (NULL != hash_insert (semaphore_map, &s->hash_elem))
+  lock_acquire (&sem_lock);
+  elem = hash_insert (&semaphore_map, &s->hash_elem);
+  lock_release (&sem_lock);
+  if (NULL != elem)
     {
       goto done;
     }
@@ -637,22 +637,27 @@ static int
 sys_semdestroy (const char *uname)
 {
   int fnval = -1;
+  bool empty = false;
   char *kname = copy_in_string (uname);
   struct semaphore_map_elem s = { .name = kname };
+  struct hash_elem *elem = NULL;
 
-  struct hash_elem *hash_elem = hash_find (semaphore_map, &s.hash_elem);
+  lock_acquire (&sem_lock);
+  struct hash_elem *hash_elem = hash_find (&semaphore_map, &s.hash_elem);
   if (NULL == hash_elem)
     {
       goto done;
     }
 
   struct semaphore_map_elem *e = hash_entry (hash_elem, struct semaphore_map_elem, hash_elem);
-  if (! list_empty (&e->semaphore.waiters))
+  empty = list_empty (&e->semaphore.waiters);
+  if (! empty)
     {
       goto done;
     }
 
-  if (NULL == hash_delete (semaphore_map, &e->hash_elem))
+  elem = hash_delete (&semaphore_map, &e->hash_elem);
+  if (NULL == elem)
     {
       goto done;
     }
@@ -663,6 +668,7 @@ sys_semdestroy (const char *uname)
   fnval = 0;
 
 done:
+  lock_release (&sem_lock);
   palloc_free_page (kname);
 
   return fnval;
@@ -673,17 +679,27 @@ static int
 sys_semwait (const char *uname)
 {
   int fnval = -1;
+  enum intr_level old_level;
   char *kname = copy_in_string (uname);
   struct semaphore_map_elem s = { .name = kname };
+  struct semaphore_map_elem *e;
 
-  struct hash_elem *hash_elem = hash_find (semaphore_map, &s.hash_elem);
+  lock_acquire (&sem_lock);
+  struct hash_elem *hash_elem = hash_find (&semaphore_map, &s.hash_elem);
   if (NULL == hash_elem)
     {
+      lock_release (&sem_lock);
       goto done;
     }
 
-  struct semaphore_map_elem *e = hash_entry (hash_elem, struct semaphore_map_elem, hash_elem);
+  /* Must release lock before calling sema_wait, but still do not want
+     semaphore to change between hash_entry and sema_wait.
+     Disable interrupts.*/
+  old_level = intr_disable ();
+  e = hash_entry (hash_elem, struct semaphore_map_elem, hash_elem);
+  lock_release (&sem_lock);
   sema_wait(&e->semaphore);
+  intr_set_level (old_level);
 
   fnval = 0;
 
@@ -703,7 +719,8 @@ sys_semsignal (const char *uname)
 
   s.name = kname;
 
-  struct hash_elem *hash_elem = hash_find (semaphore_map, &s.hash_elem);
+  lock_acquire (&sem_lock);
+  struct hash_elem *hash_elem = hash_find (&semaphore_map, &s.hash_elem);
   if (NULL == hash_elem)
     {
       goto done;
@@ -715,6 +732,7 @@ sys_semsignal (const char *uname)
   fnval = 0;
 
 done:
+  lock_release (&sem_lock);
   palloc_free_page (kname);
 
   return fnval;
