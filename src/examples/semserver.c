@@ -7,17 +7,17 @@ main (int argc, char **argv)
   const char sem_name[] = "test-sem-name";
   const char sem_bad_name[] = "bad-sem-name";
 
-  printf("%s: preparing to create semaphore %s.\n", argv[0], sem_name);
-  if(semcreate(sem_name, 0) < 0)
+  printf("%s: preparing to creat semaphore %s.\n", argv[0], sem_name);
+  if(semcreat(sem_name, 0) < 0)
     {
-      printf("%s: FAIL: create failed.\n", argv[0]);
+      printf("%s: FAIL: creat failed.\n", argv[0]);
       return EXIT_FAILURE;
     }
 
-  printf("%s: create semaphore with same name again (should fail).\n", argv[0]);
-  if(semcreate(sem_name, 0) == 0)
+  printf("%s: creat semaphore with same name again (should fail).\n", argv[0]);
+  if(semcreat(sem_name, 0) == 0)
     {
-      printf("%s: FAIL: create did not return expected value for failure.\n", argv[0]);
+      printf("%s: FAIL: creat did not return expected value for failure.\n", argv[0]);
       return EXIT_FAILURE;
     }
 

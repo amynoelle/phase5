@@ -25,9 +25,9 @@ main (int argc, char *argv[])
     }
 
   /* Create and open output file. */
-  if (!create (argv[2], filesize (in_fd))) 
+  if (!creat (argv[2], filesize (in_fd))) 
     {
-      printf ("%s: create failed\n", argv[2]);
+      printf ("%s: creat failed\n", argv[2]);
       return EXIT_FAILURE;
     }
   out_fd = open (argv[2]);

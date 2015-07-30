@@ -4,7 +4,7 @@
    generator.  I wrote a program that reads a grammar definition
    file and writes a C file containing that grammar as hard code
    static C strings.  Thus the majority of the code below in
-   machine generated and totally unreadable.  The arrays created
+   machine generated and totally unreadable.  The arrays creatd
    are specially designed to make generating the sentences as
    easy as possible.
 
@@ -132,7 +132,7 @@ char *bad_action[] =
 "religious", "experience", "discharge", "bodily", "waste", "fart", "dance", "drool",
 "lambada", "spill", "16", "rusty", "tacks", "bite", "you", "sneeze", "sing", "16",
 "campfire", "songs", "smite", "you", "16", "times", "construct", "a", "new", "home", "throw",
-"a", "party", "procreate"
+"a", "party", "procreat"
 };
 char bad_actionLoc[] =
   { 25, 0, 1, 2, 3, 5, 7, 8, 9, 10, 11, 15, 18, 22, 25, 26, 27, 28, 29, 33,
@@ -314,7 +314,7 @@ main (int argc, char *argv[])
              file system, the 0 argument means that this option
              will not be useful until project 4 is
              implemented. */
-	  create (argv[i], 0);
+	  creat (argv[i], 0);
 	  handle = open (argv[i]);
           if (handle < 0)
             {
