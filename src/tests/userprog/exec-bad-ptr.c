@@ -7,5 +7,5 @@
 void
 test_main (void) 
 {
-  exec ((char *) 0x20101234);
+  exec ((char *) 0x20101234, (char *[]) { 0x20101234, (char *) 0 });
 }

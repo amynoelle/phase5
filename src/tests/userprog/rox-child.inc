@@ -7,7 +7,6 @@
 void
 test_main (void) 
 {
-  const char *child_cmd = "child-rox " CHILD_CNT;
   int handle;
   pid_t child;
   char buffer[16];
@@ -21,7 +20,7 @@ test_main (void)
          "write \"child-rox\"");
 
   /* Execute child-rox and wait for it. */
-  CHECK ((child = exec (child_cmd)) != -1, "exec \"%s\"", child_cmd);
+  CHECK ((child = exec ("child-rox", (char *[]) { "child-rox", CHILD_CNT, (char *) 0 })) != -1, "exec \"%s %s\"", "child-rox", CHILD_CNT);
   quiet = true;
   CHECK (wait (child) == 12, "wait for child");
   quiet = false;

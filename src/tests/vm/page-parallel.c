@@ -13,7 +13,7 @@ test_main (void)
   int i;
 
   for (i = 0; i < CHILD_CNT; i++) 
-    CHECK ((children[i] = exec ("child-linear")) != -1,
+    CHECK ((children[i] = exec ("child-linear", (char **) { "child-linear", (char *) 0 })) != -1,
            "exec \"child-linear\"");
 
   for (i = 0; i < CHILD_CNT; i++) 

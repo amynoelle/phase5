@@ -17,16 +17,16 @@ main (int argc UNUSED, char *argv[])
   msg ("begin %d", n);
   if (n != 0) 
     {
-      char child_cmd[128];
+      char param[128];
       pid_t child_pid;
       int code;
       
-      snprintf (child_cmd, sizeof child_cmd, "multi-recurse %d", n - 1);
-      CHECK ((child_pid = exec (child_cmd)) != -1, "exec(\"%s\")", child_cmd);
+      snprintf (param, sizeof param, "%d", n - 1);
+      CHECK ((child_pid = exec ("multi-recurse", (char *[]) { "multi-recurse", (char *) param, (char *) 0 })) != -1, "exec(\"multi-recurse %s\")", param);
 
       code = wait (child_pid);
       if (code != n - 1)
-        fail ("wait(exec(\"%s\")) returned %d", child_cmd, code);
+        fail ("wait(exec(\"multi-recurse\")) returned %d", code);
     }
   
   msg ("end %d", n);

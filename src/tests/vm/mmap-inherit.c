@@ -21,7 +21,7 @@ test_main (void)
     fail ("read of mmap'd file reported bad data");
 
   /* Spawn child and wait. */
-  CHECK ((child = exec ("child-inherit")) != -1, "exec \"child-inherit\"");
+  CHECK ((child = exec ("child-inherit", (char **) { "child-inherit", (char *) 0 })) != -1, "exec \"child-inherit\"");
   quiet = true;
   CHECK (wait (child) == -1, "wait for child (should return -1)");
   quiet = false;

@@ -279,17 +279,26 @@ parse_options (char **argv)
 
 /* Runs the task specified in ARGV[1]. */
 static void
-run_task (char **argv)
+run_task (char **cmd_line)
 {
-  const char *task = argv[1];
-  
-  printf ("Executing '%s':\n", task);
+  int i = 0;
+  static char *argv[LOADER_ARGS_LEN / 2 + 1];
+  char *arg, *saveptr;
+  for (arg = strtok_r (cmd_line[1], " ", &saveptr);
+       arg != NULL && i < sizeof(argv) - 1;
+       arg = strtok_r (NULL, " ", &saveptr))
+    {
+      argv[i++] = arg;
+    }
+  argv[i] = 0x00;
+
+  printf ("Executing '%s':\n", argv[0]);
 #ifdef USERPROG
-  process_wait (process_execute (task));
+  process_wait (process_execute (argv[0], argv));
 #else
-  run_test (task);
+  run_test (argv[0]);
 #endif
-  printf ("Execution of '%s' complete.\n", task);
+  printf ("Execution of '%s' complete.\n", argv[0]);
 }
 
 /* Executes all of the actions specified in ARGV[]

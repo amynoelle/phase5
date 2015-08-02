@@ -76,9 +76,9 @@ exit (int status)
 }
 
 pid_t
-exec (const char *file)
+exec (const char *path, char *const argv[])
 {
-  return (pid_t) syscall1 (SYS_EXEC, file);
+  return (pid_t) syscall2 (SYS_EXEC, path, argv);
 }
 
 int

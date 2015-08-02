@@ -7,6 +7,7 @@ static void read_line (char line[], size_t);
 static bool backspace (char **pos, char line[]);
 
 #define PROMPT "pintos> "
+#define COMMAND_SIZE 80
 
 int
 main (void)
@@ -15,7 +16,7 @@ main (void)
   for (;;) 
     {
       bool background = false;
-      char commands[80], *cptr = commands, *delim = NULL;
+      char commands[COMMAND_SIZE], *cptr = commands, *delim = NULL;
 
       /* Read command(s). */
       printf (PROMPT);
@@ -45,7 +46,16 @@ main (void)
             }
           else
             {
-              pid_t pid = exec (cptr);
+              int i = 0;
+              char *arg, *argv[COMMAND_SIZE], *saveptr;
+              for (arg = strtok_r (cptr, " ", &saveptr); arg != NULL && i < sizeof(argv) - 1;
+                   arg = strtok_r (NULL, " ", &saveptr))
+                {
+                  argv[i++] = arg;
+                }
+              argv[i] = 0x00;
+
+              pid_t pid = exec (cptr, argv);
               if (pid != PID_ERROR)
                 {
                   if (! background)

@@ -20,14 +20,15 @@
 #include "threads/vaddr.h"
 
 static thread_func start_process NO_RETURN;
-static bool load (const char *cmd_line, void (**eip) (void), void **esp);
+static bool load (const char *path, char **argv, void (**eip) (void), void **esp);
 
 /* Data structure shared between process_execute() in the
    invoking thread and start_process() in the newly invoked
    thread. */
 struct exec_info 
   {
-    const char *file_name;              /* Program to load. */
+    const char *path;                   /* Program to load. */
+    char **argv;                        /* Program arguments. */
     struct semaphore load_done;         /* "Up"ed when loading complete. */
     struct thread *thread;              /* Child process. */
     bool success;                       /* Program successfully loaded? */
@@ -72,16 +73,16 @@ child_tid_slot (struct thread *thread, tid_t tid)
    before process_execute() returns.  Returns the new process's
    thread id, or TID_ERROR if the thread cannot be created. */
 tid_t
-process_execute (const char *file_name) 
+process_execute (const char *path, char **argv)
 {
   struct exec_info exec;
   char thread_name[16];
-  char *save_ptr;
   tid_t tid = TID_ERROR;
   struct thread *cur = thread_current ();
 
   /* Initialize exec_info. */
-  exec.file_name = file_name;
+  exec.path = path;
+  exec.argv = argv;
   sema_init (&exec.load_done, 0);
 
   /* Obtain a slot in which to store child status. */
@@ -92,8 +93,7 @@ process_execute (const char *file_name)
     }
 
   /* Create a new thread to execute FILE_NAME. */
-  strlcpy (thread_name, file_name, sizeof thread_name);
-  strtok_r (thread_name, " ", &save_ptr);
+  strlcpy (thread_name, path, sizeof thread_name);
   tid = thread_create (thread_name, PRI_DEFAULT, start_process, &exec);
   if (tid == TID_ERROR)
     {
@@ -132,7 +132,7 @@ start_process (void *exec_)
   if_.gs = if_.fs = if_.es = if_.ds = if_.ss = SEL_UDSEG;
   if_.cs = SEL_UCSEG;
   if_.eflags = FLAG_IF | FLAG_MBS;
-  success = load (exec->file_name, &if_.eip, &if_.esp);
+  success = load (exec->path, exec->argv, &if_.eip, &if_.esp);
 
   /* Provide parent with pointer to this thread. */
   if (success)
@@ -340,7 +340,7 @@ struct Elf32_Phdr
 #define PF_W 2          /* Writable. */
 #define PF_R 4          /* Readable. */
 
-static bool setup_stack (const char *cmd_line, void **esp);
+static bool setup_stack (const char *path, char **argv, void **esp);
 static bool validate_segment (const struct Elf32_Phdr *, struct file *);
 static bool load_segment (struct file *file, off_t ofs, uint8_t *upage,
                           uint32_t read_bytes, uint32_t zero_bytes,
@@ -351,10 +351,10 @@ static bool load_segment (struct file *file, off_t ofs, uint8_t *upage,
    and its initial stack pointer into *ESP.
    Returns true if successful, false otherwise. */
 bool
-load (const char *cmd_line, void (**eip) (void), void **esp) 
+load (const char *_path, char **argv, void (**eip) (void), void **esp)
 {
   struct thread *t = thread_current ();
-  char file_name[NAME_MAX + 2];
+  char path[NAME_MAX + 2];
   struct Elf32_Ehdr ehdr;
   struct file *file = NULL;
   off_t file_ofs;
@@ -368,19 +368,19 @@ load (const char *cmd_line, void (**eip) (void), void **esp)
     goto done;
   process_activate ();
 
-  /* Extract file_name from command line. */
-  while (*cmd_line == ' ')
-    cmd_line++;
-  strlcpy (file_name, cmd_line, sizeof file_name);
-  cp = strchr (file_name, ' ');
+  /* Fix up path. */
+  while (*_path == ' ')
+    _path++;
+  strlcpy (path, _path, sizeof path);
+  cp = strchr (path, ' ');
   if (cp != NULL)
     *cp = '\0';
 
   /* Open executable file. */
-  t->bin_file = file = filesys_open (file_name);
+  t->bin_file = file = filesys_open (path);
   if (file == NULL) 
     {
-      printf ("load: %s: open failed\n", file_name);
+      printf ("load: %s: open failed\n", path);
       goto done; 
     }
   file_deny_write (file);
@@ -394,7 +394,7 @@ load (const char *cmd_line, void (**eip) (void), void **esp)
       || ehdr.e_phentsize != sizeof (struct Elf32_Phdr)
       || ehdr.e_phnum > 1024) 
     {
-      printf ("load: %s: error loading executable\n", file_name);
+      printf ("load: %s: error loading executable\n", path);
       goto done; 
     }
 
@@ -458,7 +458,7 @@ load (const char *cmd_line, void (**eip) (void), void **esp)
     }
 
   /* Set up stack. */
-  if (!setup_stack (cmd_line, esp))
+  if (!setup_stack (path, argv, esp))
     goto done;
 
   /* Start address. */
@@ -615,34 +615,49 @@ push (uint8_t *kpage, size_t *ofs, const void *buf, size_t size)
    from CMD_LINE, separated by spaces.  Sets *ESP to the initial
    stack pointer for the process. */
 static bool
-init_cmd_line (uint8_t *kpage, uint8_t *upage, const char *cmd_line,
-               void **esp) 
+init_cmd_line (uint8_t *kpage, uint8_t *upage,
+               const char *path, char **_argv, void **esp)
 {
   size_t ofs = PGSIZE;
   char *const null = NULL;
-  char *cmd_line_copy;
-  char *karg, *saveptr;
   int argc;
-  char **argv;
+  char **orig_argv, **argv;
 
-  /* Push command line string. */
-  cmd_line_copy = push (kpage, &ofs, cmd_line, strlen (cmd_line) + 1);
-  if (cmd_line_copy == NULL)
-    return false;
+  char *uargv[10];
+
+  /* Push command line strings. */
+  for (argc = 0; _argv[argc]; argc++) {}
+  orig_argv = argv = palloc_get_page (0);
+  if (NULL == argv)
+    {
+      PANIC("BOO!");
+    }
+
+  for (int i = 0; i < argc; i++)
+    {
+      /* Replace each pointer in argv with the new user-space pointer. */
+      argv[i] = push (kpage, &ofs, _argv[i], strlen (_argv[i]) + 1);
+      if (argv[i] == NULL)
+        {
+          return false;
+        }
+    }
 
   if (push (kpage, &ofs, &null, sizeof null) == NULL)
-    return false;
-
-  /* Parse command line into arguments
-     and push them in reverse order. */
-  argc = 0;
-  for (karg = strtok_r (cmd_line_copy, " ", &saveptr); karg != NULL;
-       karg = strtok_r (NULL, " ", &saveptr))
     {
-      void *uarg = upage + (karg - (char *) kpage);
+      return false;
+    }
+
+  /* Parse command line into arguments and push them in reverse order. */
+  for (int i = 0; i < argc; i++)
+    {
+      char *arg;
+      arg = argv[i];
+      void *uarg = upage + (arg - (char *) kpage);
       if (push (kpage, &ofs, &uarg, sizeof uarg) == NULL)
-        return false;
-      argc++;
+        {
+          return false;
+        }
     }
 
   /* Reverse the order of the command line arguments. */
@@ -655,6 +670,8 @@ init_cmd_line (uint8_t *kpage, uint8_t *upage, const char *cmd_line,
       || push (kpage, &ofs, &null, sizeof null) == NULL)
     return false;
 
+  palloc_free_page (orig_argv);
+
   /* Set initial stack pointer. */
   *esp = upage + ofs;
   return true;
@@ -664,7 +681,7 @@ init_cmd_line (uint8_t *kpage, uint8_t *upage, const char *cmd_line,
    top of user virtual memory.  Fills in the page using CMD_LINE
    and sets *ESP to the stack pointer. */
 static bool
-setup_stack (const char *cmd_line, void **esp) 
+setup_stack (const char *path, char **argv, void **esp)
 {
   uint8_t *kpage;
   bool success = false;
@@ -674,7 +691,7 @@ setup_stack (const char *cmd_line, void **esp)
     {
       uint8_t *upage = ((uint8_t *) PHYS_BASE) - PGSIZE;
       if (install_page (upage, kpage, true))
-        success = init_cmd_line (kpage, upage, cmd_line, esp);
+        success = init_cmd_line (kpage, upage, path, argv, esp);
       else
         palloc_free_page (kpage);
     }

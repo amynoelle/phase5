@@ -16,7 +16,7 @@
 
 static int sys_halt (void);
 static int sys_exit (int status);
-static int sys_exec (const char *ufile);
+static int sys_exec (const char *upath, char *const uargv[]);
 static int sys_wait (tid_t);
 static int sys_creat (const char *upath, unsigned initial_size);
 static int sys_unlink (const char *upath);
@@ -93,7 +93,7 @@ syscall_handler (struct intr_frame *f)
     {
       {0, (syscall_function *) sys_halt},
       {1, (syscall_function *) sys_exit},
-      {1, (syscall_function *) sys_exec},
+      {2, (syscall_function *) sys_exec},
       {1, (syscall_function *) sys_wait},
       {2, (syscall_function *) sys_creat},
       {1, (syscall_function *) sys_unlink},
@@ -244,6 +244,64 @@ copy_in_string (const char *us)
   return ks;
 }
  
+/* Creates a copy of argv-style user string array UARGV in kernel memory
+   and returns it as a page that must be freed with
+   palloc_free_page().
+   Call thread_exit() if |argv| > PGSIZE.
+   Call thread_exit() if any of the user accesses are invalid. */
+static char **
+copy_in_argv (char *const uargv[])
+{
+  char **kargv;
+  char *ptr;
+  size_t count  = 0;
+  size_t length = 0;
+
+  kargv = palloc_get_page (0);
+  if (kargv == NULL)
+    {
+      thread_exit ();
+    }
+
+  /* First get number of pointers in argv. */
+  for (count = 0; uargv[count]; count++) {}
+
+  /* Beginning of empty space after pointer array and NULL. */
+  ptr = (char *) (kargv + count + 1);
+
+  /* For each pointer in argv ... */
+  for (int i = 0; i < count; i++)
+    {
+      /* ... copy string beyond end of pointer array. */
+      for (length = 0; length < PGSIZE; length++)
+        {
+          if (uargv >= (char **) PHYS_BASE || !get_user ((uint8_t *) ptr + length, (uint8_t *) *(uargv + i) + length)) 
+            {
+              thread_exit (); 
+            }
+
+          if (ptr[length] == '\0')
+            {
+              break;
+            }
+         }
+
+      if (ptr[length] != '\0')
+        {
+          thread_exit ();
+        }
+
+      char **v = kargv + i;
+      memcpy (v, &ptr, sizeof (ptr));
+
+      ptr += length + 1;
+    }
+
+  kargv[count] = 0x00;
+
+  return kargv;
+}
+
 /* Halt system call. */
 static int
 sys_halt (void)
@@ -262,16 +320,18 @@ sys_exit (int exit_code)
  
 /* Exec system call. */
 static int
-sys_exec (const char *ufile) 
+sys_exec (const char *upath, char *const uargv[])
 {
   tid_t tid;
-  char *kfile = copy_in_string (ufile);
+  char *kpath  = copy_in_string (upath);
+  char **kargv = copy_in_argv (uargv);
  
   lock_acquire (&fs_lock);
-  tid = process_execute (kfile);
+  tid = process_execute (kpath, kargv);
   lock_release (&fs_lock);
  
-  palloc_free_page (kfile);
+  palloc_free_page (kpath);
+  palloc_free_page (kargv);
  
   return tid;
 }

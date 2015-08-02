@@ -23,7 +23,7 @@ main (int argc, char *argv[])
     {
       snprintf (buffer, sizeof buffer,
                 "recursor %s %d %s", argv[1], atoi (argv[2]) - 1, argv[3]);
-      pid = exec (buffer);
+      pid = exec (buffer, NULL);
       if (atoi (argv[3]))
         retval = wait (pid);
     }

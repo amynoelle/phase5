@@ -55,7 +55,7 @@ sort_chunks (void)
       close (handle);
 
       /* Sort with subprocess. */
-      CHECK ((child = exec ("child-sort buffer")) != -1,
+      CHECK ((child = exec ("child-sort buffer", (char **) { "child-sort buffer", (char *) 0)) != -1,
              "exec \"child-sort buffer\"");
       CHECK (wait (child) == 123, "wait for child-sort");
 

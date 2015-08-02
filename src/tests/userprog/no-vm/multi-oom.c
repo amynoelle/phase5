@@ -36,10 +36,9 @@ enum child_termination_mode { RECURSE, CRASH };
 static pid_t
 spawn_child (int c, enum child_termination_mode mode)
 {
-  char child_cmd[128];
-  snprintf (child_cmd, sizeof child_cmd,
-            "%s %d %s", test_name, c, mode == CRASH ? "-k" : "");
-  return exec (child_cmd);
+  char cstr[128];
+  snprintf (cstr, sizeof cstr, "%d", c);
+  return exec (test_name, (char *[]) { test_name, cstr, mode == CRASH ? "-k" : "", (char *) 0 });
 }
 
 /* Open a number of files (and fail to close them).

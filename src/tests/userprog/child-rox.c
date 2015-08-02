@@ -38,11 +38,12 @@ main (int argc UNUSED, char *argv[])
     fail ("bad command-line arguments");
   if (atoi (argv[1]) > 1) 
     {
-      char cmd[128];
+      char param[128];
       int child;
+
+      snprintf (param, sizeof param, "%d", atoi (argv[1]) - 1);
       
-      snprintf (cmd, sizeof cmd, "child-rox %d", atoi (argv[1]) - 1);
-      CHECK ((child = exec (cmd)) != -1, "exec \"%s\"", cmd);
+      CHECK ((child = exec ("child-rox", (char *[]) { "child-rox", param, (char *) NULL })) != -1, "exec \"%s %s\"", "child-rox", param);
       quiet = true;
       CHECK (wait (child) == 12, "wait for \"child-rox\"");
       quiet = false;
