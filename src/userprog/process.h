@@ -22,7 +22,7 @@ struct pcb
   };
 
 void process_init (void);
-bool init_process (struct pcb *pcb, struct thread *thread);
+void init_process (struct pcb *pcb, struct thread *thread);
 tid_t process_execute (const char *file_name, char **argv);
 int process_wait (tid_t);
 void process_exit (void);

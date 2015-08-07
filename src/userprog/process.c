@@ -234,7 +234,6 @@ process_wait (pid_t child_pid)
   sema_wait (&child->dead);
   exit_code = child->exit_code;
 
-  ASSERT (NULL != child->pcb);
   ASSERT (thread_cannot_schedule (child->thread)); /* A little healthy paranoia:
                                                       we do not want to free a thread
                                                       that could later run. Otherwise,
