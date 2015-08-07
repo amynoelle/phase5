@@ -35,6 +35,10 @@ static struct thread *idle_thread;
 /* Initial thread, the thread running init.c:main(). */
 static struct thread *initial_thread;
 
+#ifdef USERPROG
+static struct pcb initial_pcb;
+#endif
+
 /* Lock used by allocate_tid(). */
 static struct lock tid_lock;
 
@@ -99,6 +103,10 @@ thread_init (void)
   init_thread (initial_thread, "main", PRI_DEFAULT);
   initial_thread->status = THREAD_RUNNING;
   initial_thread->tid = allocate_tid ();
+#ifdef USERPROG
+  initial_thread->pcb = &initial_pcb;
+  init_process (initial_thread->pcb, initial_thread); /* Has PCB to track children. */
+#endif
 }
 
 /* Starts preemptive thread scheduling by enabling interrupts.
@@ -129,7 +137,7 @@ thread_tick (void)
   if (t == idle_thread)
     idle_ticks++;
 #ifdef USERPROG
-  else if (t->pagedir != NULL)
+  else if (NULL != t->pcb)
     user_ticks++;
 #endif
   else
@@ -283,6 +291,8 @@ thread_exit ()
 {
   ASSERT (!intr_context ());
 
+  struct thread *t = thread_current();
+
 #ifdef USERPROG
   process_exit ();
   syscall_exit ();
@@ -292,7 +302,7 @@ thread_exit ()
      and schedule another process.  That process will destroy us
      when it calls thread_schedule_tail(). */
   intr_disable ();
-  list_remove (&thread_current()->allelem);
+  list_remove (&t->allelem);
 #ifdef USERPROG
   process_notify_parent ();
 #endif
@@ -301,7 +311,7 @@ thread_exit ()
      then our parent will free us when he waits. Otherwise,
      the kernel will free us.
      (Either process_wait or thread_schedule_tail) */
-  thread_current ()->status = THREAD_ZOMBIE;
+  t->status = THREAD_ZOMBIE;
 
   schedule ();
   NOT_REACHED ();
@@ -473,8 +483,6 @@ init_thread (struct thread *t, const char *name, int priority)
   strlcpy (t->name, name, sizeof t->name);
   t->stack = (uint8_t *) t + PGSIZE;
   t->priority = priority;
-  t->exit_code = -1; /* In case kernel kills process without exit. */
-  sema_init (&t->dead, 0);
   t->magic = THREAD_MAGIC;
 
   old_level = intr_disable ();
@@ -546,14 +554,14 @@ thread_schedule_tail (struct thread *prev)
   if (prev != NULL
    && prev->status == THREAD_ZOMBIE
 #ifdef USERPROG
-   && prev->is_process == false
+   && prev->pcb == NULL
 #endif
    && prev != initial_thread)
     {
       /* If zombie is not a user-space process and therefore has
          no parent to free it, then we free it here. */
       ASSERT (prev != cur);
-      ASSERT (!prev->is_process);
+      ASSERT (NULL == prev->pcb);
       palloc_free_page (prev);
     }
 }

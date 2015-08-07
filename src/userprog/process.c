@@ -34,84 +34,103 @@ struct exec_info
     bool success;                       /* Program successfully loaded? */
   };
 
-/* Returns that next unused slot in the children array or -1 if full. */
-static int
-next_child_slot (struct thread *thread)
+static bool pid_used[MAX_CHILD] = { false };
+static struct lock pid_lock;
+
+void
+process_init (void)
 {
-  int slot = MAX_CHILD;
-
-  for (slot = 0; slot < MAX_CHILD; slot++)
-    {
-      if (NULL == thread->children[slot])
-        {
-          break;
-        }
-    }
-
-  return slot < MAX_CHILD ? slot : -1;
+  lock_init (&pid_lock);
 }
 
-/* Return slot with given tid or -1 if tid not found. */
-static int
-child_tid_slot (struct thread *thread, tid_t tid)
+/* Returns the next available PID, with recycling. */
+static pid_t
+set_pid (pid_t *pid)
 {
-  int slot = MAX_CHILD;
+  *pid = PID_ERROR;
 
-  for (slot = 0; slot < MAX_CHILD; slot++)
+  lock_acquire (&pid_lock);
+
+  for (pid_t i = 0; i < MAX_CHILD; i++)
     {
-      if (NULL != thread->children[slot] && tid == thread->children[slot]->tid)
+      if (false == pid_used[i])
         {
+          pid_used[i] = true;
+          *pid = i;
           break;
         }
     }
 
-  return slot < MAX_CHILD ? slot : -1;
+  lock_release (&pid_lock);
+
+  return *pid;
 }
 
 /* Starts a new thread running a user program loaded from
    FILENAME.  The new thread may be scheduled (and may even exit)
    before process_execute() returns.  Returns the new process's
-   thread id, or TID_ERROR if the thread cannot be created. */
-tid_t
+   process id, or PID_ERROR if the thread cannot be created. */
+pid_t
 process_execute (const char *path, char **argv)
 {
   struct exec_info exec;
   char thread_name[16];
   tid_t tid = TID_ERROR;
+  pid_t pid = PID_ERROR;
   struct thread *cur = thread_current ();
+
+  ASSERT (NULL != cur->pcb);
 
   /* Initialize exec_info. */
   exec.path = path;
   exec.argv = argv;
   sema_init (&exec.load_done, 0);
 
-  /* Obtain a slot in which to store child status. */
-  int slot = next_child_slot (cur);
-  if (-1 == slot)
-    {
-      goto done;
-    }
-
   /* Create a new thread to execute FILE_NAME. */
   strlcpy (thread_name, path, sizeof thread_name);
   tid = thread_create (thread_name, PRI_DEFAULT, start_process, &exec);
   if (tid == TID_ERROR)
     {
+      pid = PID_ERROR;
       goto done;
     }
 
   sema_wait (&exec.load_done);
   if (exec.success)
     {
-      cur->children[slot] = exec.thread;
+      ASSERT (NULL != exec.thread);
+      ASSERT (NULL != exec.thread->pcb);
+
+      /* Obtain a PID. */
+      pid = set_pid (&exec.thread->pcb->pid);
+      if (PID_ERROR == pid)
+        {
+          goto done;
+        }
+
+      cur->pcb->children[pid] = exec.thread->pcb;
     }
   else
     {
-      tid = TID_ERROR;
+      pid = PID_ERROR;
     }
 
 done:
-  return tid;
+  return pid;
+}
+
+/* Allocate and initialize a PCB. */
+void
+init_process (struct pcb *pcb, struct thread *thread)
+{
+  ASSERT (NULL != pcb);
+
+  /* Set exit code to -1 in case kernel kills process without exit. */
+  pcb->exit_code = -1;
+
+  pcb->thread = thread;
+
+  sema_init (&pcb->dead, 0);
 }
 
 /* A thread function that loads a user process and starts it
@@ -122,10 +141,17 @@ start_process (void *exec_)
   struct thread *cur = thread_current ();
   struct exec_info *exec = exec_;
   struct intr_frame if_;
-  bool success;
+  bool success = false;
 
-  /* This kernel thread has a user-space process associated with it. */
-  cur->is_process = true;
+  /* Allocate a PCB. */
+  ASSERT (NULL == cur->pcb);
+  cur->pcb = palloc_get_page (PAL_ZERO);
+  if (NULL == cur->pcb)
+    {
+      goto done;
+    }
+
+  init_process (cur->pcb, cur);
 
   /* Initialize interrupt frame and load executable. */
   memset (&if_, 0, sizeof if_);
@@ -134,17 +160,18 @@ start_process (void *exec_)
   if_.eflags = FLAG_IF | FLAG_MBS;
   success = load (exec->path, exec->argv, &if_.eip, &if_.esp);
 
+done:
   /* Provide parent with pointer to this thread. */
-  if (success)
-    {
-      exec->thread = cur;
-    }
+  exec->thread = cur;
   
   /* Notify parent thread and clean up. */
   exec->success = success;
   sema_signal (&exec->load_done);
+
   if (!success) 
-    thread_exit ();
+    {
+      thread_exit ();
+    }
 
   /* Start the user process by simulating a return from an
      interrupt, implemented by intr_exit (in
@@ -185,29 +212,42 @@ thread_cannot_schedule (struct thread *zombie)
    been successfully called for the given TID, returns -1
    immediately, without waiting. */
 int
-process_wait (tid_t child_tid) 
+process_wait (pid_t child_pid)
 {
   int exit_code = -1;
   struct thread *cur = thread_current ();
 
-  int slot = child_tid_slot(cur, child_tid);
-  if (-1 == slot)
+  ASSERT (NULL != cur->pcb);
+
+  if (child_pid > MAX_CHILD)
     {
       goto done;
     }
 
-  struct thread *child = cur->children[slot];
-  cur->children[slot] = NULL;
+  struct pcb *child = cur->pcb->children[child_pid];
+  if (NULL == child)
+    {
+      goto done;
+    }
+  ASSERT (NULL != child->thread);
+
   sema_wait (&child->dead);
   exit_code = child->exit_code;
 
-  ASSERT (child->is_process);
-  ASSERT (thread_cannot_schedule (child)); /* A little healthy paranoia:
-                                              we do not want to free a thread
-                                              that could later run. Otherwise,
-                                              thread_schedule_tail might free it
-                                              again. */
+  ASSERT (NULL != child->pcb);
+  ASSERT (thread_cannot_schedule (child->thread)); /* A little healthy paranoia:
+                                                      we do not want to free a thread
+                                                      that could later run. Otherwise,
+                                                      thread_schedule_tail might free it
+                                                      again. */
 
+  /* Finally free zombie. */
+  lock_acquire (&pid_lock);
+  pid_used[child->pid] = false;
+  lock_release (&pid_lock);
+
+  cur->pcb->children[child_pid] = NULL;
+  palloc_free_page (child->thread);
   palloc_free_page (child);
 
 done:
@@ -221,18 +261,20 @@ process_exit (void)
   struct thread *cur = thread_current ();
   uint32_t *pd;
 
+  ASSERT (NULL != cur->pcb);
+
   /* Close executable (and allow writes). */
-  file_close (cur->bin_file);
+  file_close (cur->pcb->bin_file);
 
   /* Free entries of children list. */
   for (int i = 0; i < MAX_CHILD; i++)
     {
-      if (NULL != cur->children[i])
+      if (NULL != cur->pcb->children[i])
         {
-          cur->children[i] = NULL;
+          cur->pcb->children[i] = NULL;
         }
     }
-  
+
   /* Destroy the current process's page directory and switch back
      to the kernel-only page directory. */
   pd = cur->pagedir;
@@ -257,8 +299,10 @@ process_notify_parent (void)
 {
   struct thread *cur = thread_current ();
 
-  printf ("%s: exit(%d)\n", cur->name, cur->exit_code);
-  sema_signal (&cur->dead);
+  ASSERT (NULL != cur->pcb);
+
+  printf ("%s: exit(%d)\n", cur->name, cur->pcb->exit_code);
+  sema_signal (&cur->pcb->dead);
 }
 
 /* Sets up the CPU for running user code in the current
@@ -340,7 +384,7 @@ struct Elf32_Phdr
 #define PF_W 2          /* Writable. */
 #define PF_R 4          /* Readable. */
 
-static bool setup_stack (const char *path, char **argv, void **esp);
+static bool setup_stack (char **argv, void **esp);
 static bool validate_segment (const struct Elf32_Phdr *, struct file *);
 static bool load_segment (struct file *file, off_t ofs, uint8_t *upage,
                           uint32_t read_bytes, uint32_t zero_bytes,
@@ -362,6 +406,8 @@ load (const char *_path, char **argv, void (**eip) (void), void **esp)
   char *cp;
   int i;
 
+  ASSERT (NULL != t->pcb);
+
   /* Allocate and activate page directory. */
   t->pagedir = pagedir_create ();
   if (t->pagedir == NULL) 
@@ -377,7 +423,7 @@ load (const char *_path, char **argv, void (**eip) (void), void **esp)
     *cp = '\0';
 
   /* Open executable file. */
-  t->bin_file = file = filesys_open (path);
+  t->pcb->bin_file = file = filesys_open (path);
   if (file == NULL) 
     {
       printf ("load: %s: open failed\n", path);
@@ -458,7 +504,7 @@ load (const char *_path, char **argv, void (**eip) (void), void **esp)
     }
 
   /* Set up stack. */
-  if (!setup_stack (path, argv, esp))
+  if (!setup_stack (argv, esp))
     goto done;
 
   /* Start address. */
@@ -615,15 +661,12 @@ push (uint8_t *kpage, size_t *ofs, const void *buf, size_t size)
    from CMD_LINE, separated by spaces.  Sets *ESP to the initial
    stack pointer for the process. */
 static bool
-init_cmd_line (uint8_t *kpage, uint8_t *upage,
-               const char *path, char **_argv, void **esp)
+init_cmd_line (uint8_t *kpage, uint8_t *upage, char **_argv, void **esp)
 {
   size_t ofs = PGSIZE;
   char *const null = NULL;
   int argc;
   char **orig_argv, **argv;
-
-  char *uargv[10];
 
   /* Push command line strings. */
   for (argc = 0; _argv[argc]; argc++) {}
@@ -681,7 +724,7 @@ init_cmd_line (uint8_t *kpage, uint8_t *upage,
    top of user virtual memory.  Fills in the page using CMD_LINE
    and sets *ESP to the stack pointer. */
 static bool
-setup_stack (const char *path, char **argv, void **esp)
+setup_stack (char **argv, void **esp)
 {
   uint8_t *kpage;
   bool success = false;
@@ -691,7 +734,7 @@ setup_stack (const char *path, char **argv, void **esp)
     {
       uint8_t *upage = ((uint8_t *) PHYS_BASE) - PGSIZE;
       if (install_page (upage, kpage, true))
-        success = init_cmd_line (kpage, upage, path, argv, esp);
+        success = init_cmd_line (kpage, upage, argv, esp);
       else
         palloc_free_page (kpage);
     }
@@ -711,6 +754,8 @@ static bool
 install_page (void *upage, void *kpage, bool writable)
 {
   struct thread *t = thread_current ();
+
+  ASSERT (NULL != t->pcb);
 
   /* Verify that there's not already a page at that virtual
      address, then map our page there. */

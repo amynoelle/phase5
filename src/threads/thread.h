@@ -25,10 +25,6 @@ typedef int tid_t;
 #define PRI_DEFAULT 31                  /* Default priority. */
 #define PRI_MAX 63                      /* Highest priority. */
 
-/* Maximum number of open files per thread. */
-#define MAX_FILES 128
-#define MAX_CHILD 128
-
 /* A kernel thread or user process.
 
    Each thread structure is stored in its own 4 kB page.  The
@@ -95,26 +91,16 @@ struct thread
     int priority;                       /* Priority. */
     struct list_elem allelem;           /* List element for all threads list. */
 
-    /* Owned by process.c. */
-    int exit_code;                      /* This process's completion status. */
-    struct semaphore dead;              /* 1=I am alive, 0=I am dead. */
-
     /* Shared between thread.c and synch.c. */
     struct list_elem elem;              /* List element. */
 
-#ifdef USERPROG
     /* Owned by userprog/process.c. */
-    bool is_process;
     uint32_t *pagedir;                  /* Page directory. */
-    struct thread *children[MAX_CHILD]; /* This process' children. */
-#endif
-    struct file *bin_file;              /* Executable. */
-
-    /* Owned by syscall.c. */
-    struct file *fds[MAX_FILES];        /* Array of open file descriptors. */
 
     /* Owned by thread.c. */
     unsigned magic;                     /* Detects stack overflow. */
+
+    struct pcb *pcb;                    /* Process control block; NULL if kernel-only. */
   };
 
 /* If false (default), use round-robin scheduler.

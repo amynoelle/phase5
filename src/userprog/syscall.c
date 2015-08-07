@@ -135,8 +135,12 @@ syscall_handler (struct intr_frame *f)
 static bool
 verify_user (const void *uaddr) 
 {
+  struct thread *t = thread_current ();
+
+  ASSERT (NULL != t->pcb);
+
   return (uaddr < PHYS_BASE
-          && pagedir_get_page (thread_current ()->pagedir, uaddr) != NULL);
+          && pagedir_get_page (t->pagedir, uaddr) != NULL);
 }
  
 /* Returns true if UADDR--UADDR + SIZE are valid, mapped user addresses,
@@ -313,7 +317,11 @@ sys_halt (void)
 static int
 sys_exit (int exit_code) 
 {
-  thread_current ()->exit_code = exit_code;
+  struct thread *t = thread_current ();
+
+  ASSERT (NULL != t->pcb);
+
+  t->pcb->exit_code = exit_code;
   thread_exit ();
   NOT_REACHED ();
 }
@@ -383,10 +391,12 @@ next_fd (void)
 
   struct thread *cur = thread_current ();
 
+  ASSERT (NULL != cur->pcb);
+
   /* Skip 0 and 1 which represent stdin and stdout. */
   for (fd = STDOUT_FILENO + 1; fd < MAX_FILES; fd++)
     {
-      if (NULL == cur->fds[fd])
+      if (NULL == cur->pcb->fds[fd])
         {
           break;
         }
@@ -403,12 +413,14 @@ lookup_fd (int fd)
 
   struct thread *cur = thread_current ();
 
+  ASSERT (NULL != cur->pcb);
+
   if (fd < 0 || fd >= MAX_FILES)
     {
       goto done;
     }
 
-  f = cur->fds[fd];
+  f = cur->pcb->fds[fd];
 
 done:
   return f;
@@ -419,7 +431,9 @@ close_fd (int fd)
 {
   struct thread *cur = thread_current ();
 
-  struct file *f = cur->fds[fd];
+  ASSERT (NULL != cur->pcb);
+
+  struct file *f = cur->pcb->fds[fd];
   if (NULL == f)
     {
       goto done;
@@ -429,7 +443,7 @@ close_fd (int fd)
   file_close (f);
   lock_release (&fs_lock);
 
-  cur->fds[fd] = NULL;
+  cur->pcb->fds[fd] = NULL;
 
 done:
   return;
@@ -451,8 +465,10 @@ sys_open (const char *upath)
 
   struct thread *cur = thread_current ();
 
-  cur->fds[fd] = filesys_open (kpath);
-  if (NULL == cur->fds[fd])
+  ASSERT (NULL != cur->pcb);
+
+  cur->pcb->fds[fd] = filesys_open (kpath);
+  if (NULL == cur->pcb->fds[fd])
     {
       fd = -1;
     }
