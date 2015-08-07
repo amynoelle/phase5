@@ -34,7 +34,6 @@ struct exec_info
     bool success;                       /* Program successfully loaded? */
   };
 
-static bool pid_used[MAX_CHILD] = { false };
 static struct lock pid_lock;
 
 void
@@ -43,27 +42,96 @@ process_init (void)
   lock_init (&pid_lock);
 }
 
-/* Returns the next available PID, with recycling. */
+/* Returns a pid to use for a new process. */
 static pid_t
-set_pid (pid_t *pid)
+allocate_pid (void)
 {
-  *pid = PID_ERROR;
+  static pid_t next_pid = 1;
+  pid_t pid;
 
   lock_acquire (&pid_lock);
+  pid = next_pid++;
+  lock_release (&pid_lock);
 
-  for (pid_t i = 0; i < MAX_CHILD; i++)
+  return pid;
+}
+
+/* Returns pointer to pcb with given PID if it exists in children, else NULL */
+static struct pcb *
+child_find (struct pcb **children, pid_t pid)
+{
+  ASSERT (NULL != children);
+  ASSERT (pid > 0);
+
+  struct pcb *child = NULL;
+
+  for (int i = 0; i < MAX_CHILD; i++)
     {
-      if (false == pid_used[i])
+      if (NULL != children[i] && children[i]->pid == pid)
         {
-          pid_used[i] = true;
-          *pid = i;
+          child = children[i];
           break;
         }
     }
 
-  lock_release (&pid_lock);
+  return child;
+}
 
-  return *pid;
+/* Return true if children full, else false. */
+static bool
+children_full (struct pcb *children[])
+{
+  ASSERT (NULL != children);
+
+  int i = 0;
+
+  for (int i = 0; i < MAX_CHILD; i++)
+    {
+      if (NULL == children[i])
+        {
+          break;
+        }
+    }
+
+  return i == MAX_CHILD;
+}
+
+/* Add given child to children and return index; return MAX_CHILD if full. */
+static int
+child_add (struct pcb *children[], struct pcb *child)
+{
+  ASSERT (NULL != children);
+  ASSERT (NULL != child);
+
+  int i = 0;
+
+  for (int i = 0; i < MAX_CHILD; i++)
+    {
+      if (NULL == children[i])
+        {
+          children[i] = child;
+          break;
+        }
+    }
+
+  return i;
+}
+
+/* Remove given child from children. */
+static void
+child_remove (struct pcb *children[], pid_t pid)
+{
+  ASSERT (NULL != children);
+  ASSERT (pid > 0);
+
+  for (int i = 0; i < MAX_CHILD; i++)
+    {
+      if (NULL != children[i] && children[i]->pid == pid)
+        {
+          children[i] = NULL;
+          break;
+        }
+    }
 }
 
 /* Starts a new thread running a user program loaded from
@@ -86,6 +154,11 @@ process_execute (const char *path, char **argv)
   exec.argv = argv;
   sema_init (&exec.load_done, 0);
 
+  if (children_full (cur->pcb->children))
+    {
+      goto done;
+    }
+
   /* Create a new thread to execute FILE_NAME. */
   strlcpy (thread_name, path, sizeof thread_name);
   tid = thread_create (thread_name, PRI_DEFAULT, start_process, &exec);
@@ -102,13 +175,8 @@ process_execute (const char *path, char **argv)
       ASSERT (NULL != exec.thread->pcb);
 
       /* Obtain a PID. */
-      pid = set_pid (&exec.thread->pcb->pid);
-      if (PID_ERROR == pid)
-        {
-          goto done;
-        }
-
-      cur->pcb->children[pid] = exec.thread->pcb;
+      pid = exec.thread->pcb->pid = allocate_pid ();
+      child_add (cur->pcb->children, exec.thread->pcb); /* Checked for room above. */
     }
   else
     {
@@ -219,12 +287,7 @@ process_wait (pid_t child_pid)
 
   ASSERT (NULL != cur->pcb);
 
-  if (child_pid > MAX_CHILD)
-    {
-      goto done;
-    }
-
-  struct pcb *child = cur->pcb->children[child_pid];
+  struct pcb *child = child_find (cur->pcb->children, child_pid);
   if (NULL == child)
     {
       goto done;
@@ -241,11 +304,7 @@ process_wait (pid_t child_pid)
                                                       again. */
 
   /* Finally free zombie. */
-  lock_acquire (&pid_lock);
-  pid_used[child->pid] = false;
-  lock_release (&pid_lock);
-
-  cur->pcb->children[child_pid] = NULL;
+  child_remove (cur->pcb->children, child_pid);
   palloc_free_page (child->thread);
   palloc_free_page (child);
 
@@ -264,15 +323,6 @@ process_exit (void)
 
   /* Close executable (and allow writes). */
   file_close (cur->pcb->bin_file);
-
-  /* Free entries of children list. */
-  for (int i = 0; i < MAX_CHILD; i++)
-    {
-      if (NULL != cur->pcb->children[i])
-        {
-          cur->pcb->children[i] = NULL;
-        }
-    }
 
   /* Destroy the current process's page directory and switch back
      to the kernel-only page directory. */
