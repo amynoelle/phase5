@@ -330,23 +330,23 @@ sys_exit (int exit_code)
 static int
 sys_exec (const char *upath, char *const uargv[])
 {
-  tid_t tid;
+  pid_t pid;
   char *kpath  = copy_in_string (upath);
   char **kargv = copy_in_argv (uargv);
  
   lock_acquire (&fs_lock);
-  tid = process_execute (kpath, kargv);
+  pid = process_execute (kpath, kargv);
   lock_release (&fs_lock);
  
   palloc_free_page (kpath);
   palloc_free_page (kargv);
  
-  return tid;
+  return pid;
 }
  
 /* Wait system call. */
 static int
-sys_wait (tid_t child) 
+sys_wait (int child)
 {
   return process_wait (child);
 }
