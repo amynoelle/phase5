@@ -23,7 +23,7 @@ struct pcb
 
 void process_init (void);
 void init_process (struct pcb *pcb, struct thread *thread);
-pid_t process_execute (const char *file_name, char **argv);
+pid_t process_execute (const char *path, char **argv);
 int process_wait (pid_t);
 void process_exit (void);
 void process_notify_parent (void);
