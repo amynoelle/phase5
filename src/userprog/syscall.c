@@ -523,10 +523,9 @@ sys_read (int fd, void *udst_, unsigned size)
   if (fd == STDIN_FILENO) 
     {
       for (bytes_read = 0; (size_t) bytes_read < size; bytes_read++)
-        if (udst >= (uint8_t *) PHYS_BASE || !put_user (udst++, input_getc ()))
-          {
-            thread_exit ();
-          }
+        {
+          *udst++ = input_getc ();
+        }
     }
   else
     {
