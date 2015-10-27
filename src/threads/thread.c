@@ -762,12 +762,10 @@ schedule (void)
    * In this case, there was not transition from
    * one kernel thread to another.
    */
-  if (true == thread_instrument && prev != cur && prev != NULL)
+  if (true == thread_instrument && prev != cur && NULL != prev)
     {
-      printf("MEASUREMENT %s a: -1 s: %lld e: -1\n", cur->name, timer_ticks ());
+      printf("MEASUREMENT %s,%d a: -1 s: %lld e: -1\n", cur->name, cur->pcb ? cur->pcb->pid : 0, timer_ticks ());
     }
-
-   ASSERT (cur->tid == 2 || cur->tid == 1 || prev != NULL);
 }
 
 /* Returns a tid to use for a new thread. */
