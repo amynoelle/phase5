@@ -31,6 +31,7 @@ static int sys_semcreat (const char *name, int initial_value);
 static int sys_semdestroy (const char *name);
 static int sys_semwait (const char *name);
 static int sys_semsignal (const char *name);
+static int sys_nice (const int level);
  
 static void syscall_handler (struct intr_frame *);
 static void copy_in (void *, const void *, size_t);
@@ -108,6 +109,7 @@ syscall_handler (struct intr_frame *f)
       {1, (syscall_function *) sys_semdestroy},
       {1, (syscall_function *) sys_semwait},
       {1, (syscall_function *) sys_semsignal},
+      {1, (syscall_function *) sys_nice},
     };
 
   const struct syscall *sc;
@@ -808,4 +810,12 @@ done:
   palloc_free_page (kname);
 
   return fnval;
+}
+
+/* System call which sets process's nice value. */
+static int
+sys_nice (const int level)
+{
+  thread_set_nice (level);
+  return 0;
 }

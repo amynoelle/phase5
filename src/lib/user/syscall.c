@@ -206,3 +206,9 @@ inumber (int fd)
 {
   return syscall1 (SYS_INUMBER, fd);
 }
+
+int
+nice (const int value)
+{
+  return syscall1 (SYS_NICE, value);
+}
