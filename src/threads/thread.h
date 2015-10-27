@@ -5,6 +5,7 @@
 #include <list.h>
 #include <stdint.h>
 #include "threads/synch.h"
+#include "threads/fixed-point.h"
 
 /* States in a thread's life cycle. */
 enum thread_status
@@ -88,7 +89,17 @@ struct thread
     enum thread_status status;          /* Thread state. */
     char name[16];                      /* Name (for debugging purposes). */
     uint8_t *stack;                     /* Saved stack pointer. */
-    int priority;                       /* Priority. */
+
+    /* Scheduler data. */
+    int priority;                       /* Priority, including donations. */
+    int normal_priority;                /* Priority, without donations. */
+    struct list donors;                 /* Threads donating priority to us. */
+    struct list_elem donor_elem;        /* Element in donors list. */
+    struct thread *donee;               /* Thread we're donating to. */
+    struct lock *want_lock;             /* Lock we're waiting to acquire. */
+    int nice;                           /* Niceness. */
+    fixed_point_t recent_cpu;           /* Recent amount of CPU time. */ 
+
     struct list_elem allelem;           /* List element for all threads list. */
 
     /* Shared between thread.c and synch.c. */
@@ -126,6 +137,10 @@ const char *thread_name (void);
 
 void thread_exit (void) NO_RETURN;
 void thread_yield (void);
+void thread_yield_to_higher_priority (void);
+void thread_recompute_priority (struct thread *);
+bool thread_lower_priority (const struct list_elem *, const struct list_elem *,
+                            void *aux);
 
 /* Performs some operation on thread t, given auxiliary data AUX. */
 typedef void thread_action_func (struct thread *t, void *aux);
