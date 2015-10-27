@@ -1,0 +1,275 @@
+qemu-system-i386 -hda /tmp/pvpzXmLPFc.dsk -hdb build/filesys.dsk -m 4 -net none -nographic -monitor null
+PiLo hda1
+Loading............
+Kernel command line: -sched-instrument -q run 'count-looper 50000'
+Pintos booting with 3,968 kB RAM...
+367 pages available in kernel pool.
+367 pages available in user pool.
+
+MEASUREMENT idle (#-1) a: 0 s: -1 e: -1
+
+MEASUREMENT main (#0) a: -1 s: 0 e: -1
+Calibrating timer...  441,548,800 loops/s.
+hda: 1,008 sectors (504 kB), model "QM00001", serial "QEMU HARDDISK"
+
+MEASUREMENT idle (#-1) a: -1 s: 44 e: -1
+
+MEASUREMENT main (#0) a: -1 s: 44 e: -1
+hda1: 204 sectors (102 kB), Pintos OS kernel (20)
+hdb: 5,040 sectors (2 MB), model "QM00002", serial "QEMU HARDDISK"
+
+MEASUREMENT idle (#-1) a: -1 s: 44 e: -1
+
+MEASUREMENT main (#0) a: -1 s: 44 e: -1
+hdb1: 4,096 sectors (2 MB), Pintos file system (21)
+filesys: using hdb1
+
+MEASUREMENT idle (#-1) a: -1 s: 59 e: -1
+
+MEASUREMENT main (#0) a: -1 s: 59 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 59 e: -1
+
+MEASUREMENT main (#0) a: -1 s: 59 e: -1
+Boot complete.
+Executing 'count-looper':
+
+MEASUREMENT count-looper (#-1) a: 59 s: -1 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 59 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 59 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 60 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 60 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 60 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 60 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 60 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 60 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 60 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 60 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 60 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 60 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 61 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 61 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 61 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 61 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 61 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 61 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 61 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 61 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 61 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 61 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 62 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 62 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 62 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 62 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 62 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 62 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 62 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 62 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 62 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 62 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 63 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 63 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 63 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 63 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 63 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 63 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 63 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 63 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 63 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 63 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 63 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 64 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 64 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 64 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 64 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 64 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 64 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 64 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 64 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 64 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 65 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 65 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 65 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 65 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 65 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 65 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 65 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 65 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 65 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 65 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 66 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 66 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 66 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 66 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 66 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 66 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 66 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 66 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 66 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 66 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 67 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 67 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 67 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 67 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 67 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 67 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 67 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 67 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 67 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 67 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 68 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 68 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 68 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 68 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 68 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 68 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 68 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 68 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 68 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 68 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 69 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 69 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 69 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 69 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 69 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 69 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 69 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 69 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 69 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 69 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 70 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 70 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 70 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 70 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 70 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 70 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 70 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 70 e: -1
+
+MEASUREMENT main (#0) a: -1 s: 74 e: -1
+
+MEASUREMENT count-looper (#1) a: -1 s: 74 e: -1
+count-looper: done (count is 2500000000)
+
+MEASUREMENT count-looper (#1) a: -1 s: -1 e: 564
+count-looper: exit(0)
+
+MEASUREMENT main (#0) a: -1 s: 565 e: -1
+Execution of 'count-looper' complete.
+Timer: 565 ticks
+Thread: 1 idle ticks, 0 kernel ticks, 564 user ticks
+hdb1 (filesys): 58 reads, 0 writes
+Console: 6371 characters output
+Keyboard: 0 keys pressed
+Exception: 0 page faults
+Powering off...

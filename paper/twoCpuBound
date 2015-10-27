@@ -1,0 +1,1136 @@
+qemu-system-i386 -hda /tmp/W8v4NttVAl.dsk -hdb build/filesys.dsk -m 4 -net none -nographic -monitor null
+PiLo hda1
+Loading............
+Kernel command line: -sched-instrument -q run shell
+Pintos booting with 3,968 kB RAM...
+367 pages available in kernel pool.
+367 pages available in user pool.
+
+MEASUREMENT idle (#-1) a: 0 s: -1 e: -1
+
+MEASUREMENT main (#0) a: -1 s: 0 e: -1
+Calibrating timer...  444,825,600 loops/s.
+hda: 1,008 sectors (504 kB), model "QM00001", serial "QEMU HARDDISK"
+
+MEASUREMENT idle (#-1) a: -1 s: 43 e: -1
+
+MEASUREMENT main (#0) a: -1 s: 43 e: -1
+hda1: 204 sectors (102 kB), Pintos OS kernel (20)
+hdb: 5,040 sectors (2 MB), model "QM00002", serial "QEMU HARDDISK"
+
+MEASUREMENT idle (#-1) a: -1 s: 43 e: -1
+
+MEASUREMENT main (#0) a: -1 s: 43 e: -1
+hdb1: 4,096 sectors (2 MB), Pintos file system (21)
+filesys: using hdb1
+
+MEASUREMENT idle (#-1) a: -1 s: 58 e: -1
+
+MEASUREMENT main (#0) a: -1 s: 58 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 58 e: -1
+
+MEASUREMENT main (#0) a: -1 s: 58 e: -1
+Boot complete.
+Executing 'shell':
+
+MEASUREMENT shell (#-1) a: 58 s: -1 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 58 e: -1
+
+MEASUREMENT shell (#0) a: -1 s: 58 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 59 e: -1
+
+MEASUREMENT shell (#0) a: -1 s: 59 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 59 e: -1
+
+MEASUREMENT shell (#0) a: -1 s: 59 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 59 e: -1
+
+MEASUREMENT shell (#0) a: -1 s: 59 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 59 e: -1
+
+MEASUREMENT shell (#0) a: -1 s: 59 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 59 e: -1
+
+MEASUREMENT shell (#0) a: -1 s: 60 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 60 e: -1
+
+MEASUREMENT shell (#0) a: -1 s: 60 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 60 e: -1
+
+MEASUREMENT shell (#0) a: -1 s: 60 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 60 e: -1
+
+MEASUREMENT shell (#0) a: -1 s: 60 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 60 e: -1
+
+MEASUREMENT shell (#0) a: -1 s: 60 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 60 e: -1
+
+MEASUREMENT shell (#0) a: -1 s: 61 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 61 e: -1
+
+MEASUREMENT shell (#0) a: -1 s: 61 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 61 e: -1
+
+MEASUREMENT shell (#0) a: -1 s: 61 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 61 e: -1
+
+MEASUREMENT shell (#0) a: -1 s: 61 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 61 e: -1
+
+MEASUREMENT shell (#0) a: -1 s: 61 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 62 e: -1
+
+MEASUREMENT shell (#0) a: -1 s: 62 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 62 e: -1
+
+MEASUREMENT shell (#0) a: -1 s: 62 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 62 e: -1
+
+MEASUREMENT shell (#0) a: -1 s: 62 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 62 e: -1
+
+MEASUREMENT shell (#0) a: -1 s: 62 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 62 e: -1
+
+MEASUREMENT shell (#0) a: -1 s: 62 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 62 e: -1
+
+MEASUREMENT shell (#0) a: -1 s: 63 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 63 e: -1
+
+MEASUREMENT shell (#0) a: -1 s: 63 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 63 e: -1
+
+MEASUREMENT shell (#0) a: -1 s: 63 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 63 e: -1
+
+MEASUREMENT shell (#0) a: -1 s: 63 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 63 e: -1
+
+MEASUREMENT shell (#0) a: -1 s: 63 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 63 e: -1
+
+MEASUREMENT shell (#0) a: -1 s: 64 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 64 e: -1
+
+MEASUREMENT shell (#0) a: -1 s: 64 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 64 e: -1
+
+MEASUREMENT shell (#0) a: -1 s: 64 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 64 e: -1
+
+MEASUREMENT shell (#0) a: -1 s: 64 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 64 e: -1
+
+MEASUREMENT shell (#0) a: -1 s: 64 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 64 e: -1
+
+MEASUREMENT shell (#0) a: -1 s: 65 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 65 e: -1
+
+MEASUREMENT shell (#0) a: -1 s: 65 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 65 e: -1
+
+MEASUREMENT shell (#0) a: -1 s: 65 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 65 e: -1
+
+MEASUREMENT shell (#0) a: -1 s: 65 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 65 e: -1
+
+MEASUREMENT shell (#0) a: -1 s: 65 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 65 e: -1
+
+MEASUREMENT shell (#0) a: -1 s: 65 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 66 e: -1
+
+MEASUREMENT shell (#0) a: -1 s: 66 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 66 e: -1
+
+MEASUREMENT shell (#0) a: -1 s: 66 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 66 e: -1
+
+MEASUREMENT shell (#0) a: -1 s: 66 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 66 e: -1
+
+MEASUREMENT shell (#0) a: -1 s: 66 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 66 e: -1
+
+MEASUREMENT shell (#0) a: -1 s: 66 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 67 e: -1
+
+MEASUREMENT shell (#0) a: -1 s: 67 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 67 e: -1
+
+MEASUREMENT shell (#0) a: -1 s: 67 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 67 e: -1
+
+MEASUREMENT shell (#0) a: -1 s: 67 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 67 e: -1
+
+MEASUREMENT shell (#0) a: -1 s: 67 e: -1
+Shell starting...
+pintos> 
+MEASUREMENT main (#0) a: -1 s: 67 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 68 e: -1
+
+MEASUREMENT shell (#1) a: -1 s: 145 e: -1
+count-looper 50000&count-looper 50000
+MEASUREMENT idle (#-1) a: -1 s: 146 e: -1
+
+MEASUREMENT shell (#1) a: -1 s: 189 e: -1
+
+
+MEASUREMENT count-looper (#-1) a: 190 s: -1 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 190 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 191 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 191 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 191 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 191 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 191 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 192 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 192 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 192 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 192 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 192 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 192 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 192 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 192 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 192 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 192 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 193 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 193 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 193 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 193 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 193 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 193 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 193 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 193 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 193 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 194 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 194 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 194 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 194 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 194 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 194 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 194 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 194 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 194 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 194 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 195 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 195 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 195 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 195 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 195 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 195 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 195 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 195 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 195 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 196 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 196 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 196 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 196 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 196 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 196 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 196 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 196 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 196 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 196 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 197 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 197 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 197 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 197 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 197 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 197 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 197 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 197 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 197 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 198 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 198 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 198 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 198 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 198 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 198 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 198 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 198 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 198 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 198 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 199 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 199 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 199 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 199 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 199 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 199 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 199 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 199 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 199 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 200 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 200 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 200 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 200 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 200 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 200 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 200 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 200 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 200 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 200 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 201 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 201 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 201 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 201 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 201 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 201 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 201 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 201 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 201 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 202 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 202 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 202 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 202 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 202 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 202 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 202 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 202 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 202 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 202 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 203 e: -1
+
+MEASUREMENT shell (#1) a: -1 s: 207 e: -1
+
+MEASUREMENT count-looper (#-1) a: 207 s: -1 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 207 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 211 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 215 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 215 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 219 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 219 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 223 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 223 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 227 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 227 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 231 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 231 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 235 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 235 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 239 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 239 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 243 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 243 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 247 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 247 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 251 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 251 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 255 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 255 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 259 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 259 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 263 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 263 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 267 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 267 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 271 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 271 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 275 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 275 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 279 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 279 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 283 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 283 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 287 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 287 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 291 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 291 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 295 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 295 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 299 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 299 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 303 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 303 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 307 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 307 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 311 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 311 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 315 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 315 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 319 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 319 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 323 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 323 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 327 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 327 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 331 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 331 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 335 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 335 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 339 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 339 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 343 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 343 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 347 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 347 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 351 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 351 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 355 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 355 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 359 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 359 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 363 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 363 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 367 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 367 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 371 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 371 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 375 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 375 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 379 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 379 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 383 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 383 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 387 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 387 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 391 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 391 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 395 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 395 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 399 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 399 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 403 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 403 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 407 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 407 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 411 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 411 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 415 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 415 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 419 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 419 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 423 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 423 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 427 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 427 e: -1
+
+MEASUREMENT count-looper (#0) a: -1 s: 431 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 435 e: -1
+
+MEASUREMENT shell (#1) a: -1 s: 439 e: -1
+
+MEASUREMENT count-looper (#3) a: -1 s: 439 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 443 e: -1
+
+MEASUREMENT count-looper (#3) a: -1 s: 447 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 451 e: -1
+
+MEASUREMENT count-looper (#3) a: -1 s: 455 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 459 e: -1
+
+MEASUREMENT count-looper (#3) a: -1 s: 463 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 467 e: -1
+
+MEASUREMENT count-looper (#3) a: -1 s: 471 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 475 e: -1
+
+MEASUREMENT count-looper (#3) a: -1 s: 479 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 483 e: -1
+
+MEASUREMENT count-looper (#3) a: -1 s: 487 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 491 e: -1
+
+MEASUREMENT count-looper (#3) a: -1 s: 495 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 499 e: -1
+
+MEASUREMENT count-looper (#3) a: -1 s: 503 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 507 e: -1
+
+MEASUREMENT count-looper (#3) a: -1 s: 511 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 515 e: -1
+
+MEASUREMENT count-looper (#3) a: -1 s: 519 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 523 e: -1
+
+MEASUREMENT count-looper (#3) a: -1 s: 527 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 531 e: -1
+
+MEASUREMENT count-looper (#3) a: -1 s: 535 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 539 e: -1
+
+MEASUREMENT count-looper (#3) a: -1 s: 543 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 547 e: -1
+
+MEASUREMENT count-looper (#3) a: -1 s: 551 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 555 e: -1
+
+MEASUREMENT count-looper (#3) a: -1 s: 559 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 563 e: -1
+
+MEASUREMENT count-looper (#3) a: -1 s: 567 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 571 e: -1
+
+MEASUREMENT count-looper (#3) a: -1 s: 575 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 579 e: -1
+
+MEASUREMENT count-looper (#3) a: -1 s: 583 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 587 e: -1
+
+MEASUREMENT count-looper (#3) a: -1 s: 591 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 595 e: -1
+
+MEASUREMENT count-looper (#3) a: -1 s: 599 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 603 e: -1
+
+MEASUREMENT count-looper (#3) a: -1 s: 607 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 611 e: -1
+
+MEASUREMENT count-looper (#3) a: -1 s: 615 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 619 e: -1
+
+MEASUREMENT count-looper (#3) a: -1 s: 623 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 627 e: -1
+
+MEASUREMENT count-looper (#3) a: -1 s: 631 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 635 e: -1
+
+MEASUREMENT count-looper (#3) a: -1 s: 639 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 643 e: -1
+
+MEASUREMENT count-looper (#3) a: -1 s: 647 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 651 e: -1
+
+MEASUREMENT count-looper (#3) a: -1 s: 655 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 659 e: -1
+
+MEASUREMENT count-looper (#3) a: -1 s: 663 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 667 e: -1
+
+MEASUREMENT count-looper (#3) a: -1 s: 671 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 675 e: -1
+
+MEASUREMENT count-looper (#3) a: -1 s: 679 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 683 e: -1
+
+MEASUREMENT count-looper (#3) a: -1 s: 687 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 691 e: -1
+
+MEASUREMENT count-looper (#3) a: -1 s: 695 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 699 e: -1
+
+MEASUREMENT count-looper (#3) a: -1 s: 703 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 707 e: -1
+
+MEASUREMENT count-looper (#3) a: -1 s: 711 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 715 e: -1
+
+MEASUREMENT count-looper (#3) a: -1 s: 719 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 723 e: -1
+
+MEASUREMENT count-looper (#3) a: -1 s: 727 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 731 e: -1
+
+MEASUREMENT count-looper (#3) a: -1 s: 735 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 739 e: -1
+
+MEASUREMENT count-looper (#3) a: -1 s: 743 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 747 e: -1
+
+MEASUREMENT count-looper (#3) a: -1 s: 751 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 755 e: -1
+
+MEASUREMENT count-looper (#3) a: -1 s: 759 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 763 e: -1
+
+MEASUREMENT count-looper (#3) a: -1 s: 767 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 771 e: -1
+
+MEASUREMENT count-looper (#3) a: -1 s: 775 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 779 e: -1
+
+MEASUREMENT count-looper (#3) a: -1 s: 783 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 787 e: -1
+
+MEASUREMENT count-looper (#3) a: -1 s: 791 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 795 e: -1
+
+MEASUREMENT count-looper (#3) a: -1 s: 799 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 803 e: -1
+
+MEASUREMENT count-looper (#3) a: -1 s: 807 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 811 e: -1
+
+MEASUREMENT count-looper (#3) a: -1 s: 815 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 819 e: -1
+
+MEASUREMENT count-looper (#3) a: -1 s: 823 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 827 e: -1
+
+MEASUREMENT count-looper (#3) a: -1 s: 831 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 835 e: -1
+
+MEASUREMENT count-looper (#3) a: -1 s: 839 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 843 e: -1
+
+MEASUREMENT count-looper (#3) a: -1 s: 847 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 851 e: -1
+
+MEASUREMENT count-looper (#3) a: -1 s: 855 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 859 e: -1
+
+MEASUREMENT count-looper (#3) a: -1 s: 863 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 867 e: -1
+
+MEASUREMENT count-looper (#3) a: -1 s: 871 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 875 e: -1
+
+MEASUREMENT count-looper (#3) a: -1 s: 879 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 883 e: -1
+
+MEASUREMENT count-looper (#3) a: -1 s: 887 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 891 e: -1
+
+MEASUREMENT count-looper (#3) a: -1 s: 895 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 899 e: -1
+
+MEASUREMENT count-looper (#3) a: -1 s: 903 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 907 e: -1
+
+MEASUREMENT count-looper (#3) a: -1 s: 911 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 915 e: -1
+
+MEASUREMENT count-looper (#3) a: -1 s: 919 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 923 e: -1
+
+MEASUREMENT count-looper (#3) a: -1 s: 927 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 931 e: -1
+
+MEASUREMENT count-looper (#3) a: -1 s: 935 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 939 e: -1
+
+MEASUREMENT count-looper (#3) a: -1 s: 943 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 947 e: -1
+
+MEASUREMENT count-looper (#3) a: -1 s: 951 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 955 e: -1
+
+MEASUREMENT count-looper (#3) a: -1 s: 959 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 963 e: -1
+
+MEASUREMENT count-looper (#3) a: -1 s: 967 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 971 e: -1
+
+MEASUREMENT count-looper (#3) a: -1 s: 975 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 979 e: -1
+
+MEASUREMENT count-looper (#3) a: -1 s: 983 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 987 e: -1
+
+MEASUREMENT count-looper (#3) a: -1 s: 991 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 995 e: -1
+
+MEASUREMENT count-looper (#3) a: -1 s: 999 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 1003 e: -1
+
+MEASUREMENT count-looper (#3) a: -1 s: 1007 e: -1
+
+MEASUREMENT count-looper (#2) a: -1 s: 1011 e: -1
+count-looper: done (count is 2500000000)
+
+MEASUREMENT count-looper (#2) a: -1 s: -1 e: 1014
+count-looper: exit(0)
+
+MEASUREMENT count-looper (#3) a: -1 s: 1014 e: -1
+count-looper: done (count is 2500000000)
+
+MEASUREMENT count-looper (#3) a: -1 s: -1 e: 1227
+count-looper: exit(0)
+
+MEASUREMENT shell (#1) a: -1 s: 1227 e: -1
+"count-looper": exit code 0
+pintos> halt
+
+MEASUREMENT halt (#-1) a: 1227 s: -1 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 1228 e: -1
+
+MEASUREMENT halt (#0) a: -1 s: 1228 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 1228 e: -1
+
+MEASUREMENT halt (#0) a: -1 s: 1228 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 1228 e: -1
+
+MEASUREMENT halt (#0) a: -1 s: 1228 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 1228 e: -1
+
+MEASUREMENT halt (#0) a: -1 s: 1228 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 1228 e: -1
+
+MEASUREMENT halt (#0) a: -1 s: 1228 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 1229 e: -1
+
+MEASUREMENT halt (#0) a: -1 s: 1229 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 1229 e: -1
+
+MEASUREMENT halt (#0) a: -1 s: 1229 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 1229 e: -1
+
+MEASUREMENT halt (#0) a: -1 s: 1229 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 1229 e: -1
+
+MEASUREMENT halt (#0) a: -1 s: 1229 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 1229 e: -1
+
+MEASUREMENT halt (#0) a: -1 s: 1229 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 1230 e: -1
+
+MEASUREMENT halt (#0) a: -1 s: 1230 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 1230 e: -1
+
+MEASUREMENT halt (#0) a: -1 s: 1230 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 1230 e: -1
+
+MEASUREMENT halt (#0) a: -1 s: 1230 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 1230 e: -1
+
+MEASUREMENT halt (#0) a: -1 s: 1230 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 1230 e: -1
+
+MEASUREMENT halt (#0) a: -1 s: 1230 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 1230 e: -1
+
+MEASUREMENT halt (#0) a: -1 s: 1231 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 1231 e: -1
+
+MEASUREMENT halt (#0) a: -1 s: 1231 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 1231 e: -1
+
+MEASUREMENT halt (#0) a: -1 s: 1231 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 1231 e: -1
+
+MEASUREMENT halt (#0) a: -1 s: 1231 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 1231 e: -1
+
+MEASUREMENT halt (#0) a: -1 s: 1231 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 1231 e: -1
+
+MEASUREMENT halt (#0) a: -1 s: 1232 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 1232 e: -1
+
+MEASUREMENT halt (#0) a: -1 s: 1232 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 1232 e: -1
+
+MEASUREMENT halt (#0) a: -1 s: 1232 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 1232 e: -1
+
+MEASUREMENT halt (#0) a: -1 s: 1232 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 1232 e: -1
+
+MEASUREMENT halt (#0) a: -1 s: 1232 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 1232 e: -1
+
+MEASUREMENT halt (#0) a: -1 s: 1233 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 1233 e: -1
+
+MEASUREMENT halt (#0) a: -1 s: 1233 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 1233 e: -1
+
+MEASUREMENT halt (#0) a: -1 s: 1233 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 1233 e: -1
+
+MEASUREMENT halt (#0) a: -1 s: 1233 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 1233 e: -1
+
+MEASUREMENT halt (#0) a: -1 s: 1233 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 1233 e: -1
+
+MEASUREMENT halt (#0) a: -1 s: 1233 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 1234 e: -1
+
+MEASUREMENT halt (#0) a: -1 s: 1234 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 1234 e: -1
+
+MEASUREMENT halt (#0) a: -1 s: 1234 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 1234 e: -1
+
+MEASUREMENT halt (#0) a: -1 s: 1234 e: -1
+
+MEASUREMENT idle (#-1) a: -1 s: 1234 e: -1
+
+MEASUREMENT halt (#0) a: -1 s: 1234 e: -1
+Timer: 1234 ticks
+Thread: 135 idle ticks, 0 kernel ticks, 1099 user ticks
+hdb1 (filesys): 193 reads, 0 writes
+Console: 26767 characters output
+Keyboard: 0 keys pressed
+Exception: 0 page faults
+Powering off...
