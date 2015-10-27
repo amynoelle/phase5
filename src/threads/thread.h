@@ -119,6 +119,11 @@ struct thread
    Controlled by kernel command-line option "-o mlfqs". */
 extern bool thread_mlfqs;
 
+/* If false (default), do not instrument scheduler.
+   If true, instrument scheduler.
+   Controlled by kernel command-line option "-o sched-instrument". */
+extern bool thread_instrument;
+
 void thread_init (void);
 void thread_start (void);
 

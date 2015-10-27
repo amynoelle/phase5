@@ -66,6 +66,11 @@ static fixed_point_t load_avg;  /* Load average. */
    Controlled by kernel command-line option "-o mlfqs". */
 bool thread_mlfqs;
 
+/* If false (default), do not instrument scheduler.
+   If true, instrument scheduler.
+   Controlled by kernel command-line option "-o sched-instrument". */
+bool thread_instrument;
+
 static void kernel_thread (thread_func *, void *aux);
 
 static void idle (void *aux UNUSED);
@@ -258,6 +263,11 @@ thread_create (const char *name, int priority,
   sf->eip = switch_entry;
   sf->ebp = 0;
 
+  if (true == thread_instrument)
+    {
+      printf("MEASUREMENT %s a: %lld s: -1 e: -1\n", t->name, timer_ticks ());
+    }
+
   /* Add to run queue. */
   thread_unblock (t);
   if (priority > thread_get_priority ())
@@ -356,6 +366,11 @@ void
 thread_exit (void)
 {
   ASSERT (!intr_context ());
+
+  if (true == thread_instrument)
+    {
+      printf("MEASUREMENT %s a: -1 s: -1 e: %lld\n", thread_current()->name, timer_ticks ());
+    }
 
   struct thread *t = thread_current();
 
@@ -742,6 +757,17 @@ schedule (void)
   if (cur != next)
     prev = switch_threads (cur, next);
   thread_schedule_tail (prev);
+
+  /* prev == NULL implies cur was and is idle/main.
+   * In this case, there was not transition from
+   * one kernel thread to another.
+   */
+  if (true == thread_instrument && prev != cur && prev != NULL)
+    {
+      printf("MEASUREMENT %s a: -1 s: %lld e: -1\n", cur->name, timer_ticks ());
+    }
+
+   ASSERT (cur->tid == 2 || cur->tid == 1 || prev != NULL);
 }
 
 /* Returns a tid to use for a new thread. */
