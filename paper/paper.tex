@@ -152,7 +152,7 @@
 \pdfpagewidth 8.5in
 \pdfpageheight 11in
 
-\title{Project Phase 5: \\ Analysis of two Nachos Schedulers}
+\title{Project Phase 5: \\ Analysis of Pintos Scheduler}
 \author{W. Michael Petullo}
 
 \begin{document}
@@ -264,21 +264,13 @@ described for predictability.
 \section{Experiment design and analysis}
 
 I first ran some runs of \command{count-looper} and \command{cat-looper} with a stopwatch
-to determine an appropriate iteration count. I found that \num{1400} iterations of \command{count-looper}
-and \num{1000} iterations of \command{cat-looper} (with \path{states.txt} serving as the input for the latter) both took approximately five seconds
+to determine an appropriate iteration count. I found that \num{50000} iterations of \command{count-looper}
+and \num{200} iterations of \command{cat-looper} (with \path{states.txt} serving as the input for the latter) both took approximately five seconds
 on my computer.
 I chose this duration so that I would have time to run pairs of processes concurrently.
 Figures~\ref{fig:countLooperBaseline} and \ref{fig:catLooperBaseline} show
 the scheduling of a single \command{countLooperBaseline} and \command{catLooperBaseline},
 respectively.
-
-\color{red}
-\begin{enumerate}
-\item Why do multiple \command{cat-looper}s seem to overlap? Because the quanta is so small and due to rounding in my script's division.
-\item Why do two \command{cat-looper}s run faster than one?
-\item Why does a \command{count-looper} monopolize the processor?
-\end{enumerate}
-\color{black}
 
 \begin{landscape}
 \begin{figure}
@@ -296,7 +288,7 @@ respectively.
 
 \begin{tabular}{cccc}\toprule
 Process & Arrival time (ticks) & Exit time (ticks) & Duration (ticks)\\\hline
-\command{count-looper} (PID 3) & \num{59} & \num{564} & \num{505} \\\bottomrule
+\command{count-looper} & \num{59} & \num{565} & \num{506} \\\bottomrule
 \end{tabular}
 \caption{Scheduling analysis of count-looper baseline}
 \label{fig:countLooperBaseline}
@@ -308,28 +300,23 @@ Process & Arrival time (ticks) & Exit time (ticks) & Duration (ticks)\\\hline
 \centering
 
 \begin{tabular}{l}
-\command{cat-looper states.txt 1000}
-\command{halt}
+\command{../utils/pintos --no-vga -- -sched-instrument -q run 'cat-looper 200 states.txt'}
 \end{tabular}
 
 \vspace{1em}
 
-%\input{rr_catLooperBaseline}
+\input{catLooperBaseline}
 
 \vspace{1em}
 
 \begin{tabular}{cccc}\toprule
 Process & Arrival time (ticks) & Exit time (ticks) & Duration (ticks)\\\hline
-\command{cat-looper} (PID 3) & \num{56955227} & \num{58523593} & \num{1568366} \\\bottomrule
+\command{cat-looper} & \num{60} & \num{564} & \num{1484} \\\bottomrule
 \end{tabular}
 \caption{Scheduling analysis of cat-looper baseline}
 \label{fig:catLooperBaseline}
 \end{figure}
 \end{landscape}
-
-Figure~\ref{fig:twoCpuBound} \todo[inline]{Complete.}
-The most obvious surprise in these measurements is that the CPU-bound processes do not interleave.
-This seems to indicate that Nachos' timer interrupt is not working as expected.
 
 \begin{landscape}
 \begin{figure}
@@ -347,8 +334,8 @@ This seems to indicate that Nachos' timer interrupt is not working as expected.
 
 \begin{tabular}{cccc}\toprule
 Process & Arrival time (ticks) & Exit time (ticks) & Duration (ticks)\\\hline
-\command{count-looper} (PID 3) & \num{190} & \num{1014} & \num{824} \\\bottomrule
-\command{count-looper} (PID 4) & \num{207} & \num{1227} & \num{1020} \\\bottomrule
+\command{count-looper} & \num{182} & \num{1033} & \num{851} \\\bottomrule
+\command{count-looper} & \num{198} & \num{1210} & \num{1012} \\\bottomrule
 \end{tabular}
 \caption{Scheduling two CPU-bound processes}
 \label{fig:twoCpuBound}
@@ -360,23 +347,24 @@ Process & Arrival time (ticks) & Exit time (ticks) & Duration (ticks)\\\hline
 \centering
 
 \begin{tabular}{l}
-\command{cat-looper states.txt 1000 \&}
-\command{cat-looper states.txt 1000}
+\command{../utils/pintos --no-vga -- -sched-instrument -q run 'shell'} \\
+\command{nice 20 count-looper 50000\&nice -20 count-looper 50000}
 \command{halt}
 \end{tabular}
 
-%\input{twoIoBound}
+\vspace{1em}
+
+\input{niceCpuBound}
 
 \vspace{1em}
 
 \begin{tabular}{cccc}\toprule
 Process & Arrival time (ticks) & Exit time (ticks) & Duration (ticks)\\\hline
-\command{cat-looper} (PID 3) & \num{50097047} & \num{50838673} & \num{741626} \\\bottomrule
-\command{cat-looper} (PID 4) & \num{50097083} & \num{50969733} & \num{872650} \\\bottomrule
+\command{count-looper} & \num{158} & \num{908} & \num{750} \\\bottomrule
+\command{count-looper} & \num{170} & \num{1192} & \num{1022} \\\bottomrule
 \end{tabular}
-\caption{Scheduling two IO-bound processes; \textbf{Note that executions do \emph{not} overlap,
-however, the quanta are so small that they cause the illusion of both processes executing uninterruptedly}}
-\label{fig:twoIoBound}
+\caption{Scheduling two CPU-bound processes with different nice levels}
+\label{fig:niceCpuBound}
 \end{figure}
 \end{landscape}
 
@@ -384,19 +372,18 @@ however, the quanta are so small that they cause the illusion of both processes 
 \centering
 
 \begin{tabular}{l}
-\command{count-looper 1400 \&}
-\command{cat-looper states.txt 1000}
+\command{cat-looper 1000 states.txt\&count-looper 50000}
 \command{halt}
 \end{tabular}
 
-%\input{rr_oneEach}
+\input{oneEach}
 
 \vspace{1em}
 
 \begin{tabular}{cccc}\toprule
 Process & Arrival time (ticks) & Exit time (ticks) & Duration (ticks)\\\hline
-\command{cat-looper} (PID 3) & \num{16479214} & \num{147334219} & \num{130855005} \\\bottomrule
-\command{count-looper} (PID 4) & \num{29174038} & \num{43638054} & \num{14464016} \\\bottomrule
+\command{cat-looper} & \num{203} & \num{761} & \num{558} \\\bottomrule
+\command{count-looper} & \num{216} & \num{2248} & \num{2032} \\\bottomrule
 \end{tabular}
 \caption{Scheduling one IO-bound and one CPU-bound process}
 \label{fig:oneEach}

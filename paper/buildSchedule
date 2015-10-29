@@ -38,7 +38,10 @@ for i in range(1,len(lines)):
 	else:
 		m[process]  = [[s, e]]
 
-width = 7 / (maxTime - minTime)
+if maxTime - minTime > 1500:
+	width = 5 / (maxTime - minTime)
+else:
+	width = 7 / (maxTime - minTime)
 
 print("\\begin{ganttchart}[x unit=" + str(width) + "in,bar/.append style={fill=black}]{" + str(minTime) + "}{" + str(maxTime) + "}")
 for process in m:
