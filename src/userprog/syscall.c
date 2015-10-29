@@ -816,6 +816,5 @@ done:
 static int
 sys_nice (const int level)
 {
-  thread_set_nice (level);
-  return thread_get_nice ();;
+  /* TODO (Phase 5): Implement nice system call. */
 }

@@ -265,7 +265,7 @@ thread_create (const char *name, int priority,
 
   if (true == thread_instrument)
     {
-      printf("\nMEASUREMENT %s (#%d) a: %lld s: -1 e: -1\n", t->name, t->pcb ? t->pcb->pid : -1, timer_ticks ());
+      /* TODO (Phase 5): Instrument?. */
     }
 
   /* Add to run queue. */
@@ -369,8 +369,7 @@ thread_exit (void)
 
   if (true == thread_instrument)
     {
-      struct thread *t = thread_current();
-      printf("\nMEASUREMENT %s (#%d) a: -1 s: -1 e: %lld\n", t->name, t->pcb ? t->pcb->pid : -1, timer_ticks ());
+      /* TODO (Phase 5): Instrument?. */
     }
 
   struct thread *t = thread_current();
@@ -765,7 +764,7 @@ schedule (void)
    */
   if (true == thread_instrument && prev != cur && NULL != prev)
     {
-      printf("\nMEASUREMENT %s (#%d) a: -1 s: %lld e: -1\n", cur->name, cur->pcb ? cur->pcb->pid : -1, timer_ticks ());
+      /* TODO (Phase 5): Instrument?. */
     }
 }
 
