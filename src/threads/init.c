@@ -255,8 +255,8 @@ parse_options (char **argv)
 #endif
       else if (!strcmp (name, "-rs"))
         random_init (atoi (value));
-      else if (!strcmp (name, "-mlfqs"))
-        thread_mlfqs = true;
+      else if (!strcmp (name, "-rrs"))
+        thread_mlfqs = false;
       else if (!strcmp (name, "-sched-instrument"))
         thread_instrument = true;
 #ifdef USERPROG
@@ -390,7 +390,7 @@ usage (void)
 #endif
 #endif
           "  -rs=SEED           Set random number seed to SEED.\n"
-          "  -mlfqs             Use multi-level feedback queue scheduler.\n"
+          "  -rrs               Use round-robin scheduler.\n"
 #ifdef USERPROG
           "  -ul=COUNT          Limit user memory to COUNT pages.\n"
 #endif

@@ -817,5 +817,5 @@ static int
 sys_nice (const int level)
 {
   thread_set_nice (level);
-  return 0;
+  return thread_get_nice ();;
 }

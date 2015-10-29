@@ -114,8 +114,8 @@ struct thread
     struct pcb *pcb;                    /* Process control block; NULL if kernel-only. */
   };
 
-/* If false (default), use round-robin scheduler.
-   If true, use multi-level feedback queue scheduler.
+/* If false, use round-robin scheduler.
+   If true (default), use multi-level feedback queue scheduler.
    Controlled by kernel command-line option "-o mlfqs". */
 extern bool thread_mlfqs;
 
