@@ -24,6 +24,7 @@ enum
     SYS_SEMDESTROY,             /* Destroy the named semaphore. */
     SYS_SEMWAIT,                /* Wait on semaphore. */
     SYS_SEMSIGNAL,              /* Signal semaphore. */
+    SYS_NICE,                   /* Sets process's nice value. */
 
     /* Project 3 and optionally project 4. */
     SYS_MMAP,                   /* Map a file into memory. */
@@ -35,9 +36,6 @@ enum
     SYS_READDIR,                /* Reads a directory entry. */
     SYS_ISDIR,                  /* Tests if a fd represents a directory. */
     SYS_INUMBER,                /* Returns the inode number for a fd. */
-
-    /* USMA additions. */
-    SYS_NICE,                   /* Sets process's nice value. */
   };
 
 #endif /* lib/syscall-nr.h */

@@ -39,6 +39,7 @@ int semcreat (const char *name, int initial_value);
 int semdestroy (const char *name);
 int semwait (const char *name);
 int semsignal (const char *name);
+int nice (const int value);
 
 /* Project 3 and optionally project 4. */
 mapid_t mmap (int fd, void *addr);
