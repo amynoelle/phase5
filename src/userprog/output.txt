@@ -1,134 +1,23 @@
-/usr/libexec/qemu-kvm -hda /tmp/crPtiUL0R3.dsk -hdb build/filesys.dsk -m 4 -net none -nographic -monitor null
+/usr/libexec/qemu-kvm -hda /tmp/X_6oTxrARM.dsk -hdb build/filesys.dsk -m 4 -net none -nographic -monitor null
 PiLo hda1
 Loading...........
 Kernel command line: -sched-instrument -q run shell
 Pintos booting with 4,088 kB RAM...
 382 pages available in kernel pool.
 382 pages available in user pool.
-Create Pid: 0, Tick: 0
-Schedule Tick: 0
 Calibrating timer...  3,352,166,400 loops/s.
 hda: 1,008 sectors (504 kB), model "QM00001", serial "QEMU HARDDISK"
-Schedule Tick: 40
-Schedule Tick: 40
 hda1: 185 sectors (92 kB), Pintos OS kernel (20)
 hdb: 5,040 sectors (2 MB), model "QM00002", serial "QEMU HARDDISK"
-Schedule Tick: 40
-Schedule Tick: 40
 hdb1: 4,096 sectors (2 MB), Pintos file system (21)
 filesys: using hdb1
-Schedule Tick: 55
-Schedule Tick: 55
-Schedule Tick: 55
-Schedule Tick: 55
 Boot complete.
 Executing 'shell':
-Create Pid: 0, Tick: 57
-Schedule Tick: 58
-Schedule Tick: 59
-Schedule Tick: 60
-Schedule Tick: 61
-Schedule Tick: 62
-Schedule Tick: 63
-Schedule Tick: 64
-Schedule Tick: 65
-Schedule Tick: 66
-Schedule Tick: 67
-Schedule Tick: 68
-Schedule Tick: 69
-Schedule Tick: 70
-Schedule Tick: 71
-Schedule Tick: 72
-Schedule Tick: 73
-Schedule Tick: 74
-Schedule Tick: 75
-Schedule Tick: 76
-Schedule Tick: 77
-Schedule Tick: 78
-Schedule Tick: 79
-Schedule Tick: 80
-Schedule Tick: 81
-Schedule Tick: 82
-Schedule Tick: 83
-Schedule Tick: 84
-Schedule Tick: 85
-Schedule Tick: 86
-Schedule Tick: 87
-Schedule Tick: 89
-Schedule Tick: 90
-Schedule Tick: 91
-Schedule Tick: 92
-Schedule Tick: 93
-Schedule Tick: 94
-Schedule Tick: 95
-Schedule Tick: 96
-Schedule Tick: 97
-Schedule Tick: 98
-Schedule Tick: 99
-Schedule Tick: 100
-Schedule Tick: 101
-Schedule Tick: 102
-Schedule Tick: 103
-Schedule Tick: 104
-Schedule Tick: 105
-Schedule Tick: 106
-Schedule Tick: 107
-Schedule Tick: 108
-Schedule Tick: 109
-Schedule Tick: 110
-Schedule Tick: 111
-Schedule Tick: 112
-Schedule Tick: 113
-Schedule Tick: 114
-Schedule Tick: 115
-Schedule Tick: 116
-Schedule Tick: 117
-Schedule Tick: 118
-Schedule Tick: 119
-Schedule Tick: 120
-Schedule Tick: 121
-Schedule Tick: 122
-Schedule Tick: 123
-Schedule Tick: 124
-Schedule Tick: 125
-Schedule Tick: 126
-Schedule Tick: 127
-Schedule Tick: 128
-Schedule Tick: 129
-Schedule Tick: 130
-Schedule Tick: 131
-Schedule Tick: 132
-Schedule Tick: 133
-Schedule Tick: 134
-Schedule Tick: 135
-Schedule Tick: 137
-Schedule Tick: 138
-Schedule Tick: 139
-Schedule Tick: 140
-Schedule Tick: 141
 Shell starting...
-pintos> Schedule Tick: 143
-Schedule Tick: 144
-Schedule Tick: 210
-cSchedule Tick: 211
-Schedule Tick: 220
-dSchedule Tick: 221
-Schedule Tick: 231
- Schedule Tick: 232
-Schedule Tick: 244
-.Schedule Tick: 245
-Schedule Tick: 258
-.Schedule Tick: 259
-Schedule Tick: 276
-
-Exit Pid: 1, Tick: 278, Nice: 0
-shell: exit(-1)
-Schedule Tick: 279
-Execution of 'shell' complete.
-Timer: 282 ticks
-Thread: 169 idle ticks, 0 kernel ticks, 114 user ticks
-hdb1 (filesys): 43 reads, 0 writes
-Console: 2703 characters output
-Keyboard: 0 keys pressed
-Exception: 0 page faults
-Powering off...
+pintos> nice - 20 count-o looper 100000000000000000  
+***Test*** Schedule PID: 2, Tick: 1121
+nice: set nice to 20
+***Test*** Create PID: 2, Tick: 1121
+***Test*** Schedule PID: 2, Tick: 1121
+***Test*** Schedule PID: 2, Tick: 1125
+***Test*** Schedule PID: 3, Tick: 1125
