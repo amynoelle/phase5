@@ -1,0 +1,129 @@
+/usr/libexec/qemu-kvm -hda /tmp/tYTRYN5oQo.dsk -hdb build/filesys.dsk -m 4 -net none -nographic -monitor null
+PiLo hda1
+Loading...........
+Kernel command line: -sched-instrument -q run shell
+Pintos booting with 4,088 kB RAM...
+382 pages available in kernel pool.
+382 pages available in user pool.
+Create Pid: 0, Tick: 0
+Schedule Pid: 0, Tick: 0
+Calibrating timer...  3,352,166,400 loops/s.
+hda: 1,008 sectors (504 kB), model "QM00001", serial "QEMU HARDDISK"
+Schedule Pid: 0, Tick: 44
+hda1: 185 sectors (92 kB), Pintos OS kernel (20)
+hdb: 5,040 sectors (2 MB), model "QM00002", serial "QEMU HARDDISK"
+Schedule Pid: 0, Tick: 48
+hdb1: 4,096 sectors (2 MB), Pintos file system (21)
+filesys: using hdb1
+Schedule Pid: 0, Tick: 67
+Schedule Pid: 0, Tick: 71
+Boot complete.
+Executing 'shell':
+Create Pid: 0, Tick: 71
+Schedule Pid: 0, Tick: 75
+Schedule Pid: 0, Tick: 79
+Schedule Pid: 0, Tick: 84
+Schedule Pid: 0, Tick: 89
+Schedule Pid: 0, Tick: 94
+Kernel PANIC at ../../threads/thread.c:353 in thread_current(): assertion `is_thread (t)' failed.
+Call stack: 0xc002881e 0xc0021b0e 0 0xc0021b0e 0 0xc0021b0e 0 0xc0021b0e 0 0xc0021b0e 0 0xc0021b0e 0 0xc0021b0e 0 0xc0021b0e 0 0xc0021b0e 0.
+The `backtrace' program can make call stacks useful.
+Read "Backtraces" in the "Debugging Tools" chapter
+of the Pintos documentation for more information.
+Kernel PANIC recursion at ../../threads/synch.c:204 in lock_acquire().
+PiLo hda1
+Loading...........
+Kernel command line: -sched-instrument -q run shell
+Pintos booting with 4,088 kB RAM...
+382 pages available in kernel pool.
+382 pages available in user pool.
+Create Pid: 0, Tick: 0
+Schedule Pid: 0, Tick: 0
+Calibrating timer...  3,352,166,400 loops/s.
+hda: 1,008 sectors (504 kB), model "QM00001", serial "QEMU HARDDISK"
+Schedule Pid: 0, Tick: 44
+hda1: 185 sectors (92 kB), Pintos OS kernel (20)
+hdb: 5,040 sectors (2 MB), model "QM00002", serial "QEMU HARDDISK"
+Schedule Pid: 0, Tick: 48
+hdb1: 4,096 sectors (2 MB), Pintos file system (21)
+filesys: using hdb1
+Schedule Pid: 0, Tick: 67
+Schedule Pid: 0, Tick: 71
+Boot complete.
+Executing 'shell':
+Create Pid: 0, Tick: 71
+Schedule Pid: 0, Tick: 75
+Schedule Pid: 0, Tick: 79
+Schedule Pid: 0, Tick: 84
+Schedule Pid: 0, Tick: 89
+Schedule Pid: 0, Tick: 94
+Kernel PANIC at ../../threads/thread.c:353 in thread_current(): assertion `is_thread (t)' failed.
+Call stack: 0xc002881e 0xc0022067 0xc0021b0e 0 0xc0021b0e 0 0xc0021b0e 0 0xc0021b0e 0 0xc0021b0e 0 0xc0021b0e 0 0xc0021b0e 0 0xc0021b0e 0 0xc0021b0e.
+The `backtrace' program can make call stacks useful.
+Read "Backtraces" in the "Debugging Tools" chapter
+of the Pintos documentation for more information.
+Kernel PANIC recursion at ../../threads/synch.c:204 in lock_acquire().
+PiLo hda1
+Loading...........
+Kernel command line: -sched-instrument -q run shell
+Pintos booting with 4,088 kB RAM...
+382 pages available in kernel pool.
+382 pages available in user pool.
+Create Pid: 0, Tick: 0
+Schedule Pid: 0, Tick: 0
+Calibrating timer...  3,352,166,400 loops/s.
+hda: 1,008 sectors (504 kB), model "QM00001", serial "QEMU HARDDISK"
+Schedule Pid: 0, Tick: 44
+hda1: 185 sectors (92 kB), Pintos OS kernel (20)
+hdb: 5,040 sectors (2 MB), model "QM00002", serial "QEMU HARDDISK"
+Schedule Pid: 0, Tick: 48
+hdb1: 4,096 sectors (2 MB), Pintos file system (21)
+filesys: using hdb1
+Schedule Pid: 0, Tick: 67
+Schedule Pid: 0, Tick: 71
+Boot complete.
+Executing 'shell':
+Create Pid: 0, Tick: 71
+Schedule Pid: 0, Tick: 75
+Schedule Pid: 0, Tick: 79
+Schedule Pid: 0, Tick: 84
+Schedule Pid: 0, Tick: 89
+Schedule Pid: 0, Tick: 94
+Kernel PANIC at ../../threads/thread.c:353 in thread_current(): assertion `is_thread (t)' failed.
+Call stack: 0xc002881e 0xc0021b0e 0 0xc0021b0e 0 0xc0021b0e 0 0xc0021b0e 0 0xc0021b0e 0 0xc0021b0e 0 0xc002bcd8 0 0xc0021b0e 0 0xc0021f67 0 0xc0021b0e.
+The `backtrace' program can make call stacks useful.
+Read "Backtraces" in the "Debugging Tools" chapter
+of the Pintos documentation for more information.
+Kernel PANIC recursion at ../../threads/synch.c:204 in lock_acquire().
+PiLo hda1
+Loading...........
+Kernel command line: -sched-instrument -q run shell
+Pintos booting with 4,088 kB RAM...
+382 pages available in kernel pool.
+382 pages available in user pool.
+Create Pid: 0, Tick: 0
+Schedule Pid: 0, Tick: 0
+Calibrating timer...  3,352,166,400 loops/s.
+hda: 1,008 sectors (504 kB), model "QM00001", serial "QEMU HARDDISK"
+Schedule Pid: 0, Tick: 44
+hda1: 185 sectors (92 kB), Pintos OS kernel (20)
+hdb: 5,040 sectors (2 MB), model "QM00002", serial "QEMU HARDDISK"
+Schedule Pid: 0, Tick: 48
+hdb1: 4,096 sectors (2 MB), Pintos file system (21)
+filesys: using hdb1
+Schedule Pid: 0, Tick: 67
+Schedule Pid: 0, Tick: 71
+Boot complete.
+Executing 'shell':
+Create Pid: 0, Tick: 71
+Schedule Pid: 0, Tick: 75
+Schedule Pid: 0, Tick: 79
+Schedule Pid: 0, Tick: 84
+Schedule Pid: 0, Tick: 89
+Schedule Pid: 0, Tick: 94
+Kernel PANIC at ../../threads/thread.c:353 in thread_current(): assertion `is_thread (t)' failed.
+Call stack: 0xc002881e 0xc0021b0e 0 0xc0021b0e 0 0xc0021b0e 0 0xc0021b0e 0 0xc0021b0e 0 0xc0021b0e 0 0xc0021b0e 0 0xc0021b0e 0 0xc0021b0e 0 0xc0021b0e.
+The `backtrace' program can make call stacks useful.
+Read "Backtraces" in the "Debugging Tools" chapter
+of the Pintos documentation for more information.
+Kernel PANIC recursion at ../../threads/synch.c:204 in lock_acquire().
