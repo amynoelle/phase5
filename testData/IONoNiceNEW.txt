@@ -1,20 +1,3 @@
-/usr/libexec/qemu-kvm -hda /tmp/llTGwgMWkl.dsk -hdb build/filesys.dsk -m 4 -net none -nographic -monitor null
-PiLo hda1
-Loading...........
-Kernel command line: -sched-instrument -q run shell
-Pintos booting with 4,088 kB RAM...
-382 pages available in kernel pool.
-382 pages available in user pool.
-Calibrating timer...  3,352,166,400 loops/s.
-hda: 1,008 sectors (504 kB), model "QM00001", serial "QEMU HARDDISK"
-hda1: 185 sectors (92 kB), Pintos OS kernel (20)
-hdb: 5,040 sectors (2 MB), model "QM00002", serial "QEMU HARDDISK"
-hdb1: 4,096 sectors (2 MB), Pintos file system (21)
-filesys: using hdb1
-Boot complete.
-Executing 'shell':
-Shell starting...
-pintos> nice 0 cat-looper 10 states.txt &
 *TID: 4, Nice: 0, Tick: 469
 *TID: 4, Nice: 0, Tick: 469
 *TID: 4, Nice: 0, Tick: 469
@@ -68,9 +51,7 @@ pintos> nice 0 cat-looper 10 states.txt &
 *TID: 4, Nice: 0, Tick: 511
 *TID: 4, Nice: 0, Tick: 512
 *TID: 4, Nice: 0, Tick: 513
-pintos> nice 0 cat-looper 10 states.txt &
 *TID: 4, Nice: 0, Tick: 515
-nice: set nice to 0
 *TID: 5, Nice: 0, Tick: 517
 *TID: 5, Nice: 0, Tick: 518
 *TID: 5, Nice: 0, Tick: 519
@@ -123,10 +104,8 @@ nice: set nice to 0
 *TID: 5, Nice: 0, Tick: 564
 *TID: 5, Nice: 0, Tick: 565
 *TID: 5, Nice: 0, Tick: 566
-pintos> nice 0 cat-looper 10 states.txt &
 *TID: 4, Nice: 0, Tick: 568
 *TID: 5, Nice: 0, Tick: 568
-nice: set nice to 0
 *TID: 6, Nice: 0, Tick: 571
 *TID: 6, Nice: 0, Tick: 572
 *TID: 6, Nice: 0, Tick: 573
@@ -179,10 +158,8 @@ nice: set nice to 0
 *TID: 6, Nice: 0, Tick: 618
 *TID: 6, Nice: 0, Tick: 619
 *TID: 6, Nice: 0, Tick: 620
-pintos> nice 0 cat-looper 10 states.txt &
 *TID: 4, Nice: 0, Tick: 622
 *TID: 6, Nice: 0, Tick: 623
-nice: set nice to 0
 *TID: 7, Nice: 0, Tick: 625
 *TID: 7, Nice: 0, Tick: 626
 *TID: 7, Nice: 0, Tick: 627
@@ -235,10 +212,8 @@ nice: set nice to 0
 *TID: 7, Nice: 0, Tick: 672
 *TID: 7, Nice: 0, Tick: 673
 *TID: 7, Nice: 0, Tick: 674
-pintos> nice 0 cat-looper 10 states.txt &
 *TID: 5, Nice: 0, Tick: 676
 *TID: 7, Nice: 0, Tick: 677
-nice: set nice to 0
 *TID: 8, Nice: 0, Tick: 679
 *TID: 8, Nice: 0, Tick: 680
 *TID: 8, Nice: 0, Tick: 681
@@ -291,10 +266,8 @@ nice: set nice to 0
 *TID: 8, Nice: 0, Tick: 725
 *TID: 8, Nice: 0, Tick: 726
 *TID: 8, Nice: 0, Tick: 727
-pintos> nice 0 cat-looper 10 states.txt &
 *TID: 4, Nice: 0, Tick: 729
 *TID: 8, Nice: 0, Tick: 730
-nice: set nice to 0
 *TID: 9, Nice: 0, Tick: 732
 *TID: 9, Nice: 0, Tick: 733
 *TID: 9, Nice: 0, Tick: 734
@@ -347,10 +320,8 @@ nice: set nice to 0
 *TID: 9, Nice: 0, Tick: 779
 *TID: 9, Nice: 0, Tick: 780
 *TID: 9, Nice: 0, Tick: 781
-pintos> cd ..*TID: 6, Nice: 0, Tick: 782
 *TID: 6, Nice: 0, Tick: 783
 *TID: 9, Nice: 0, Tick: 784
-nice: set nice to 0
 *TID: 10, Nice: 0, Tick: 786
 *TID: 10, Nice: 0, Tick: 787
 *TID: 10, Nice: 0, Tick: 788
@@ -697,57 +668,7 @@ nice: set nice to 0
 *TID: 10, Nice: 0, Tick: 1115
 *TID: 11, Nice: 0, Tick: 1116
 *TID: 10, Nice: 0, Tick: 1117
-Alabama
-Alaska
-Arizona
-Arkansas
 *TID: 10, Nice: 0, Tick: 1121
-California
-Colorado
-Connecticut
-Delaware
-Florida
-Georgia
-Hawaii
-Idaho
-Illinois
-Indiana
-Iowa
-Kansas
-Kentucky
-Louisiana
-Maine
-Maryland
-Massachusetts
-Michigan
-Minnesota
-Mississippi
-Missouri
-Montana
-Nebraska
-Nevada
-New Hampshire
-New Jersey
-New Mexico
-New York
-North Carolina
-North Dakota
-Ohio
-Oklahoma
-Oregon
-Pennsylvania
-Rhode Island
-South Carolina
-South Dakota
-Tennessee
-Texas
-Utah
-Vermont
-Virginia
-Washington
-West Virginia
-Wisconsin
-Wyoming
 *TID: 12, Nice: 0, Tick: 1166
 *TID: 12, Nice: 0, Tick: 1121
 *TID: 13, Nice: 0, Tick: 1166
@@ -780,57 +701,7 @@ Wyoming
 *TID: 10, Nice: 0, Tick: 1193
 *TID: 15, Nice: 0, Tick: 1194
 *TID: 10, Nice: 0, Tick: 1195
-Alabama
-Alaska
-Arizona
 *TID: 10, Nice: 0, Tick: 1199
-Arkansas
-California
-Colorado
-Connecticut
-Delaware
-Florida
-Georgia
-Hawaii
-Idaho
-Illinois
-Indiana
-Iowa
-Kansas
-Kentucky
-Louisiana
-Maine
-Maryland
-Massachusetts
-Michigan
-Minnesota
-Mississippi
-Missouri
-Montana
-Nebraska
-Nevada
-New Hampshire
-New Jersey
-New Mexico
-New York
-North Carolina
-North Dakota
-Ohio
-Oklahoma
-Oregon
-Pennsylvania
-Rhode Island
-South Carolina
-South Dakota
-Tennessee
-Texas
-Utah
-Vermont
-Virginia
-Washington
-West Virginia
-Wisconsin
-Wyoming
 *TID: 11, Nice: 0, Tick: 1244
 *TID: 11, Nice: 0, Tick: 1199
 *TID: 12, Nice: 0, Tick: 1244
@@ -863,57 +734,7 @@ Wyoming
 *TID: 10, Nice: 0, Tick: 1272
 *TID: 14, Nice: 0, Tick: 1273
 *TID: 10, Nice: 0, Tick: 1274
-Alabama
-Alaska
-Arizona
 *TID: 10, Nice: 0, Tick: 1278
-Arkansas
-California
-Colorado
-Connecticut
-Delaware
-Florida
-Georgia
-Hawaii
-Idaho
-Illinois
-Indiana
-Iowa
-Kansas
-Kentucky
-Louisiana
-Maine
-Maryland
-Massachusetts
-Michigan
-Minnesota
-Mississippi
-Missouri
-Montana
-Nebraska
-Nevada
-New Hampshire
-New Jersey
-New Mexico
-New York
-North Carolina
-North Dakota
-Ohio
-Oklahoma
-Oregon
-Pennsylvania
-Rhode Island
-South Carolina
-South Dakota
-Tennessee
-Texas
-Utah
-Vermont
-Virginia
-Washington
-West Virginia
-Wisconsin
-Wyoming
 *TID: 15, Nice: 0, Tick: 1323
 *TID: 15, Nice: 0, Tick: 1278
 *TID: 11, Nice: 0, Tick: 1323
@@ -946,57 +767,7 @@ Wyoming
 *TID: 10, Nice: 0, Tick: 1351
 *TID: 13, Nice: 0, Tick: 1352
 *TID: 10, Nice: 0, Tick: 1352
-Alabama
-Alaska
-Arizona
 *TID: 10, Nice: 0, Tick: 1356
-Arkansas
-California
-Colorado
-Connecticut
-Delaware
-Florida
-Georgia
-Hawaii
-Idaho
-Illinois
-Indiana
-Iowa
-Kansas
-Kentucky
-Louisiana
-Maine
-Maryland
-Massachusetts
-Michigan
-Minnesota
-Mississippi
-Missouri
-Montana
-Nebraska
-Nevada
-New Hampshire
-New Jersey
-New Mexico
-New York
-North Carolina
-North Dakota
-Ohio
-Oklahoma
-Oregon
-Pennsylvania
-Rhode Island
-South Carolina
-South Dakota
-Tennessee
-Texas
-Utah
-Vermont
-Virginia
-Washington
-West Virginia
-Wisconsin
-Wyoming
 *TID: 14, Nice: 0, Tick: 1401
 *TID: 14, Nice: 0, Tick: 1356
 *TID: 15, Nice: 0, Tick: 1401
@@ -1029,57 +800,7 @@ Wyoming
 *TID: 10, Nice: 0, Tick: 1429
 *TID: 12, Nice: 0, Tick: 1430
 *TID: 10, Nice: 0, Tick: 1431
-Alabama
-Alaska
-Arizona
 *TID: 10, Nice: 0, Tick: 1435
-Arkansas
-California
-Colorado
-Connecticut
-Delaware
-Florida
-Georgia
-Hawaii
-Idaho
-Illinois
-Indiana
-Iowa
-Kansas
-Kentucky
-Louisiana
-Maine
-Maryland
-Massachusetts
-Michigan
-Minnesota
-Mississippi
-Missouri
-Montana
-Nebraska
-Nevada
-New Hampshire
-New Jersey
-New Mexico
-New York
-North Carolina
-North Dakota
-Ohio
-Oklahoma
-Oregon
-Pennsylvania
-Rhode Island
-South Carolina
-South Dakota
-Tennessee
-Texas
-Utah
-Vermont
-Virginia
-Washington
-West Virginia
-Wisconsin
-Wyoming
 *TID: 13, Nice: 0, Tick: 1480
 *TID: 13, Nice: 0, Tick: 1435
 *TID: 14, Nice: 0, Tick: 1480
@@ -1112,57 +833,7 @@ Wyoming
 *TID: 10, Nice: 0, Tick: 1508
 *TID: 11, Nice: 0, Tick: 1509
 *TID: 10, Nice: 0, Tick: 1510
-Alabama
-Alaska
-Arizona
-Arkansas
 *TID: 10, Nice: 0, Tick: 1514
-California
-Colorado
-Connecticut
-Delaware
-Florida
-Georgia
-Hawaii
-Idaho
-Illinois
-Indiana
-Iowa
-Kansas
-Kentucky
-Louisiana
-Maine
-Maryland
-Massachusetts
-Michigan
-Minnesota
-Mississippi
-Missouri
-Montana
-Nebraska
-Nevada
-New Hampshire
-New Jersey
-New Mexico
-New York
-North Carolina
-North Dakota
-Ohio
-Oklahoma
-Oregon
-Pennsylvania
-Rhode Island
-South Carolina
-South Dakota
-Tennessee
-Texas
-Utah
-Vermont
-Virginia
-Washington
-West Virginia
-Wisconsin
-Wyoming
 *TID: 12, Nice: 0, Tick: 1559
 *TID: 12, Nice: 0, Tick: 1514
 *TID: 13, Nice: 0, Tick: 1559
@@ -1195,57 +866,7 @@ Wyoming
 *TID: 10, Nice: 0, Tick: 1586
 *TID: 15, Nice: 0, Tick: 1587
 *TID: 10, Nice: 0, Tick: 1588
-Alabama
-Alaska
-Arizona
 *TID: 10, Nice: 0, Tick: 1592
-Arkansas
-California
-Colorado
-Connecticut
-Delaware
-Florida
-Georgia
-Hawaii
-Idaho
-Illinois
-Indiana
-Iowa
-Kansas
-Kentucky
-Louisiana
-Maine
-Maryland
-Massachusetts
-Michigan
-Minnesota
-Mississippi
-Missouri
-Montana
-Nebraska
-Nevada
-New Hampshire
-New Jersey
-New Mexico
-New York
-North Carolina
-North Dakota
-Ohio
-Oklahoma
-Oregon
-Pennsylvania
-Rhode Island
-South Carolina
-South Dakota
-Tennessee
-Texas
-Utah
-Vermont
-Virginia
-Washington
-West Virginia
-Wisconsin
-Wyoming
 *TID: 11, Nice: 0, Tick: 1637
 *TID: 11, Nice: 0, Tick: 1592
 *TID: 12, Nice: 0, Tick: 1637
@@ -1278,57 +899,7 @@ Wyoming
 *TID: 10, Nice: 0, Tick: 1665
 *TID: 14, Nice: 0, Tick: 1666
 *TID: 10, Nice: 0, Tick: 1667
-Alabama
-Alaska
-Arizona
 *TID: 10, Nice: 0, Tick: 1671
-Arkansas
-California
-Colorado
-Connecticut
-Delaware
-Florida
-Georgia
-Hawaii
-Idaho
-Illinois
-Indiana
-Iowa
-Kansas
-Kentucky
-Louisiana
-Maine
-Maryland
-Massachusetts
-Michigan
-Minnesota
-Mississippi
-Missouri
-Montana
-Nebraska
-Nevada
-New Hampshire
-New Jersey
-New Mexico
-New York
-North Carolina
-North Dakota
-Ohio
-Oklahoma
-Oregon
-Pennsylvania
-Rhode Island
-South Carolina
-South Dakota
-Tennessee
-Texas
-Utah
-Vermont
-Virginia
-Washington
-West Virginia
-Wisconsin
-Wyoming
 *TID: 15, Nice: 0, Tick: 1716
 *TID: 15, Nice: 0, Tick: 1671
 *TID: 11, Nice: 0, Tick: 1716
@@ -1361,57 +932,7 @@ Wyoming
 *TID: 10, Nice: 0, Tick: 1744
 *TID: 13, Nice: 0, Tick: 1745
 *TID: 10, Nice: 0, Tick: 1746
-Alabama
-Alaska
-Arizona
-Arkansas
 *TID: 10, Nice: 0, Tick: 1750
-California
-Colorado
-Connecticut
-Delaware
-Florida
-Georgia
-Hawaii
-Idaho
-Illinois
-Indiana
-Iowa
-Kansas
-Kentucky
-Louisiana
-Maine
-Maryland
-Massachusetts
-Michigan
-Minnesota
-Mississippi
-Missouri
-Montana
-Nebraska
-Nevada
-New Hampshire
-New Jersey
-New Mexico
-New York
-North Carolina
-North Dakota
-Ohio
-Oklahoma
-Oregon
-Pennsylvania
-Rhode Island
-South Carolina
-South Dakota
-Tennessee
-Texas
-Utah
-Vermont
-Virginia
-Washington
-West Virginia
-Wisconsin
-Wyoming
 *TID: 14, Nice: 0, Tick: 1794
 *TID: 14, Nice: 0, Tick: 1750
 *TID: 15, Nice: 0, Tick: 1794
@@ -1444,59 +965,8 @@ Wyoming
 *TID: 10, Nice: 0, Tick: 1822
 *TID: 12, Nice: 0, Tick: 1823
 *TID: 10, Nice: 0, Tick: 1824
-Alabama
-Alaska
-Arizona
 *TID: 10, Nice: 0, Tick: 1828
-Arkansas
-California
-Colorado
-Connecticut
-Delaware
-Florida
-Georgia
-Hawaii
-Idaho
-Illinois
-Indiana
-Iowa
-Kansas
-Kentucky
-Louisiana
-Maine
-Maryland
-Massachusetts
-Michigan
-Minnesota
-Mississippi
-Missouri
-Montana
-Nebraska
-Nevada
-New Hampshire
-New Jersey
-New Mexico
-New York
-North Carolina
-North Dakota
-Ohio
-Oklahoma
-Oregon
-Pennsylvania
-Rhode Island
-South Carolina
-South Dakota
-Tennessee
-Texas
-Utah
-Vermont
-Virginia
-Washington
-West Virginia
-Wisconsin
-Wyoming
 *TID: 10, Nice: 0, Tick: 1873
-cat-looper: exit(0)
 *TID: 13, Nice: 0, Tick: 1874
 *TID: 13, Nice: 0, Tick: 1828
 *TID: 14, Nice: 0, Tick: 1877
@@ -1504,7 +974,6 @@ cat-looper: exit(0)
 *TID: 6, Nice: 0, Tick: 1877
 *TID: 6, Nice: 0, Tick: 1879
 *TID: 6, Nice: 0, Tick: 1881
-nice: exit(0)
 *TID: 13, Nice: 0, Tick: 1882
 *TID: 13, Nice: 0, Tick: 1881
 *TID: 13, Nice: 0, Tick: 1885
@@ -1534,57 +1003,7 @@ nice: exit(0)
 *TID: 13, Nice: 0, Tick: 1908
 *TID: 11, Nice: 0, Tick: 1909
 *TID: 13, Nice: 0, Tick: 1910
-Alabama
-Alaska
-Arizona
 *TID: 13, Nice: 0, Tick: 1914
-Arkansas
-California
-Colorado
-Connecticut
-Delaware
-Florida
-Georgia
-Hawaii
-Idaho
-Illinois
-Indiana
-Iowa
-Kansas
-Kentucky
-Louisiana
-Maine
-Maryland
-Massachusetts
-Michigan
-Minnesota
-Mississippi
-Missouri
-Montana
-Nebraska
-Nevada
-New Hampshire
-New Jersey
-New Mexico
-New York
-North Carolina
-North Dakota
-Ohio
-Oklahoma
-Oregon
-Pennsylvania
-Rhode Island
-South Carolina
-South Dakota
-Tennessee
-Texas
-Utah
-Vermont
-Virginia
-Washington
-West Virginia
-Wisconsin
-Wyoming
 *TID: 12, Nice: 0, Tick: 1959
 *TID: 12, Nice: 0, Tick: 1914
 *TID: 14, Nice: 0, Tick: 1959
@@ -1617,57 +1036,7 @@ Wyoming
 *TID: 13, Nice: 0, Tick: 1987
 *TID: 11, Nice: 0, Tick: 1988
 *TID: 13, Nice: 0, Tick: 1989
-Alabama
-Alaska
-Arizona
-Arkansas
 *TID: 13, Nice: 0, Tick: 1993
-California
-Colorado
-Connecticut
-Delaware
-Florida
-Georgia
-Hawaii
-Idaho
-Illinois
-Indiana
-Iowa
-Kansas
-Kentucky
-Louisiana
-Maine
-Maryland
-Massachusetts
-Michigan
-Minnesota
-Mississippi
-Missouri
-Montana
-Nebraska
-Nevada
-New Hampshire
-New Jersey
-New Mexico
-New York
-North Carolina
-North Dakota
-Ohio
-Oklahoma
-Oregon
-Pennsylvania
-Rhode Island
-South Carolina
-South Dakota
-Tennessee
-Texas
-Utah
-Vermont
-Virginia
-Washington
-West Virginia
-Wisconsin
-Wyoming
 *TID: 12, Nice: 0, Tick: 2037
 *TID: 12, Nice: 0, Tick: 1993
 *TID: 14, Nice: 0, Tick: 2037
@@ -1700,57 +1069,7 @@ Wyoming
 *TID: 13, Nice: 0, Tick: 2065
 *TID: 11, Nice: 0, Tick: 2066
 *TID: 13, Nice: 0, Tick: 2067
-Alabama
-Alaska
-Arizona
 *TID: 13, Nice: 0, Tick: 2071
-Arkansas
-California
-Colorado
-Connecticut
-Delaware
-Florida
-Georgia
-Hawaii
-Idaho
-Illinois
-Indiana
-Iowa
-Kansas
-Kentucky
-Louisiana
-Maine
-Maryland
-Massachusetts
-Michigan
-Minnesota
-Mississippi
-Missouri
-Montana
-Nebraska
-Nevada
-New Hampshire
-New Jersey
-New Mexico
-New York
-North Carolina
-North Dakota
-Ohio
-Oklahoma
-Oregon
-Pennsylvania
-Rhode Island
-South Carolina
-South Dakota
-Tennessee
-Texas
-Utah
-Vermont
-Virginia
-Washington
-West Virginia
-Wisconsin
-Wyoming
 *TID: 12, Nice: 0, Tick: 2116
 *TID: 12, Nice: 0, Tick: 2071
 *TID: 14, Nice: 0, Tick: 2116
@@ -1783,57 +1102,7 @@ Wyoming
 *TID: 13, Nice: 0, Tick: 2144
 *TID: 11, Nice: 0, Tick: 2145
 *TID: 13, Nice: 0, Tick: 2146
-Alabama
-Alaska
-Arizona
 *TID: 13, Nice: 0, Tick: 2150
-Arkansas
-California
-Colorado
-Connecticut
-Delaware
-Florida
-Georgia
-Hawaii
-Idaho
-Illinois
-Indiana
-Iowa
-Kansas
-Kentucky
-Louisiana
-Maine
-Maryland
-Massachusetts
-Michigan
-Minnesota
-Mississippi
-Missouri
-Montana
-Nebraska
-Nevada
-New Hampshire
-New Jersey
-New Mexico
-New York
-North Carolina
-North Dakota
-Ohio
-Oklahoma
-Oregon
-Pennsylvania
-Rhode Island
-South Carolina
-South Dakota
-Tennessee
-Texas
-Utah
-Vermont
-Virginia
-Washington
-West Virginia
-Wisconsin
-Wyoming
 *TID: 12, Nice: 0, Tick: 2195
 *TID: 12, Nice: 0, Tick: 2150
 *TID: 14, Nice: 0, Tick: 2195
@@ -1866,57 +1135,7 @@ Wyoming
 *TID: 13, Nice: 0, Tick: 2223
 *TID: 11, Nice: 0, Tick: 2224
 *TID: 13, Nice: 0, Tick: 2224
-Alabama
-Alaska
-Arizona
 *TID: 13, Nice: 0, Tick: 2228
-Arkansas
-California
-Colorado
-Connecticut
-Delaware
-Florida
-Georgia
-Hawaii
-Idaho
-Illinois
-Indiana
-Iowa
-Kansas
-Kentucky
-Louisiana
-Maine
-Maryland
-Massachusetts
-Michigan
-Minnesota
-Mississippi
-Missouri
-Montana
-Nebraska
-Nevada
-New Hampshire
-New Jersey
-New Mexico
-New York
-North Carolina
-North Dakota
-Ohio
-Oklahoma
-Oregon
-Pennsylvania
-Rhode Island
-South Carolina
-South Dakota
-Tennessee
-Texas
-Utah
-Vermont
-Virginia
-Washington
-West Virginia
-Wisconsin
-Wyoming
 *TID: 12, Nice: 0, Tick: 2273
 *TID: 12, Nice: 0, Tick: 2228
 *TID: 14, Nice: 0, Tick: 2273
@@ -1949,57 +1168,7 @@ Wyoming
 *TID: 13, Nice: 0, Tick: 2301
 *TID: 11, Nice: 0, Tick: 2302
 *TID: 13, Nice: 0, Tick: 2303
-Alabama
-Alaska
-Arizona
 *TID: 13, Nice: 0, Tick: 2307
-Arkansas
-California
-Colorado
-Connecticut
-Delaware
-Florida
-Georgia
-Hawaii
-Idaho
-Illinois
-Indiana
-Iowa
-Kansas
-Kentucky
-Louisiana
-Maine
-Maryland
-Massachusetts
-Michigan
-Minnesota
-Mississippi
-Missouri
-Montana
-Nebraska
-Nevada
-New Hampshire
-New Jersey
-New Mexico
-New York
-North Carolina
-North Dakota
-Ohio
-Oklahoma
-Oregon
-Pennsylvania
-Rhode Island
-South Carolina
-South Dakota
-Tennessee
-Texas
-Utah
-Vermont
-Virginia
-Washington
-West Virginia
-Wisconsin
-Wyoming
 *TID: 12, Nice: 0, Tick: 2352
 *TID: 12, Nice: 0, Tick: 2307
 *TID: 14, Nice: 0, Tick: 2352
@@ -2032,57 +1201,7 @@ Wyoming
 *TID: 13, Nice: 0, Tick: 2380
 *TID: 11, Nice: 0, Tick: 2381
 *TID: 13, Nice: 0, Tick: 2382
-Alabama
-Alaska
-Arizona
 *TID: 13, Nice: 0, Tick: 2386
-Arkansas
-California
-Colorado
-Connecticut
-Delaware
-Florida
-Georgia
-Hawaii
-Idaho
-Illinois
-Indiana
-Iowa
-Kansas
-Kentucky
-Louisiana
-Maine
-Maryland
-Massachusetts
-Michigan
-Minnesota
-Mississippi
-Missouri
-Montana
-Nebraska
-Nevada
-New Hampshire
-New Jersey
-New Mexico
-New York
-North Carolina
-North Dakota
-Ohio
-Oklahoma
-Oregon
-Pennsylvania
-Rhode Island
-South Carolina
-South Dakota
-Tennessee
-Texas
-Utah
-Vermont
-Virginia
-Washington
-West Virginia
-Wisconsin
-Wyoming
 *TID: 12, Nice: 0, Tick: 2431
 *TID: 12, Nice: 0, Tick: 2386
 *TID: 14, Nice: 0, Tick: 2431
@@ -2115,57 +1234,7 @@ Wyoming
 *TID: 13, Nice: 0, Tick: 2459
 *TID: 11, Nice: 0, Tick: 2459
 *TID: 13, Nice: 0, Tick: 2460
-Alabama
-Alaska
-Arizona
 *TID: 13, Nice: 0, Tick: 2464
-Arkansas
-California
-Colorado
-Connecticut
-Delaware
-Florida
-Georgia
-Hawaii
-Idaho
-Illinois
-Indiana
-Iowa
-Kansas
-Kentucky
-Louisiana
-Maine
-Maryland
-Massachusetts
-Michigan
-Minnesota
-Mississippi
-Missouri
-Montana
-Nebraska
-Nevada
-New Hampshire
-New Jersey
-New Mexico
-New York
-North Carolina
-North Dakota
-Ohio
-Oklahoma
-Oregon
-Pennsylvania
-Rhode Island
-South Carolina
-South Dakota
-Tennessee
-Texas
-Utah
-Vermont
-Virginia
-Washington
-West Virginia
-Wisconsin
-Wyoming
 *TID: 12, Nice: 0, Tick: 2510
 *TID: 12, Nice: 0, Tick: 2464
 *TID: 14, Nice: 0, Tick: 2510
@@ -2198,57 +1267,7 @@ Wyoming
 *TID: 13, Nice: 0, Tick: 2537
 *TID: 11, Nice: 0, Tick: 2538
 *TID: 13, Nice: 0, Tick: 2539
-Alabama
-Alaska
-Arizona
 *TID: 13, Nice: 0, Tick: 2543
-Arkansas
-California
-Colorado
-Connecticut
-Delaware
-Florida
-Georgia
-Hawaii
-Idaho
-Illinois
-Indiana
-Iowa
-Kansas
-Kentucky
-Louisiana
-Maine
-Maryland
-Massachusetts
-Michigan
-Minnesota
-Mississippi
-Missouri
-Montana
-Nebraska
-Nevada
-New Hampshire
-New Jersey
-New Mexico
-New York
-North Carolina
-North Dakota
-Ohio
-Oklahoma
-Oregon
-Pennsylvania
-Rhode Island
-South Carolina
-South Dakota
-Tennessee
-Texas
-Utah
-Vermont
-Virginia
-Washington
-West Virginia
-Wisconsin
-Wyoming
 *TID: 12, Nice: 0, Tick: 2588
 *TID: 12, Nice: 0, Tick: 2543
 *TID: 14, Nice: 0, Tick: 2588
@@ -2281,67 +1300,14 @@ Wyoming
 *TID: 13, Nice: 0, Tick: 2616
 *TID: 11, Nice: 0, Tick: 2617
 *TID: 13, Nice: 0, Tick: 2618
-Alabama
-Alaska
-Arizona
 *TID: 13, Nice: 0, Tick: 2622
-Arkansas
-California
-Colorado
-Connecticut
-Delaware
-Florida
-Georgia
-Hawaii
-Idaho
-Illinois
-Indiana
-Iowa
-Kansas
-Kentucky
-Louisiana
-Maine
-Maryland
-Massachusetts
-Michigan
-Minnesota
-Mississippi
-Missouri
-Montana
-Nebraska
-Nevada
-New Hampshire
-New Jersey
-New Mexico
-New York
-North Carolina
-North Dakota
-Ohio
-Oklahoma
-Oregon
-Pennsylvania
-Rhode Island
-South Carolina
-South Dakota
-Tennessee
-Texas
-Utah
-Vermont
-Virginia
-Washington
-West Virginia
-Wisconsin
-Wyoming
 *TID: 13, Nice: 0, Tick: 2667
-cat-looper: exit(0)
 *TID: 12, Nice: 0, Tick: 2668
 *TID: 12, Nice: 0, Tick: 2622
 *TID: 14, Nice: 0, Tick: 2670
 *TID: 15, Nice: 0, Tick: 2670
 *TID: 4, Nice: 0, Tick: 2670
 *T*TID: 4, Nice: 0, Tick: 2674
-ID: 4, Nice: 0, Tick: 2672
-nice: exit(0)
 *TID: 12, Nice: 0, Tick: 2676
 *TID: 12, Nice: 0, Tick: 2674
 *TID: 12, Nice: 0, Tick: 2679
@@ -2371,57 +1337,7 @@ nice: exit(0)
 *TID: 12, Nice: 0, Tick: 2702
 *TID: 11, Nice: 0, Tick: 2703
 *TID: 12, Nice: 0, Tick: 2704
-Alabama
-Alaska
-Arizona
-Arkansas
 *TID: 12, Nice: 0, Tick: 2708
-California
-Colorado
-Connecticut
-Delaware
-Florida
-Georgia
-Hawaii
-Idaho
-Illinois
-Indiana
-Iowa
-Kansas
-Kentucky
-Louisiana
-Maine
-Maryland
-Massachusetts
-Michigan
-Minnesota
-Mississippi
-Missouri
-Montana
-Nebraska
-Nevada
-New Hampshire
-New Jersey
-New Mexico
-New York
-North Carolina
-North Dakota
-Ohio
-Oklahoma
-Oregon
-Pennsylvania
-Rhode Island
-South Carolina
-South Dakota
-Tennessee
-Texas
-Utah
-Vermont
-Virginia
-Washington
-West Virginia
-Wisconsin
-Wyoming
 *TID: 14, Nice: 0, Tick: 2753
 *TID: 14, Nice: 0, Tick: 2708
 *TID: 15, Nice: 0, Tick: 2753
@@ -2454,57 +1370,7 @@ Wyoming
 *TID: 12, Nice: 0, Tick: 2780
 *TID: 14, Nice: 0, Tick: 2781
 *TID: 12, Nice: 0, Tick: 2782
-Alabama
-Alaska
-Arizona
 *TID: 12, Nice: 0, Tick: 2786
-Arkansas
-California
-Colorado
-Connecticut
-Delaware
-Florida
-Georgia
-Hawaii
-Idaho
-Illinois
-Indiana
-Iowa
-Kansas
-Kentucky
-Louisiana
-Maine
-Maryland
-Massachusetts
-Michigan
-Minnesota
-Mississippi
-Missouri
-Montana
-Nebraska
-Nevada
-New Hampshire
-New Jersey
-New Mexico
-New York
-North Carolina
-North Dakota
-Ohio
-Oklahoma
-Oregon
-Pennsylvania
-Rhode Island
-South Carolina
-South Dakota
-Tennessee
-Texas
-Utah
-Vermont
-Virginia
-Washington
-West Virginia
-Wisconsin
-Wyoming
 *TID: 15, Nice: 0, Tick: 2831
 *TID: 15, Nice: 0, Tick: 2786
 *TID: 11, Nice: 0, Tick: 2831
@@ -2537,57 +1403,7 @@ Wyoming
 *TID: 12, Nice: 0, Tick: 2859
 *TID: 15, Nice: 0, Tick: 2860
 *TID: 12, Nice: 0, Tick: 2861
-Alabama
-Alaska
-Arizona
 *TID: 12, Nice: 0, Tick: 2865
-Arkansas
-California
-Colorado
-Connecticut
-Delaware
-Florida
-Georgia
-Hawaii
-Idaho
-Illinois
-Indiana
-Iowa
-Kansas
-Kentucky
-Louisiana
-Maine
-Maryland
-Massachusetts
-Michigan
-Minnesota
-Mississippi
-Missouri
-Montana
-Nebraska
-Nevada
-New Hampshire
-New Jersey
-New Mexico
-New York
-North Carolina
-North Dakota
-Ohio
-Oklahoma
-Oregon
-Pennsylvania
-Rhode Island
-South Carolina
-South Dakota
-Tennessee
-Texas
-Utah
-Vermont
-Virginia
-Washington
-West Virginia
-Wisconsin
-Wyoming
 *TID: 11, Nice: 0, Tick: 2910
 *TID: 11, Nice: 0, Tick: 2865
 *TID: 14, Nice: 0, Tick: 2910
@@ -2620,57 +1436,7 @@ Wyoming
 *TID: 12, Nice: 0, Tick: 2938
 *TID: 11, Nice: 0, Tick: 2939
 *TID: 12, Nice: 0, Tick: 2940
-Alabama
-Alaska
-Arizona
 *TID: 12, Nice: 0, Tick: 2944
-Arkansas
-California
-Colorado
-Connecticut
-Delaware
-Florida
-Georgia
-Hawaii
-Idaho
-Illinois
-Indiana
-Iowa
-Kansas
-Kentucky
-Louisiana
-Maine
-Maryland
-Massachusetts
-Michigan
-Minnesota
-Mississippi
-Missouri
-Montana
-Nebraska
-Nevada
-New Hampshire
-New Jersey
-New Mexico
-New York
-North Carolina
-North Dakota
-Ohio
-Oklahoma
-Oregon
-Pennsylvania
-Rhode Island
-South Carolina
-South Dakota
-Tennessee
-Texas
-Utah
-Vermont
-Virginia
-Washington
-West Virginia
-Wisconsin
-Wyoming
 *TID: 14, Nice: 0, Tick: 2989
 *TID: 14, Nice: 0, Tick: 2944
 *TID: 15, Nice: 0, Tick: 2989
@@ -2703,57 +1469,6 @@ Wyoming
 *TID: 12, Nice: 0, Tick: 3017
 *TID: 14, Nice: 0, Tick: 3018
 *TID: 12, Nice: 0, Tick: 3019
-Alabama
-Alaska
-Arizona
-A*TID: 12, Nice: 0, Tick: 3023
-rkansas
-California
-Colorado
-Connecticut
-Delaware
-Florida
-Georgia
-Hawaii
-Idaho
-Illinois
-Indiana
-Iowa
-Kansas
-Kentucky
-Louisiana
-Maine
-Maryland
-Massachusetts
-Michigan
-Minnesota
-Mississippi
-Missouri
-Montana
-Nebraska
-Nevada
-New Hampshire
-New Jersey
-New Mexico
-New York
-North Carolina
-North Dakota
-Ohio
-Oklahoma
-Oregon
-Pennsylvania
-Rhode Island
-South Carolina
-South Dakota
-Tennessee
-Texas
-Utah
-Vermont
-Virginia
-Washington
-West Virginia
-Wisconsin
-Wyoming
 *TID: 15, Nice: 0, Tick: 3068
 *TID: 15, Nice: 0, Tick: 3023
 *TID: 11, Nice: 0, Tick: 3068
@@ -2786,57 +1501,7 @@ Wyoming
 *TID: 12, Nice: 0, Tick: 3097
 *TID: 15, Nice: 0, Tick: 3098
 *TID: 12, Nice: 0, Tick: 3099
-Alabama
-Alaska
-Arizona
-Arkansas
 *TID: 12, Nice: 0, Tick: 3103
-California
-Colorado
-Connecticut
-Delaware
-Florida
-Georgia
-Hawaii
-Idaho
-Illinois
-Indiana
-Iowa
-Kansas
-Kentucky
-Louisiana
-Maine
-Maryland
-Massachusetts
-Michigan
-Minnesota
-Mississippi
-Missouri
-Montana
-Nebraska
-Nevada
-New Hampshire
-New Jersey
-New Mexico
-New York
-North Carolina
-North Dakota
-Ohio
-Oklahoma
-Oregon
-Pennsylvania
-Rhode Island
-South Carolina
-South Dakota
-Tennessee
-Texas
-Utah
-Vermont
-Virginia
-Washington
-West Virginia
-Wisconsin
-Wyoming
 *TID: 11, Nice: 0, Tick: 3148
 *TID: 11, Nice: 0, Tick: 3103
 *TID: 14, Nice: 0, Tick: 3148
@@ -2869,57 +1534,7 @@ Wyoming
 *TID: 12, Nice: 0, Tick: 3175
 *TID: 11, Nice: 0, Tick: 3176
 *TID: 12, Nice: 0, Tick: 3177
-Alabama
-Alaska
-Arizona
 *TID: 12, Nice: 0, Tick: 3181
-Arkansas
-California
-Colorado
-Connecticut
-Delaware
-Florida
-Georgia
-Hawaii
-Idaho
-Illinois
-Indiana
-Iowa
-Kansas
-Kentucky
-Louisiana
-Maine
-Maryland
-Massachusetts
-Michigan
-Minnesota
-Mississippi
-Missouri
-Montana
-Nebraska
-Nevada
-New Hampshire
-New Jersey
-New Mexico
-New York
-North Carolina
-North Dakota
-Ohio
-Oklahoma
-Oregon
-Pennsylvania
-Rhode Island
-South Carolina
-South Dakota
-Tennessee
-Texas
-Utah
-Vermont
-Virginia
-Washington
-West Virginia
-Wisconsin
-Wyoming
 *TID: 14, Nice: 0, Tick: 3226
 *TID: 14, Nice: 0, Tick: 3181
 *TID: 15, Nice: 0, Tick: 3226
@@ -2952,57 +1567,7 @@ Wyoming
 *TID: 12, Nice: 0, Tick: 3254
 *TID: 14, Nice: 0, Tick: 3255
 *TID: 12, Nice: 0, Tick: 3256
-Alabama
-Alaska
-Arizona
 *TID: 12, Nice: 0, Tick: 3260
-Arkansas
-California
-Colorado
-Connecticut
-Delaware
-Florida
-Georgia
-Hawaii
-Idaho
-Illinois
-Indiana
-Iowa
-Kansas
-Kentucky
-Louisiana
-Maine
-Maryland
-Massachusetts
-Michigan
-Minnesota
-Mississippi
-Missouri
-Montana
-Nebraska
-Nevada
-New Hampshire
-New Jersey
-New Mexico
-New York
-North Carolina
-North Dakota
-Ohio
-Oklahoma
-Oregon
-Pennsylvania
-Rhode Island
-South Carolina
-South Dakota
-Tennessee
-Texas
-Utah
-Vermont
-Virginia
-Washington
-West Virginia
-Wisconsin
-Wyoming
 *TID: 15, Nice: 0, Tick: 3305
 *TID: 15, Nice: 0, Tick: 3260
 *TID: 11, Nice: 0, Tick: 3305
@@ -3035,57 +1600,7 @@ Wyoming
 *TID: 12, Nice: 0, Tick: 3332
 *TID: 15, Nice: 0, Tick: 3333
 *TID: 12, Nice: 0, Tick: 3334
-Alabama
-Alaska
-Arizona
 *TID: 12, Nice: 0, Tick: 3338
-Arkansas
-California
-Colorado
-Connecticut
-Delaware
-Florida
-Georgia
-Hawaii
-Idaho
-Illinois
-Indiana
-Iowa
-Kansas
-Kentucky
-Louisiana
-Maine
-Maryland
-Massachusetts
-Michigan
-Minnesota
-Mississippi
-Missouri
-Montana
-Nebraska
-Nevada
-New Hampshire
-New Jersey
-New Mexico
-New York
-North Carolina
-North Dakota
-Ohio
-Oklahoma
-Oregon
-Pennsylvania
-Rhode Island
-South Carolina
-South Dakota
-Tennessee
-Texas
-Utah
-Vermont
-Virginia
-Washington
-West Virginia
-Wisconsin
-Wyoming
 *TID: 11, Nice: 0, Tick: 3383
 *TID: 11, Nice: 0, Tick: 3338
 *TID: 14, Nice: 0, Tick: 3383
@@ -3118,59 +1633,8 @@ Wyoming
 *TID: 12, Nice: 0, Tick: 3411
 *TID: 11, Nice: 0, Tick: 3412
 *TID: 12, Nice: 0, Tick: 3413
-Alabama
-Alaska
-Arizona
 *TID: 12, Nice: 0, Tick: 3417
-Arkansas
-California
-Colorado
-Connecticut
-Delaware
-Florida
-Georgia
-Hawaii
-Idaho
-Illinois
-Indiana
-Iowa
-Kansas
-Kentucky
-Louisiana
-Maine
-Maryland
-Massachusetts
-Michigan
-Minnesota
-Mississippi
-Missouri
-Montana
-Nebraska
-Nevada
-New Hampshire
-New Jersey
-New Mexico
-New York
-North Carolina
-North Dakota
-Ohio
-Oklahoma
-Oregon
-Pennsylvania
-Rhode Island
-South Carolina
-South Dakota
-Tennessee
-Texas
-Utah
-Vermont
-Virginia
-Washington
-West Virginia
-Wisconsin
-Wyoming
 *TID: 12, Nice: 0, Tick: 3462
-cat-looper: exit(0)
 *TID: 14, Nice: 0, Tick: 3463
 *TID: 14, Nice: 0, Tick: 3417
 *TID: 15, Nice: 0, Tick: 3465
@@ -3178,7 +1642,6 @@ cat-looper: exit(0)
 *TID: 7, Nice: 0, Tick: 3465
 *TID: 7, Nice: 0, Tick: 3467
 *TID: 7, Nice: 0, Tick: 3469
-nice: exit(0)
 *TID: 14, Nice: 0, Tick: 3470
 *TID: 14, Nice: 0, Tick: 3469
 *TID: 14, Nice: 0, Tick: 3473
@@ -3208,57 +1671,7 @@ nice: exit(0)
 *TID: 14, Nice: 0, Tick: 3496
 *TID: 15, Nice: 0, Tick: 3497
 *TID: 14, Nice: 0, Tick: 3498
-Alabama
-Alaska
-Arizona
 *TID: 14, Nice: 0, Tick: 3502
-Arkansas
-California
-Colorado
-Connecticut
-Delaware
-Florida
-Georgia
-Hawaii
-Idaho
-Illinois
-Indiana
-Iowa
-Kansas
-Kentucky
-Louisiana
-Maine
-Maryland
-Massachusetts
-Michigan
-Minnesota
-Mississippi
-Missouri
-Montana
-Nebraska
-Nevada
-New Hampshire
-New Jersey
-New Mexico
-New York
-North Carolina
-North Dakota
-Ohio
-Oklahoma
-Oregon
-Pennsylvania
-Rhode Island
-South Carolina
-South Dakota
-Tennessee
-Texas
-Utah
-Vermont
-Virginia
-Washington
-West Virginia
-Wisconsin
-Wyoming
 *TID: 11, Nice: 0, Tick: 3547
 *TID: 11, Nice: 0, Tick: 3502
 *TID: 15, Nice: 0, Tick: 3547
@@ -3290,57 +1703,7 @@ Wyoming
 *TID: 14, Nice: 0, Tick: 3574
 *TID: 11, Nice: 0, Tick: 3575
 *TID: 14, Nice: 0, Tick: 3576
-Alabama
-Alaska
-Arizona
-Arkansas
 *TID: 14, Nice: 0, Tick: 3580
-California
-Colorado
-Connecticut
-Delaware
-Florida
-Georgia
-Hawaii
-Idaho
-Illinois
-Indiana
-Iowa
-Kansas
-Kentucky
-Louisiana
-Maine
-Maryland
-Massachusetts
-Michigan
-Minnesota
-Mississippi
-Missouri
-Montana
-Nebraska
-Nevada
-New Hampshire
-New Jersey
-New Mexico
-New York
-North Carolina
-North Dakota
-Ohio
-Oklahoma
-Oregon
-Pennsylvania
-Rhode Island
-South Carolina
-South Dakota
-Tennessee
-Texas
-Utah
-Vermont
-Virginia
-Washington
-West Virginia
-Wisconsin
-Wyoming
 *TID: 15, Nice: 0, Tick: 3625
 *TID: 15, Nice: 0, Tick: 3580
 *TID: 11, Nice: 0, Tick: 3625
@@ -3372,57 +1735,7 @@ Wyoming
 *TID: 14, Nice: 0, Tick: 3652
 *TID: 15, Nice: 0, Tick: 3653
 *TID: 14, Nice: 0, Tick: 3654
-Alabama
-Alaska
-Arizona
 *TID: 14, Nice: 0, Tick: 3658
-Arkansas
-California
-Colorado
-Connecticut
-Delaware
-Florida
-Georgia
-Hawaii
-Idaho
-Illinois
-Indiana
-Iowa
-Kansas
-Kentucky
-Louisiana
-Maine
-Maryland
-Massachusetts
-Michigan
-Minnesota
-Mississippi
-Missouri
-Montana
-Nebraska
-Nevada
-New Hampshire
-New Jersey
-New Mexico
-New York
-North Carolina
-North Dakota
-Ohio
-Oklahoma
-Oregon
-Pennsylvania
-Rhode Island
-South Carolina
-South Dakota
-Tennessee
-Texas
-Utah
-Vermont
-Virginia
-Washington
-West Virginia
-Wisconsin
-Wyoming
 *TID: 11, Nice: 0, Tick: 3703
 *TID: 11, Nice: 0, Tick: 3658
 *TID: 15, Nice: 0, Tick: 3703
@@ -3454,57 +1767,7 @@ Wyoming
 *TID: 14, Nice: 0, Tick: 3730
 *TID: 11, Nice: 0, Tick: 3731
 *TID: 14, Nice: 0, Tick: 3732
-Alabama
-Alaska
-Arizona
-Arkansas
 *TID: 14, Nice: 0, Tick: 3736
-California
-Colorado
-Connecticut
-Delaware
-Florida
-Georgia
-Hawaii
-Idaho
-Illinois
-Indiana
-Iowa
-Kansas
-Kentucky
-Louisiana
-Maine
-Maryland
-Massachusetts
-Michigan
-Minnesota
-Mississippi
-Missouri
-Montana
-Nebraska
-Nevada
-New Hampshire
-New Jersey
-New Mexico
-New York
-North Carolina
-North Dakota
-Ohio
-Oklahoma
-Oregon
-Pennsylvania
-Rhode Island
-South Carolina
-South Dakota
-Tennessee
-Texas
-Utah
-Vermont
-Virginia
-Washington
-West Virginia
-Wisconsin
-Wyoming
 *TID: 15, Nice: 0, Tick: 3781
 *TID: 15, Nice: 0, Tick: 3736
 *TID: 11, Nice: 0, Tick: 3781
@@ -3536,57 +1799,7 @@ Wyoming
 *TID: 14, Nice: 0, Tick: 3807
 *TID: 15, Nice: 0, Tick: 3808
 *TID: 14, Nice: 0, Tick: 3809
-Alabama
-Alaska
-Arizona
 *TID: 14, Nice: 0, Tick: 3813
-Arkansas
-California
-Colorado
-Connecticut
-Delaware
-Florida
-Georgia
-Hawaii
-Idaho
-Illinois
-Indiana
-Iowa
-Kansas
-Kentucky
-Louisiana
-Maine
-Maryland
-Massachusetts
-Michigan
-Minnesota
-Mississippi
-Missouri
-Montana
-Nebraska
-Nevada
-New Hampshire
-New Jersey
-New Mexico
-New York
-North Carolina
-North Dakota
-Ohio
-Oklahoma
-Oregon
-Pennsylvania
-Rhode Island
-South Carolina
-South Dakota
-Tennessee
-Texas
-Utah
-Vermont
-Virginia
-Washington
-West Virginia
-Wisconsin
-Wyoming
 *TID: 11, Nice: 0, Tick: 3858
 *TID: 11, Nice: 0, Tick: 3813
 *TID: 15, Nice: 0, Tick: 3858
@@ -3618,57 +1831,7 @@ Wyoming
 *TID: 14, Nice: 0, Tick: 3885
 *TID: 11, Nice: 0, Tick: 3886
 *TID: 14, Nice: 0, Tick: 3887
-Alabama
-Alaska
-Arizona
 *TID: 14, Nice: 0, Tick: 3891
-Arkansas
-California
-Colorado
-Connecticut
-Delaware
-Florida
-Georgia
-Hawaii
-Idaho
-Illinois
-Indiana
-Iowa
-Kansas
-Kentucky
-Louisiana
-Maine
-Maryland
-Massachusetts
-Michigan
-Minnesota
-Mississippi
-Missouri
-Montana
-Nebraska
-Nevada
-New Hampshire
-New Jersey
-New Mexico
-New York
-North Carolina
-North Dakota
-Ohio
-Oklahoma
-Oregon
-Pennsylvania
-Rhode Island
-South Carolina
-South Dakota
-Tennessee
-Texas
-Utah
-Vermont
-Virginia
-Washington
-West Virginia
-Wisconsin
-Wyoming
 *TID: 15, Nice: 0, Tick: 3936
 *TID: 15, Nice: 0, Tick: 3891
 *TID: 11, Nice: 0, Tick: 3936
@@ -3700,57 +1863,7 @@ Wyoming
 *TID: 14, Nice: 0, Tick: 3963
 *TID: 15, Nice: 0, Tick: 3964
 *TID: 14, Nice: 0, Tick: 3965
-Alabama
-Alaska
-Arizona
-Arkansas
 *TID: 14, Nice: 0, Tick: 3969
-California
-Colorado
-Connecticut
-Delaware
-Florida
-Georgia
-Hawaii
-Idaho
-Illinois
-Indiana
-Iowa
-Kansas
-Kentucky
-Louisiana
-Maine
-Maryland
-Massachusetts
-Michigan
-Minnesota
-Mississippi
-Missouri
-Montana
-Nebraska
-Nevada
-New Hampshire
-New Jersey
-New Mexico
-New York
-North Carolina
-North Dakota
-Ohio
-Oklahoma
-Oregon
-Pennsylvania
-Rhode Island
-South Carolina
-South Dakota
-Tennessee
-Texas
-Utah
-Vermont
-Virginia
-Washington
-West Virginia
-Wisconsin
-Wyoming
 *TID: 11, Nice: 0, Tick: 4014
 *TID: 11, Nice: 0, Tick: 3969
 *TID: 15, Nice: 0, Tick: 4014
@@ -3782,57 +1895,7 @@ Wyoming
 *TID: 14, Nice: 0, Tick: 4040
 *TID: 11, Nice: 0, Tick: 4041
 *TID: 14, Nice: 0, Tick: 4042
-Alabama
-Alaska
-Arizona
 *TID: 14, Nice: 0, Tick: 4046
-Arkansas
-California
-Colorado
-Connecticut
-Delaware
-Florida
-Georgia
-Hawaii
-Idaho
-Illinois
-Indiana
-Iowa
-Kansas
-Kentucky
-Louisiana
-Maine
-Maryland
-Massachusetts
-Michigan
-Minnesota
-Mississippi
-Missouri
-Montana
-Nebraska
-Nevada
-New Hampshire
-New Jersey
-New Mexico
-New York
-North Carolina
-North Dakota
-Ohio
-Oklahoma
-Oregon
-Pennsylvania
-Rhode Island
-South Carolina
-South Dakota
-Tennessee
-Texas
-Utah
-Vermont
-Virginia
-Washington
-West Virginia
-Wisconsin
-Wyoming
 *TID: 15, Nice: 0, Tick: 4092
 *TID: 15, Nice: 0, Tick: 4046
 *TID: 11, Nice: 0, Tick: 4092
@@ -3864,57 +1927,7 @@ Wyoming
 *TID: 14, Nice: 0, Tick: 4119
 *TID: 15, Nice: 0, Tick: 4119
 *TID: 14, Nice: 0, Tick: 4120
-Alabama
-Alaska
-Arizona
 *TID: 14, Nice: 0, Tick: 4124
-Arkansas
-California
-Colorado
-Connecticut
-Delaware
-Florida
-Georgia
-Hawaii
-Idaho
-Illinois
-Indiana
-Iowa
-Kansas
-Kentucky
-Louisiana
-Maine
-Maryland
-Massachusetts
-Michigan
-Minnesota
-Mississippi
-Missouri
-Montana
-Nebraska
-Nevada
-New Hampshire
-New Jersey
-New Mexico
-New York
-North Carolina
-North Dakota
-Ohio
-Oklahoma
-Oregon
-Pennsylvania
-Rhode Island
-South Carolina
-South Dakota
-Tennessee
-Texas
-Utah
-Vermont
-Virginia
-Washington
-West Virginia
-Wisconsin
-Wyoming
 *TID: 11, Nice: 0, Tick: 4169
 *TID: 11, Nice: 0, Tick: 4124
 *TID: 15, Nice: 0, Tick: 4169
@@ -3946,65 +1959,13 @@ Wyoming
 *TID: 14, Nice: 0, Tick: 4196
 *TID: 11, Nice: 0, Tick: 4197
 *TID: 14, Nice: 0, Tick: 4198
-Alabama
-Alaska
-Arizona
 *TID: 14, Nice: 0, Tick: 4202
-Arkansas
-California
-Colorado
-Connecticut
-Delaware
-Florida
-Georgia
-Hawaii
-Idaho
-Illinois
-Indiana
-Iowa
-Kansas
-Kentucky
-Louisiana
-Maine
-Maryland
-Massachusetts
-Michigan
-Minnesota
-Mississippi
-Missouri
-Montana
-Nebraska
-Nevada
-New Hampshire
-New Jersey
-New Mexico
-New York
-North Carolina
-North Dakota
-Ohio
-Oklahoma
-Oregon
-Pennsylvania
-Rhode Island
-South Carolina
-South Dakota
-Tennessee
-Texas
-Utah
-Vermont
-Virginia
-Washington
-West Virginia
-Wisconsin
-Wyoming
 *TID: 14, Nice: 0, Tick: 4247
-cat-looper: exit(0)
 *TID: 15, Nice: 0, Tick: 4248
 *TID: 15, Nice: 0, Tick: 4202
 *TID: 11, Nice: 0, Tick: 4251
 *TID: 8, Nice: 0, Tick: 4251
 *TID: 8, Nice: 0, Tick: 4253
-nice: exit(0)
 *TID: 15, Nice: 0, Tick: 4254
 *TID: 15, Nice: 0, Tick: 4256
 *TID: 15, Nice: 0, Tick: 4257
@@ -4033,57 +1994,7 @@ nice: exit(0)
 *TID: 15, Nice: 0, Tick: 4279
 *TID: 11, Nice: 0, Tick: 4280
 *TID: 15, Nice: 0, Tick: 4281
-Alabama
-Alaska
-Arizona
 *TID: 15, Nice: 0, Tick: 4285
-Arkansas
-California
-Colorado
-Connecticut
-Delaware
-Florida
-Georgia
-Hawaii
-Idaho
-Illinois
-Indiana
-Iowa
-Kansas
-Kentucky
-Louisiana
-Maine
-Maryland
-Massachusetts
-Michigan
-Minnesota
-Mississippi
-Missouri
-Montana
-Nebraska
-Nevada
-New Hampshire
-New Jersey
-New Mexico
-New York
-North Carolina
-North Dakota
-Ohio
-Oklahoma
-Oregon
-Pennsylvania
-Rhode Island
-South Carolina
-South Dakota
-Tennessee
-Texas
-Utah
-Vermont
-Virginia
-Washington
-West Virginia
-Wisconsin
-Wyoming
 *TID: 11, Nice: 0, Tick: 4330
 *TID: 11, Nice: 0, Tick: 4285
 *TID: 15, Nice: 0, Tick: 4332
@@ -4114,57 +2025,7 @@ Wyoming
 *TID: 15, Nice: 0, Tick: 4356
 *TID: 11, Nice: 0, Tick: 4357
 *TID: 15, Nice: 0, Tick: 4358
-Alabama
-Alaska
-Arizona
-Arkansas
 *TID: 15, Nice: 0, Tick: 4362
-California
-Colorado
-Connecticut
-Delaware
-Florida
-Georgia
-Hawaii
-Idaho
-Illinois
-Indiana
-Iowa
-Kansas
-Kentucky
-Louisiana
-Maine
-Maryland
-Massachusetts
-Michigan
-Minnesota
-Mississippi
-Missouri
-Montana
-Nebraska
-Nevada
-New Hampshire
-New Jersey
-New Mexico
-New York
-North Carolina
-North Dakota
-Ohio
-Oklahoma
-Oregon
-Pennsylvania
-Rhode Island
-South Carolina
-South Dakota
-Tennessee
-Texas
-Utah
-Vermont
-Virginia
-Washington
-West Virginia
-Wisconsin
-Wyoming
 *TID: 11, Nice: 0, Tick: 4406
 *TID: 11, Nice: 0, Tick: 4362
 *TID: 15, Nice: 0, Tick: 4408
@@ -4195,57 +2056,7 @@ Wyoming
 *TID: 15, Nice: 0, Tick: 4432
 *TID: 11, Nice: 0, Tick: 4433
 *TID: 15, Nice: 0, Tick: 4434
-Alabama
-Alaska
-Arizona
 *TID: 15, Nice: 0, Tick: 4438
-Arkansas
-California
-Colorado
-Connecticut
-Delaware
-Florida
-Georgia
-Hawaii
-Idaho
-Illinois
-Indiana
-Iowa
-Kansas
-Kentucky
-Louisiana
-Maine
-Maryland
-Massachusetts
-Michigan
-Minnesota
-Mississippi
-Missouri
-Montana
-Nebraska
-Nevada
-New Hampshire
-New Jersey
-New Mexico
-New York
-North Carolina
-North Dakota
-Ohio
-Oklahoma
-Oregon
-Pennsylvania
-Rhode Island
-South Carolina
-South Dakota
-Tennessee
-Texas
-Utah
-Vermont
-Virginia
-Washington
-West Virginia
-Wisconsin
-Wyoming
 *TID: 11, Nice: 0, Tick: 4484
 *TID: 11, Nice: 0, Tick: 4438
 *TID: 15, Nice: 0, Tick: 4485
@@ -4276,57 +2087,7 @@ Wyoming
 *TID: 15, Nice: 0, Tick: 4510
 *TID: 11, Nice: 0, Tick: 4510
 *TID: 15, Nice: 0, Tick: 4511
-Alabama
-Alaska
-Arizona
 *TID: 15, Nice: 0, Tick: 4515
-Arkansas
-California
-Colorado
-Connecticut
-Delaware
-Florida
-Georgia
-Hawaii
-Idaho
-Illinois
-Indiana
-Iowa
-Kansas
-Kentucky
-Louisiana
-Maine
-Maryland
-Massachusetts
-Michigan
-Minnesota
-Mississippi
-Missouri
-Montana
-Nebraska
-Nevada
-New Hampshire
-New Jersey
-New Mexico
-New York
-North Carolina
-North Dakota
-Ohio
-Oklahoma
-Oregon
-Pennsylvania
-Rhode Island
-South Carolina
-South Dakota
-Tennessee
-Texas
-Utah
-Vermont
-Virginia
-Washington
-West Virginia
-Wisconsin
-Wyoming
 *TID: 11, Nice: 0, Tick: 4560
 *TID: 11, Nice: 0, Tick: 4515
 *TID: 15, Nice: 0, Tick: 4562
@@ -4357,57 +2118,7 @@ Wyoming
 *TID: 15, Nice: 0, Tick: 4586
 *TID: 11, Nice: 0, Tick: 4587
 *TID: 15, Nice: 0, Tick: 4588
-Alabama
-Alaska
-Arizona
 *TID: 15, Nice: 0, Tick: 4592
-Arkansas
-California
-Colorado
-Connecticut
-Delaware
-Florida
-Georgia
-Hawaii
-Idaho
-Illinois
-Indiana
-Iowa
-Kansas
-Kentucky
-Louisiana
-Maine
-Maryland
-Massachusetts
-Michigan
-Minnesota
-Mississippi
-Missouri
-Montana
-Nebraska
-Nevada
-New Hampshire
-New Jersey
-New Mexico
-New York
-North Carolina
-North Dakota
-Ohio
-Oklahoma
-Oregon
-Pennsylvania
-Rhode Island
-South Carolina
-South Dakota
-Tennessee
-Texas
-Utah
-Vermont
-Virginia
-Washington
-West Virginia
-Wisconsin
-Wyoming
 *TID: 11, Nice: 0, Tick: 4637
 *TID: 11, Nice: 0, Tick: 4592
 *TID: 15, Nice: 0, Tick: 4639
@@ -4438,57 +2149,7 @@ Wyoming
 *TID: 15, Nice: 0, Tick: 4663
 *TID: 11, Nice: 0, Tick: 4664
 *TID: 15, Nice: 0, Tick: 4665
-Alabama
-Alaska
-Arizona
 *TID: 15, Nice: 0, Tick: 4669
-Arkansas
-California
-Colorado
-Connecticut
-Delaware
-Florida
-Georgia
-Hawaii
-Idaho
-Illinois
-Indiana
-Iowa
-Kansas
-Kentucky
-Louisiana
-Maine
-Maryland
-Massachusetts
-Michigan
-Minnesota
-Mississippi
-Missouri
-Montana
-Nebraska
-Nevada
-New Hampshire
-New Jersey
-New Mexico
-New York
-North Carolina
-North Dakota
-Ohio
-Oklahoma
-Oregon
-Pennsylvania
-Rhode Island
-South Carolina
-South Dakota
-Tennessee
-Texas
-Utah
-Vermont
-Virginia
-Washington
-West Virginia
-Wisconsin
-Wyoming
 *TID: 11, Nice: 0, Tick: 4714
 *TID: 11, Nice: 0, Tick: 4669
 *TID: 15, Nice: 0, Tick: 4716
@@ -4519,57 +2180,7 @@ Wyoming
 *TID: 15, Nice: 0, Tick: 4740
 *TID: 11, Nice: 0, Tick: 4741
 *TID: 15, Nice: 0, Tick: 4742
-Alabama
-Alaska
-Arizona
 *TID: 15, Nice: 0, Tick: 4746
-Arkansas
-California
-Colorado
-Connecticut
-Delaware
-Florida
-Georgia
-Hawaii
-Idaho
-Illinois
-Indiana
-Iowa
-Kansas
-Kentucky
-Louisiana
-Maine
-Maryland
-Massachusetts
-Michigan
-Minnesota
-Mississippi
-Missouri
-Montana
-Nebraska
-Nevada
-New Hampshire
-New Jersey
-New Mexico
-New York
-North Carolina
-North Dakota
-Ohio
-Oklahoma
-Oregon
-Pennsylvania
-Rhode Island
-South Carolina
-South Dakota
-Tennessee
-Texas
-Utah
-Vermont
-Virginia
-Washington
-West Virginia
-Wisconsin
-Wyoming
 *TID: 11, Nice: 0, Tick: 4791
 *TID: 11, Nice: 0, Tick: 4746
 *TID: 15, Nice: 0, Tick: 4793
@@ -4600,57 +2211,7 @@ Wyoming
 *TID: 15, Nice: 0, Tick: 4817
 *TID: 11, Nice: 0, Tick: 4818
 *TID: 15, Nice: 0, Tick: 4818
-Alabama
-Alaska
-Arizona
 *TID: 15, Nice: 0, Tick: 4822
-Arkansas
-California
-Colorado
-Connecticut
-Delaware
-Florida
-Georgia
-Hawaii
-Idaho
-Illinois
-Indiana
-Iowa
-Kansas
-Kentucky
-Louisiana
-Maine
-Maryland
-Massachusetts
-Michigan
-Minnesota
-Mississippi
-Missouri
-Montana
-Nebraska
-Nevada
-New Hampshire
-New Jersey
-New Mexico
-New York
-North Carolina
-North Dakota
-Ohio
-Oklahoma
-Oregon
-Pennsylvania
-Rhode Island
-South Carolina
-South Dakota
-Tennessee
-Texas
-Utah
-Vermont
-Virginia
-Washington
-West Virginia
-Wisconsin
-Wyoming
 *TID: 11, Nice: 0, Tick: 4867
 *TID: 11, Nice: 0, Tick: 4822
 *TID: 15, Nice: 0, Tick: 4869
@@ -4681,57 +2242,7 @@ Wyoming
 *TID: 15, Nice: 0, Tick: 4893
 *TID: 11, Nice: 0, Tick: 4894
 *TID: 15, Nice: 0, Tick: 4895
-Alabama
-Alaska
-Arizona
 *TID: 15, Nice: 0, Tick: 4899
-Arkansas
-California
-Colorado
-Connecticut
-Delaware
-Florida
-Georgia
-Hawaii
-Idaho
-Illinois
-Indiana
-Iowa
-Kansas
-Kentucky
-Louisiana
-Maine
-Maryland
-Massachusetts
-Michigan
-Minnesota
-Mississippi
-Missouri
-Montana
-Nebraska
-Nevada
-New Hampshire
-New Jersey
-New Mexico
-New York
-North Carolina
-North Dakota
-Ohio
-Oklahoma
-Oregon
-Pennsylvania
-Rhode Island
-South Carolina
-South Dakota
-Tennessee
-Texas
-Utah
-Vermont
-Virginia
-Washington
-West Virginia
-Wisconsin
-Wyoming
 *TID: 11, Nice: 0, Tick: 4944
 *TID: 11, Nice: 0, Tick: 4899
 *TID: 15, Nice: 0, Tick: 4946
@@ -4762,64 +2273,12 @@ Wyoming
 *TID: 15, Nice: 0, Tick: 4970
 *TID: 11, Nice: 0, Tick: 4971
 *TID: 15, Nice: 0, Tick: 4972
-Alabama
-Alaska
-Arizona
 *TID: 15, Nice: 0, Tick: 4976
-Arkansas
-California
-Colorado
-Connecticut
-Delaware
-Florida
-Georgia
-Hawaii
-Idaho
-Illinois
-Indiana
-Iowa
-Kansas
-Kentucky
-Louisiana
-Maine
-Maryland
-Massachusetts
-Michigan
-Minnesota
-Mississippi
-Missouri
-Montana
-Nebraska
-Nevada
-New Hampshire
-New Jersey
-New Mexico
-New York
-North Carolina
-North Dakota
-Ohio
-Oklahoma
-Oregon
-Pennsylvania
-Rhode Island
-South Carolina
-South Dakota
-Tennessee
-Texas
-Utah
-Vermont
-Virginia
-Washington
-West Virginia
-Wisconsin
-Wyoming
 *TID: 15, Nice: 0, Tick: 5021
-cat-looper: exit(0)
 *TID: 11, Nice: 0, Tick: 5022
 *TID: 11, Nice: 0, Tick: 4976
 *TID: 9, Nice: 0, Tick: 5025
 *TID: 9, Nice: 0, Tick: 5026
-nice: exit(0)
 *TID: 11, Nice: 0, Tick: 5027
 *TID: 11, Nice: 0, Tick: 5029
 *TID: 11, Nice: 0, Tick: 5030
@@ -4847,56 +2306,6 @@ nice: exit(0)
 *TID: 11, Nice: 0, Tick: 5051
 *TID: 11, Nice: 0, Tick: 5052
 *TID: 11, Nice: 0, Tick: 5053
-Alabama
-Alaska
-Arizona
-Arkansas
-California
-Colorado
-Connecticut
-Delaware
-Florida
-Georgia
-Hawaii
-Idaho
-Illinois
-Indiana
-Iowa
-Kansas
-Kentucky
-Louisiana
-Maine
-Maryland
-Massachusetts
-Michigan
-Minnesota
-Mississippi
-Missouri
-Montana
-Nebraska
-Nevada
-New Hampshire
-New Jersey
-New Mexico
-New York
-North Carolina
-North Dakota
-Ohio
-Oklahoma
-Oregon
-Pennsylvania
-Rhode Island
-South Carolina
-South Dakota
-Tennessee
-Texas
-Utah
-Vermont
-Virginia
-Washington
-West Virginia
-Wisconsin
-Wyoming
 *TID: 11, Nice: 0, Tick: 5101
 *TID: 11, Nice: 0, Tick: 5102
 *TID: 11, Nice: 0, Tick: 5103
@@ -4924,56 +2333,6 @@ Wyoming
 *TID: 11, Nice: 0, Tick: 5124
 *TID: 11, Nice: 0, Tick: 5125
 *TID: 11, Nice: 0, Tick: 5126
-Alabama
-Alaska
-Arizona
-Arkansas
-California
-Colorado
-Connecticut
-Delaware
-Florida
-Georgia
-Hawaii
-Idaho
-Illinois
-Indiana
-Iowa
-Kansas
-Kentucky
-Louisiana
-Maine
-Maryland
-Massachusetts
-Michigan
-Minnesota
-Mississippi
-Missouri
-Montana
-Nebraska
-Nevada
-New Hampshire
-New Jersey
-New Mexico
-New York
-North Carolina
-North Dakota
-Ohio
-Oklahoma
-Oregon
-Pennsylvania
-Rhode Island
-South Carolina
-South Dakota
-Tennessee
-Texas
-Utah
-Vermont
-Virginia
-Washington
-West Virginia
-Wisconsin
-Wyoming
 *TID: 11, Nice: 0, Tick: 5174
 *TID: 11, Nice: 0, Tick: 5175
 *TID: 11, Nice: 0, Tick: 5175
@@ -5001,56 +2360,6 @@ Wyoming
 *TID: 11, Nice: 0, Tick: 5197
 *TID: 11, Nice: 0, Tick: 5198
 *TID: 11, Nice: 0, Tick: 5199
-Alabama
-Alaska
-Arizona
-Arkansas
-California
-Colorado
-Connecticut
-Delaware
-Florida
-Georgia
-Hawaii
-Idaho
-Illinois
-Indiana
-Iowa
-Kansas
-Kentucky
-Louisiana
-Maine
-Maryland
-Massachusetts
-Michigan
-Minnesota
-Mississippi
-Missouri
-Montana
-Nebraska
-Nevada
-New Hampshire
-New Jersey
-New Mexico
-New York
-North Carolina
-North Dakota
-Ohio
-Oklahoma
-Oregon
-Pennsylvania
-Rhode Island
-South Carolina
-South Dakota
-Tennessee
-Texas
-Utah
-Vermont
-Virginia
-Washington
-West Virginia
-Wisconsin
-Wyoming
 *TID: 11, Nice: 0, Tick: 5247
 *TID: 11, Nice: 0, Tick: 5248
 *TID: 11, Nice: 0, Tick: 5249
@@ -5078,56 +2387,6 @@ Wyoming
 *TID: 11, Nice: 0, Tick: 5270
 *TID: 11, Nice: 0, Tick: 5271
 *TID: 11, Nice: 0, Tick: 5272
-Alabama
-Alaska
-Arizona
-Arkansas
-California
-Colorado
-Connecticut
-Delaware
-Florida
-Georgia
-Hawaii
-Idaho
-Illinois
-Indiana
-Iowa
-Kansas
-Kentucky
-Louisiana
-Maine
-Maryland
-Massachusetts
-Michigan
-Minnesota
-Mississippi
-Missouri
-Montana
-Nebraska
-Nevada
-New Hampshire
-New Jersey
-New Mexico
-New York
-North Carolina
-North Dakota
-Ohio
-Oklahoma
-Oregon
-Pennsylvania
-Rhode Island
-South Carolina
-South Dakota
-Tennessee
-Texas
-Utah
-Vermont
-Virginia
-Washington
-West Virginia
-Wisconsin
-Wyoming
 *TID: 11, Nice: 0, Tick: 5320
 *TID: 11, Nice: 0, Tick: 5321
 *TID: 11, Nice: 0, Tick: 5322
@@ -5155,56 +2414,6 @@ Wyoming
 *TID: 11, Nice: 0, Tick: 5343
 *TID: 11, Nice: 0, Tick: 5344
 *TID: 11, Nice: 0, Tick: 5345
-Alabama
-Alaska
-Arizona
-Arkansas
-California
-Colorado
-Connecticut
-Delaware
-Florida
-Georgia
-Hawaii
-Idaho
-Illinois
-Indiana
-Iowa
-Kansas
-Kentucky
-Louisiana
-Maine
-Maryland
-Massachusetts
-Michigan
-Minnesota
-Mississippi
-Missouri
-Montana
-Nebraska
-Nevada
-New Hampshire
-New Jersey
-New Mexico
-New York
-North Carolina
-North Dakota
-Ohio
-Oklahoma
-Oregon
-Pennsylvania
-Rhode Island
-South Carolina
-South Dakota
-Tennessee
-Texas
-Utah
-Vermont
-Virginia
-Washington
-West Virginia
-Wisconsin
-Wyoming
 *TID: 11, Nice: 0, Tick: 5393
 *TID: 11, Nice: 0, Tick: 5394
 *TID: 11, Nice: 0, Tick: 5395
@@ -5232,56 +2441,6 @@ Wyoming
 *TID: 11, Nice: 0, Tick: 5416
 *TID: 11, Nice: 0, Tick: 5417
 *TID: 11, Nice: 0, Tick: 5418
-Alabama
-Alaska
-Arizona
-Arkansas
-California
-Colorado
-Connecticut
-Delaware
-Florida
-Georgia
-Hawaii
-Idaho
-Illinois
-Indiana
-Iowa
-Kansas
-Kentucky
-Louisiana
-Maine
-Maryland
-Massachusetts
-Michigan
-Minnesota
-Mississippi
-Missouri
-Montana
-Nebraska
-Nevada
-New Hampshire
-New Jersey
-New Mexico
-New York
-North Carolina
-North Dakota
-Ohio
-Oklahoma
-Oregon
-Pennsylvania
-Rhode Island
-South Carolina
-South Dakota
-Tennessee
-Texas
-Utah
-Vermont
-Virginia
-Washington
-West Virginia
-Wisconsin
-Wyoming
 *TID: 11, Nice: 0, Tick: 5466
 *TID: 11, Nice: 0, Tick: 5467
 *TID: 11, Nice: 0, Tick: 5468
@@ -5309,56 +2468,6 @@ Wyoming
 *TID: 11, Nice: 0, Tick: 5489
 *TID: 11, Nice: 0, Tick: 5490
 *TID: 11, Nice: 0, Tick: 5491
-Alabama
-Alaska
-Arizona
-Arkansas
-California
-Colorado
-Connecticut
-Delaware
-Florida
-Georgia
-Hawaii
-Idaho
-Illinois
-Indiana
-Iowa
-Kansas
-Kentucky
-Louisiana
-Maine
-Maryland
-Massachusetts
-Michigan
-Minnesota
-Mississippi
-Missouri
-Montana
-Nebraska
-Nevada
-New Hampshire
-New Jersey
-New Mexico
-New York
-North Carolina
-North Dakota
-Ohio
-Oklahoma
-Oregon
-Pennsylvania
-Rhode Island
-South Carolina
-South Dakota
-Tennessee
-Texas
-Utah
-Vermont
-Virginia
-Washington
-West Virginia
-Wisconsin
-Wyoming
 *TID: 11, Nice: 0, Tick: 5539
 *TID: 11, Nice: 0, Tick: 5540
 *TID: 11, Nice: 0, Tick: 5541
@@ -5386,56 +2495,6 @@ Wyoming
 *TID: 11, Nice: 0, Tick: 5562
 *TID: 11, Nice: 0, Tick: 5563
 *TID: 11, Nice: 0, Tick: 5564
-Alabama
-Alaska
-Arizona
-Arkansas
-California
-Colorado
-Connecticut
-Delaware
-Florida
-Georgia
-Hawaii
-Idaho
-Illinois
-Indiana
-Iowa
-Kansas
-Kentucky
-Louisiana
-Maine
-Maryland
-Massachusetts
-Michigan
-Minnesota
-Mississippi
-Missouri
-Montana
-Nebraska
-Nevada
-New Hampshire
-New Jersey
-New Mexico
-New York
-North Carolina
-North Dakota
-Ohio
-Oklahoma
-Oregon
-Pennsylvania
-Rhode Island
-South Carolina
-South Dakota
-Tennessee
-Texas
-Utah
-Vermont
-Virginia
-Washington
-West Virginia
-Wisconsin
-Wyoming
 *TID: 11, Nice: 0, Tick: 5612
 *TID: 11, Nice: 0, Tick: 5613
 *TID: 11, Nice: 0, Tick: 5614
@@ -5463,56 +2522,6 @@ Wyoming
 *TID: 11, Nice: 0, Tick: 5635
 *TID: 11, Nice: 0, Tick: 5636
 *TID: 11, Nice: 0, Tick: 5637
-Alabama
-Alaska
-Arizona
-Arkansas
-California
-Colorado
-Connecticut
-Delaware
-Florida
-Georgia
-Hawaii
-Idaho
-Illinois
-Indiana
-Iowa
-Kansas
-Kentucky
-Louisiana
-Maine
-Maryland
-Massachusetts
-Michigan
-Minnesota
-Mississippi
-Missouri
-Montana
-Nebraska
-Nevada
-New Hampshire
-New Jersey
-New Mexico
-New York
-North Carolina
-North Dakota
-Ohio
-Oklahoma
-Oregon
-Pennsylvania
-Rhode Island
-South Carolina
-South Dakota
-Tennessee
-Texas
-Utah
-Vermont
-Virginia
-Washington
-West Virginia
-Wisconsin
-Wyoming
 *TID: 11, Nice: 0, Tick: 5685
 *TID: 11, Nice: 0, Tick: 5686
 *TID: 11, Nice: 0, Tick: 5687
@@ -5540,68 +2549,6 @@ Wyoming
 *TID: 11, Nice: 0, Tick: 5708
 *TID: 11, Nice: 0, Tick: 5709
 *TID: 11, Nice: 0, Tick: 5710
-Alabama
-Alaska
-Arizona
-Arkansas
-California
-Colorado
-Connecticut
-Delaware
-Florida
-Georgia
-Hawaii
-Idaho
-Illinois
-Indiana
-Iowa
-Kansas
-Kentucky
-Louisiana
-Maine
-Maryland
-Massachusetts
-Michigan
-Minnesota
-Mississippi
-Missouri
-Montana
-Nebraska
-Nevada
-New Hampshire
-New Jersey
-New Mexico
-New York
-North Carolina
-North Dakota
-Ohio
-Oklahoma
-Oregon
-Pennsylvania
-Rhode Island
-South Carolina
-South Dakota
-Tennessee
-Texas
-Utah
-Vermont
-Virginia
-Washington
-West Virginia
-Wisconsin
-Wyoming
 *TID: 11, Nice: 0, Tick: 5758
-cat-looper: exit(0)
 *TID: 5, Nice: 0, Tick: 5759
 *TID: 5, Nice: 0, Tick: 5761
-nice: exit(0)
-
-shell: exit(-1)
-Execution of 'shell' complete.
-Timer: 6642 ticks
-Thread: 1457 idle ticks, 3 kernel ticks, 5183 user ticks
-hdb1 (filesys): 2277 reads, 0 writes
-Console: 105387 characters output
-Keyboard: 0 keys pressed
-Exception: 0 page faults
-Powering off...

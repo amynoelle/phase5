@@ -1,0 +1,53 @@
+bash -c '../utils/pintos --no-vga -- -sched-instrument -q run shell' | tee output.txt 
+
+CPU Nice
+bash -c '../utils/pintos --no-vga -- -sched-instrument -q run shell' | tee CPUNiceSet.txt
+nice 20 count-looper 100000 &
+nice 10 count-looper 100000 &
+nice 1 count-looper 100000 &
+nice -20 count-looper 100000 &
+nice -10 count-looper 100000 &
+nice -1 count-looper 100000 &
+cd ..
+
+CPU No Nice
+bash -c '../utils/pintos --no-vga -- -sched-instrument -q run shell' | tee CPUNoNice.txt
+nice 0 count-looper 100000 &
+nice 0 count-looper 100000 &
+nice 0 count-looper 100000 &
+nice 0 count-looper 100000 &
+nice 0 count-looper 100000 &
+nice 0 count-looper 100000 &
+cd ..
+
+IO Nice
+bash -c '../utils/pintos --no-vga -- -sched-instrument -q run shell' | tee IONiceSet.txt
+nice 20 cat-looper 10 states.txt &
+nice 10 cat-looper 10 states.txt &
+nice 1 cat-looper 10 states.txt &
+nice -20 cat-looper 10 states.txt &
+nice -10 cat-looper 10 states.txt &
+nice -1 cat-looper 10 states.txt &
+cd ..
+
+IO No Nice
+bash -c '../utils/pintos --no-vga -- -sched-instrument -q run shell' | tee IONoNice.txt
+nice 0 cat-looper 10 states.txt &
+nice 0 cat-looper 10 states.txt &
+nice 0 cat-looper 10 states.txt &
+nice 0 cat-looper 10 states.txt &
+nice 0 cat-looper 10 states.txt &
+nice 0 cat-looper 10 states.txt &
+cd ..
+
+-----------------------------------------
+
+CPU vs IO
+bash -c '../utils/pintos --no-vga -- -sched-instrument -q run shell' | tee CPUvIO.txt
+nice 20 count-looper 1000 &
+nice 20 cat-looper 10 states.txt &
+nice 20 count-looper 1000 &
+nice 20 cat-looper 10 states.txt &
+nice 20 count-looper 1000 &
+nice 20 cat-looper 10 states.txt &
+cd ..
