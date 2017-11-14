@@ -1,0 +1,3505 @@
+/usr/libexec/qemu-kvm -hda /tmp/jbplr7wsqG.dsk -hdb build/filesys.dsk -m 4 -net none -nographic -monitor null
+PiLo hda1
+Loading...........
+Kernel command line: -sched-instrument -q run shell
+Pintos booting with 4,088 kB RAM...
+382 pages available in kernel pool.
+382 pages available in user pool.
+Calibrating timer...  3,352,166,400 loops/s.
+hda: 1,008 sectors (504 kB), model "QM00001", serial "QEMU HARDDISK"
+hda1: 185 sectors (92 kB), Pintos OS kernel (20)
+hdb: 5,040 sectors (2 MB), model "QM00002", serial "QEMU HARDDISK"
+hdb1: 4,096 sectors (2 MB), Pintos file system (21)
+filesys: using hdb1
+Boot complete.
+Executing 'shell':
+Shell starting...
+pintos> nice 20 count-looper 100000 &
+*TID: 4, Nice: 0, Tick: 419
+*TID: 4, Nice: 0, Tick: 419
+*TID: 4, Nice: 0, Tick: 420
+*TID: 4, Nice: 0, Tick: 420
+*TID: 4, Nice: 0, Tick: 420
+*TID: 4, Nice: 0, Tick: 420
+*TID: 4, Nice: 0, Tick: 420
+*TID: 4, Nice: 0, Tick: 421
+*TID: 4, Nice: 0, Tick: 422
+*TID: 4, Nice: 0, Tick: 423
+*TID: 4, Nice: 0, Tick: 424
+*TID: 4, Nice: 0, Tick: 425
+*TID: 4, Nice: 0, Tick: 426
+*TID: 4, Nice: 0, Tick: 427
+*TID: 4, Nice: 0, Tick: 428
+*TID: 4, Nice: 0, Tick: 429
+*TID: 4, Nice: 0, Tick: 430
+*TID: 4, Nice: 0, Tick: 431
+*TID: 4, Nice: 0, Tick: 432
+*TID: 4, Nice: 0, Tick: 433
+*TID: 4, Nice: 0, Tick: 434
+*TID: 4, Nice: 0, Tick: 435
+*TID: 4, Nice: 0, Tick: 435
+*TID: 4, Nice: 0, Tick: 436
+*TID: 4, Nice: 0, Tick: 438
+*TID: 4, Nice: 0, Tick: 439
+*TID: 4, Nice: 0, Tick: 439
+*TID: 4, Nice: 0, Tick: 440
+*TID: 4, Nice: 0, Tick: 442
+*TID: 4, Nice: 0, Tick: 443
+*TID: 4, Nice: 0, Tick: 444
+*TID: 4, Nice: 0, Tick: 444
+*TID: 4, Nice: 0, Tick: 445
+*TID: 4, Nice: 0, Tick: 446
+*TID: 4, Nice: 0, Tick: 447
+*TID: 4, Nice: 0, Tick: 448
+*TID: 4, Nice: 0, Tick: 449
+*TID: 4, Nice: 0, Tick: 450
+*TID: 4, Nice: 0, Tick: 451
+*TID: 4, Nice: 0, Tick: 452
+*TID: 4, Nice: 0, Tick: 453
+*TID: 4, Nice: 0, Tick: 454
+*TID: 4, Nice: 0, Tick: 455
+*TID: 4, Nice: 0, Tick: 456
+*TID: 4, Nice: 0, Tick: 457
+*TID: 4, Nice: 0, Tick: 458
+*TID: 4, Nice: 0, Tick: 459
+*TID: 4, Nice: 0, Tick: 460
+*TID: 4, Nice: 0, Tick: 461
+*TID: 4, Nice: 0, Tick: 462
+*TID: 4, Nice: 0, Tick: 463
+*TID: 4, Nice: 0, Tick: 464
+*TID: 4, Nice: 0, Tick: 465
+pintos> nice 20 cat-looper 10 states.txt &
+*TID: 4, Nice: 20, Tick: 468
+nice: set nice to 20
+*TID: 5, Nice: 0, Tick: 470
+*TID: 5, Nice: 0, Tick: 471
+*TID: 5, Nice: 0, Tick: 472
+*TID: 5, Nice: 0, Tick: 473
+*TID: 5, Nice: 0, Tick: 473
+*TID: 5, Nice: 0, Tick: 474
+*TID: 5, Nice: 0, Tick: 475
+*TID: 5, Nice: 0, Tick: 476
+*TID: 5, Nice: 0, Tick: 477
+*TID: 5, Nice: 0, Tick: 478
+*TID: 5, Nice: 0, Tick: 479
+*TID: 5, Nice: 0, Tick: 480
+*TID: 5, Nice: 0, Tick: 481
+*TID: 5, Nice: 0, Tick: 482
+*TID: 5, Nice: 0, Tick: 483
+*TID: 5, Nice: 0, Tick: 484
+*TID: 5, Nice: 0, Tick: 485
+*TID: 5, Nice: 0, Tick: 486
+*TID: 5, Nice: 0, Tick: 487
+*TID: 5, Nice: 0, Tick: 488
+*TID: 5, Nice: 0, Tick: 489
+*TID: 5, Nice: 0, Tick: 490
+*TID: 5, Nice: 0, Tick: 491
+*TID: 5, Nice: 0, Tick: 492
+*TID: 5, Nice: 0, Tick: 493
+*TID: 5, Nice: 0, Tick: 494
+*TID: 5, Nice: 0, Tick: 495
+*TID: 5, Nice: 0, Tick: 496
+*TID: 5, Nice: 0, Tick: 497
+*TID: 5, Nice: 0, Tick: 498
+*TID: 5, Nice: 0, Tick: 499
+*TID: 5, Nice: 0, Tick: 500
+*TID: 5, Nice: 0, Tick: 501
+*TID: 5, Nice: 0, Tick: 502
+*TID: 5, Nice: 0, Tick: 503
+*TID: 5, Nice: 0, Tick: 504
+*TID: 5, Nice: 0, Tick: 505
+*TID: 5, Nice: 0, Tick: 506
+*TID: 5, Nice: 0, Tick: 507
+*TID: 5, Nice: 0, Tick: 508
+*TID: 5, Nice: 0, Tick: 509
+*TID: 5, Nice: 0, Tick: 510
+*TID: 5, Nice: 0, Tick: 511
+*TID: 5, Nice: 0, Tick: 512
+*TID: 5, Nice: 0, Tick: 513
+*TID: 5, Nice: 0, Tick: 514
+*TID: 5, Nice: 0, Tick: 515
+*TID: 5, Nice: 0, Tick: 516
+*TID: 5, Nice: 0, Tick: 517
+*TID: 5, Nice: 0, Tick: 518
+*TID: 5, Nice: 0, Tick: 519
+*TID: 5, Nice: 0, Tick: 520
+pintos> nice 20 count-looper 100000 &
+*TID: 5, Nice: 20, Tick: 522
+nice: set nice to 20
+*TID: 6, Nice: 0, Tick: 524
+*TID: 4, Nice: 20, Tick: 525
+*TID: 6, Nice: 0, Tick: 526
+*TID: 6, Nice: 0, Tick: 527
+*TID: 6, Nice: 0, Tick: 528
+*TID: 6, Nice: 0, Tick: 529
+*TID: 6, Nice: 0, Tick: 530
+*TID: 6, Nice: 0, Tick: 531
+*TID: 6, Nice: 0, Tick: 532
+*TID: 6, Nice: 0, Tick: 533
+*TID: 6, Nice: 0, Tick: 534
+*TID: 6, Nice: 0, Tick: 535
+*TID: 6, Nice: 0, Tick: 536
+*TID: 6, Nice: 0, Tick: 537
+*TID: 6, Nice: 0, Tick: 538
+*TID: 6, Nice: 0, Tick: 539
+*TID: 6, Nice: 0, Tick: 540
+*TID: 6, Nice: 0, Tick: 541
+*TID: 6, Nice: 0, Tick: 542
+*TID: 6, Nice: 0, Tick: 543
+*TID: 6, Nice: 0, Tick: 544
+*TID: 6, Nice: 0, Tick: 545
+*TID: 6, Nice: 0, Tick: 546
+*TID: 6, Nice: 0, Tick: 547
+*TID: 6, Nice: 0, Tick: 548
+*TID: 6, Nice: 0, Tick: 549
+*TID: 6, Nice: 0, Tick: 550
+*TID: 6, Nice: 0, Tick: 551
+*TID: 6, Nice: 0, Tick: 552
+*TID: 6, Nice: 0, Tick: 553
+*TID: 6, Nice: 0, Tick: 554
+*TID: 6, Nice: 0, Tick: 555
+*TID: 6, Nice: 0, Tick: 556
+*TID: 6, Nice: 0, Tick: 557
+*TID: 6, Nice: 0, Tick: 558
+*TID: 6, Nice: 0, Tick: 559
+*TID: 6, Nice: 0, Tick: 560
+*TID: 6, Nice: 0, Tick: 561
+*TID: 6, Nice: 0, Tick: 562
+*TID: 6, Nice: 0, Tick: 563
+*TID: 6, Nice: 0, Tick: 564
+*TID: 6, Nice: 0, Tick: 565
+*TID: 6, Nice: 0, Tick: 566
+*TID: 6, Nice: 0, Tick: 567
+*TID: 6, Nice: 0, Tick: 568
+*TID: 6, Nice: 0, Tick: 569
+*TID: 6, Nice: 0, Tick: 570
+*TID: 6, Nice: 0, Tick: 571
+*TID: 6, Nice: 0, Tick: 572
+*TID: 6, Nice: 0, Tick: 573
+*TID: 6, Nice: 0, Tick: 574
+*TID: 6, Nice: 0, Tick: 575
+*TID: 6, Nice: 0, Tick: 576
+pintos> nice 20 cat-looper 10 states.txt &
+*TID: 5, Nice: 20, Tick: 578
+*TID: 6, Nice: 20, Tick: 578
+nice: set nice to 20
+*TID: 7, Nice: 0, Tick: 581
+*TID: 7, Nice: 0, Tick: 582
+*TID: 7, Nice: 0, Tick: 583
+*TID: 7, Nice: 0, Tick: 584
+*TID: 7, Nice: 0, Tick: 585
+*TID: 7, Nice: 0, Tick: 586
+*TID: 7, Nice: 0, Tick: 587
+*TID: 7, Nice: 0, Tick: 588
+*TID: 7, Nice: 0, Tick: 589
+*TID: 7, Nice: 0, Tick: 590
+*TID: 7, Nice: 0, Tick: 591
+*TID: 7, Nice: 0, Tick: 592
+*TID: 7, Nice: 0, Tick: 593
+*TID: 7, Nice: 0, Tick: 594
+*TID: 7, Nice: 0, Tick: 595
+*TID: 7, Nice: 0, Tick: 596
+*TID: 7, Nice: 0, Tick: 597
+*TID: 7, Nice: 0, Tick: 598
+*TID: 7, Nice: 0, Tick: 599
+*TID: 7, Nice: 0, Tick: 600
+*TID: 7, Nice: 0, Tick: 601
+*TID: 7, Nice: 0, Tick: 602
+*TID: 7, Nice: 0, Tick: 603
+*TID: 7, Nice: 0, Tick: 604
+*TID: 7, Nice: 0, Tick: 605
+*TID: 7, Nice: 0, Tick: 606
+*TID: 7, Nice: 0, Tick: 607
+*TID: 7, Nice: 0, Tick: 608
+*TID: 7, Nice: 0, Tick: 609
+*TID: 7, Nice: 0, Tick: 610
+*TID: 7, Nice: 0, Tick: 611
+*TID: 7, Nice: 0, Tick: 612
+*TID: 7, Nice: 0, Tick: 613
+*TID: 7, Nice: 0, Tick: 614
+*TID: 7, Nice: 0, Tick: 615
+*TID: 7, Nice: 0, Tick: 616
+*TID: 7, Nice: 0, Tick: 617
+*TID: 7, Nice: 0, Tick: 618
+*TID: 7, Nice: 0, Tick: 619
+*TID: 7, Nice: 0, Tick: 620
+*TID: 7, Nice: 0, Tick: 621
+*TID: 7, Nice: 0, Tick: 622
+*TID: 7, Nice: 0, Tick: 623
+*TID: 7, Nice: 0, Tick: 624
+*TID: 7, Nice: 0, Tick: 625
+*TID: 7, Nice: 0, Tick: 626
+*TID: 7, Nice: 0, Tick: 627
+*TID: 7, Nice: 0, Tick: 628
+*TID: 7, Nice: 0, Tick: 629
+*TID: 7, Nice: 0, Tick: 630
+*TID: 7, Nice: 0, Tick: 631
+*TID: 7, Nice: 0, Tick: 632
+pintos> nice 20 count-looper 100000 &
+*TID: 4, Nice: 20, Tick: 634
+*TID: 7, Nice: 20, Tick: 634
+nice: set nice to 20
+*TID: 8, Nice: 0, Tick: 637
+*TID: 8, Nice: 0, Tick: 638
+*TID: 8, Nice: 0, Tick: 639
+*TID: 8, Nice: 0, Tick: 640
+*TID: 8, Nice: 0, Tick: 641
+*TID: 8, Nice: 0, Tick: 642
+*TID: 8, Nice: 0, Tick: 643
+*TID: 8, Nice: 0, Tick: 644
+*TID: 8, Nice: 0, Tick: 645
+*TID: 8, Nice: 0, Tick: 646
+*TID: 8, Nice: 0, Tick: 647
+*TID: 8, Nice: 0, Tick: 648
+*TID: 8, Nice: 0, Tick: 649
+*TID: 8, Nice: 0, Tick: 650
+*TID: 8, Nice: 0, Tick: 651
+*TID: 8, Nice: 0, Tick: 652
+*TID: 8, Nice: 0, Tick: 653
+*TID: 8, Nice: 0, Tick: 654
+*TID: 8, Nice: 0, Tick: 655
+*TID: 8, Nice: 0, Tick: 656
+*TID: 8, Nice: 0, Tick: 657
+*TID: 8, Nice: 0, Tick: 658
+*TID: 8, Nice: 0, Tick: 659
+*TID: 8, Nice: 0, Tick: 660
+*TID: 8, Nice: 0, Tick: 661
+*TID: 8, Nice: 0, Tick: 662
+*TID: 8, Nice: 0, Tick: 663
+*TID: 8, Nice: 0, Tick: 664
+*TID: 8, Nice: 0, Tick: 665
+*TID: 8, Nice: 0, Tick: 666
+*TID: 8, Nice: 0, Tick: 667
+*TID: 8, Nice: 0, Tick: 668
+*TID: 8, Nice: 0, Tick: 669
+*TID: 8, Nice: 0, Tick: 670
+*TID: 8, Nice: 0, Tick: 671
+*TID: 8, Nice: 0, Tick: 672
+*TID: 8, Nice: 0, Tick: 673
+*TID: 8, Nice: 0, Tick: 674
+*TID: 8, Nice: 0, Tick: 675
+*TID: 8, Nice: 0, Tick: 676
+*TID: 8, Nice: 0, Tick: 677
+*TID: 8, Nice: 0, Tick: 678
+*TID: 8, Nice: 0, Tick: 679
+*TID: 8, Nice: 0, Tick: 680
+*TID: 8, Nice: 0, Tick: 681
+*TID: 8, Nice: 0, Tick: 682
+*TID: 8, Nice: 0, Tick: 683
+*TID: 8, Nice: 0, Tick: 684
+*TID: 8, Nice: 0, Tick: 684
+*TID: 8, Nice: 0, Tick: 685
+*TID: 8, Nice: 0, Tick: 686
+*TID: 8, Nice: 0, Tick: 687
+pintos> nice 20 cat-looper 10 states.txt &
+*TID: 5, Nice: 20, Tick: 690
+*TID: 8, Nice: 20, Tick: 690
+nice: set nice to 20
+*TID: 9, Nice: 0, Tick: 692
+*TID: 9, Nice: 0, Tick: 693
+*TID: 9, Nice: 0, Tick: 694
+*TID: 9, Nice: 0, Tick: 695
+*TID: 9, Nice: 0, Tick: 696
+*TID: 9, Nice: 0, Tick: 697
+*TID: 9, Nice: 0, Tick: 698
+*TID: 9, Nice: 0, Tick: 699
+*TID: 9, Nice: 0, Tick: 700
+*TID: 9, Nice: 0, Tick: 701
+*TID: 9, Nice: 0, Tick: 702
+*TID: 9, Nice: 0, Tick: 703
+*TID: 9, Nice: 0, Tick: 704
+*TID: 9, Nice: 0, Tick: 705
+*TID: 9, Nice: 0, Tick: 706
+*TID: 9, Nice: 0, Tick: 707
+*TID: 9, Nice: 0, Tick: 708
+*TID: 9, Nice: 0, Tick: 709
+*TID: 9, Nice: 0, Tick: 710
+*TID: 9, Nice: 0, Tick: 711
+*TID: 9, Nice: 0, Tick: 712
+*TID: 9, Nice: 0, Tick: 713
+*TID: 9, Nice: 0, Tick: 714
+*TID: 9, Nice: 0, Tick: 715
+*TID: 9, Nice: 0, Tick: 716
+*TID: 9, Nice: 0, Tick: 717
+*TID: 9, Nice: 0, Tick: 718
+*TID: 9, Nice: 0, Tick: 719
+*TID: 9, Nice: 0, Tick: 720
+*TID: 9, Nice: 0, Tick: 721
+*TID: 9, Nice: 0, Tick: 722
+*TID: 9, Nice: 0, Tick: 723
+*TID: 9, Nice: 0, Tick: 724
+*TID: 9, Nice: 0, Tick: 725
+*TID: 9, Nice: 0, Tick: 726
+*TID: 9, Nice: 0, Tick: 727
+*TID: 9, Nice: 0, Tick: 728
+*TID: 9, Nice: 0, Tick: 729
+*TID: 9, Nice: 0, Tick: 730
+*TID: 9, Nice: 0, Tick: 731
+*TID: 9, Nice: 0, Tick: 732
+*TID: 9, Nice: 0, Tick: 733
+*TID: 9, Nice: 0, Tick: 734
+*TID: 9, Nice: 0, Tick: 735
+*TID: 9, Nice: 0, Tick: 736
+*TID: 9, Nice: 0, Tick: 737
+*TID: 9, Nice: 0, Tick: 738
+*TID: 9, Nice: 0, Tick: 739
+*TID: 9, Nice: 0, Tick: 740
+*TID: 9, Nice: 0, Tick: 741
+*TID: 9, Nice: 0, Tick: 742
+*TID: 9, Nice: 0, Tick: 743
+pintos> cd ..*TID: 6, Nice: 20, Tick: 744
+*TID: 6, Nice: 20, Tick: 745
+*TID: 6, Nice: 20, Tick: 746
+*TID: 10, Nice: 20, Tick: 747
+*TID: 9, Nice: 20, Tick: 748
+nice: set nice to 20
+*TID: 10, Nice: 20, Tick: 750
+*TID: 10, Nice: 20, Tick: 751
+*TID: 10, Nice: 20, Tick: 752
+*TID: 10, Nice: 20, Tick: 753
+*TID: 10, Nice: 20, Tick: 754
+*TID: 10, Nice: 20, Tick: 755
+*TID: 10, Nice: 20, Tick: 756
+*TID: 10, Nice: 20, Tick: 757
+*TID: 10, Nice: 20, Tick: 758
+*TID: 10, Nice: 20, Tick: 759
+*TID: 10, Nice: 20, Tick: 760
+*TID: 10, Nice: 20, Tick: 761
+*TID: 10, Nice: 20, Tick: 762
+*TID: 10, Nice: 20, Tick: 763
+*TID: 10, Nice: 20, Tick: 764
+*TID: 10, Nice: 20, Tick: 765
+*TID: 10, Nice: 20, Tick: 766
+*TID: 10, Nice: 20, Tick: 767
+*TID: 10, Nice: 20, Tick: 768
+*TID: 10, Nice: 20, Tick: 769
+*TID: 10, Nice: 20, Tick: 770
+*TID: 10, Nice: 20, Tick: 771
+*TID: 10, Nice: 20, Tick: 772
+*TID: 10, Nice: 20, Tick: 773
+*TID: 10, Nice: 20, Tick: 774
+*TID: 10, Nice: 20, Tick: 775
+*TID: 10, Nice: 20, Tick: 776
+*TID: 10, Nice: 20, Tick: 777
+*TID: 10, Nice: 20, Tick: 778
+*TID: 10, Nice: 20, Tick: 779
+*TID: 10, Nice: 20, Tick: 780
+*TID: 10, Nice: 20, Tick: 781
+*TID: 10, Nice: 20, Tick: 782
+*TID: 10, Nice: 20, Tick: 783
+*TID: 10, Nice: 20, Tick: 784
+*TID: 10, Nice: 20, Tick: 785
+*TID: 10, Nice: 20, Tick: 786
+*TID: 10, Nice: 20, Tick: 787
+*TID: 10, Nice: 20, Tick: 788
+*TID: 10, Nice: 20, Tick: 789
+*TID: 10, Nice: 20, Tick: 790
+*TID: 10, Nice: 20, Tick: 791
+*TID: 10, Nice: 20, Tick: 792
+*TID: 10, Nice: 20, Tick: 793
+*TID: 10, Nice: 20, Tick: 794
+*TID: 10, Nice: 20, Tick: 795
+*TID: 10, Nice: 20, Tick: 796
+*TID: 10, Nice: 20, Tick: 797
+*TID: 10, Nice: 20, Tick: 798
+*TID: 10, Nice: 20, Tick: 799
+*TID: 10, Nice: 20, Tick: 800
+*TID: 6, Nice: 20, Tick: 804
+*TID: 4, Nice: 20, Tick: 804
+*TID: 4, Nice: 20, Tick: 805
+*TID: 4, Nice: 20, Tick: 806
+*TID: 11, Nice: 20, Tick: 807
+*TID: 10, Nice: 20, Tick: 808
+*TID: 11, Nice: 20, Tick: 812
+*TID: 10, Nice: 20, Tick: 812
+*TID: 11, Nice: 20, Tick: 816
+*TID: 10, Nice: 20, Tick: 816
+*TID: 11, Nice: 20, Tick: 820
+*TID: 10, Nice: 20, Tick: 820
+*TID: 11, Nice: 20, Tick: 824
+*TID: 10, Nice: 20, Tick: 824
+*TID: 11, Nice: 20, Tick: 828
+*TID: 10, Nice: 20, Tick: 828
+*TID: 11, Nice: 20, Tick: 832
+*TID: 10, Nice: 20, Tick: 832
+*TID: 11, Nice: 20, Tick: 836
+*TID: 10, Nice: 20, Tick: 836
+*TID: 11, Nice: 20, Tick: 840
+*TID: 10, Nice: 20, Tick: 840
+*TID: 11, Nice: 20, Tick: 844
+*TID: 10, Nice: 20, Tick: 844
+*TID: 11, Nice: 20, Tick: 848
+*TID: 10, Nice: 20, Tick: 848
+*TID: 11, Nice: 20, Tick: 852
+*TID: 10, Nice: 20, Tick: 852
+*TID: 11, Nice: 20, Tick: 856
+*TID: 10, Nice: 20, Tick: 856
+*TID: 11, Nice: 20, Tick: 860
+*TID: 10, Nice: 20, Tick: 860
+*TID: 11, Nice: 20, Tick: 864
+*TID: 10, Nice: 20, Tick: 864
+*TID: 11, Nice: 20, Tick: 868
+*TID: 10, Nice: 20, Tick: 868
+*TID: 11, Nice: 20, Tick: 872
+*TID: 10, Nice: 20, Tick: 872
+*TID: 11, Nice: 20, Tick: 876
+*TID: 10, Nice: 20, Tick: 876
+*TID: 11, Nice: 20, Tick: 880
+*TID: 10, Nice: 20, Tick: 880
+*TID: 11, Nice: 20, Tick: 884
+*TID: 10, Nice: 20, Tick: 884
+*TID: 11, Nice: 20, Tick: 888
+*TID: 10, Nice: 20, Tick: 888
+*TID: 11, Nice: 20, Tick: 892
+*TID: 10, Nice: 20, Tick: 892
+*TID: 11, Nice: 20, Tick: 896
+*TID: 10, Nice: 20, Tick: 896
+*TID: 11, Nice: 20, Tick: 900
+*TID: 10, Nice: 20, Tick: 900
+*TID: 11, Nice: 20, Tick: 904
+*TID: 10, Nice: 20, Tick: 904
+*TID: 11, Nice: 20, Tick: 908
+*TID: 10, Nice: 20, Tick: 908
+*TID: 11, Nice: 20, Tick: 912
+*TID: 10, Nice: 20, Tick: 912
+*TID: 11, Nice: 20, Tick: 916
+*TID: 10, Nice: 20, Tick: 916
+*TID: 11, Nice: 20, Tick: 920
+*TID: 10, Nice: 20, Tick: 920
+*TID: 11, Nice: 20, Tick: 924
+*TID: 10, Nice: 20, Tick: 924
+*TID: 11, Nice: 20, Tick: 928
+*TID: 10, Nice: 20, Tick: 928
+*TID: 11, Nice: 20, Tick: 932
+*TID: 10, Nice: 20, Tick: 932
+*TID: 11, Nice: 20, Tick: 936
+*TID: 10, Nice: 20, Tick: 936
+*TID: 11, Nice: 20, Tick: 940
+*TID: 10, Nice: 20, Tick: 940
+*TID: 11, Nice: 20, Tick: 944
+*TID: 10, Nice: 20, Tick: 944
+*TID: 11, Nice: 20, Tick: 948
+*TID: 10, Nice: 20, Tick: 948
+*TID: 11, Nice: 20, Tick: 952
+*TID: 10, Nice: 20, Tick: 952
+*TID: 11, Nice: 20, Tick: 956
+*TID: 10, Nice: 20, Tick: 956
+*TID: 11, Nice: 20, Tick: 960
+*TID: 10, Nice: 20, Tick: 960
+*TID: 11, Nice: 20, Tick: 964
+*TID: 10, Nice: 20, Tick: 964
+*TID: 11, Nice: 20, Tick: 968
+*TID: 10, Nice: 20, Tick: 968
+*TID: 11, Nice: 20, Tick: 972
+*TID: 10, Nice: 20, Tick: 972
+*TID: 11, Nice: 20, Tick: 976
+*TID: 10, Nice: 20, Tick: 976
+*TID: 11, Nice: 20, Tick: 980
+*TID: 10, Nice: 20, Tick: 980
+*TID: 11, Nice: 20, Tick: 984
+*TID: 10, Nice: 20, Tick: 984
+*TID: 11, Nice: 20, Tick: 988
+*TID: 10, Nice: 20, Tick: 988
+*TID: 11, Nice: 20, Tick: 992
+*TID: 10, Nice: 20, Tick: 992
+*TID: 11, Nice: 20, Tick: 996
+*TID: 10, Nice: 20, Tick: 996
+*TID: 11, Nice: 20, Tick: 1000
+*TID: 10, Nice: 20, Tick: 1000
+*TID: 11, Nice: 20, Tick: 1004
+*TID: 10, Nice: 20, Tick: 1004
+*TID: 11, Nice: 20, Tick: 1008
+*TID: 4, Nice: 20, Tick: 1012
+*TID: 7, Nice: 20, Tick: 1012
+*TID: 7, Nice: 20, Tick: 1013
+*TID: 7, Nice: 20, Tick: 1015
+*TID: 12, Nice: 20, Tick: 1016
+*TID: 11, Nice: 20, Tick: 1017
+*TID: 12, Nice: 20, Tick: 1021
+*TID: 11, Nice: 20, Tick: 1021
+*TID: 12, Nice: 20, Tick: 1025
+*TID: 11, Nice: 20, Tick: 1025
+*TID: 12, Nice: 20, Tick: 1029
+*TID: 11, Nice: 20, Tick: 1029
+*TID: 12, Nice: 20, Tick: 1033
+*TID: 11, Nice: 20, Tick: 1033
+*TID: 12, Nice: 20, Tick: 1037
+*TID: 11, Nice: 20, Tick: 1037
+*TID: 12, Nice: 20, Tick: 1041
+*TID: 11, Nice: 20, Tick: 1041
+*TID: 12, Nice: 20, Tick: 1045
+*TID: 10, Nice: 20, Tick: 1045
+*TID: 12, Nice: 20, Tick: 1049
+*TID: 11, Nice: 20, Tick: 1049
+*TID: 12, Nice: 20, Tick: 1053
+*TID: 10, Nice: 20, Tick: 1053
+*TID: 12, Nice: 20, Tick: 1057
+*TID: 11, Nice: 20, Tick: 1057
+*TID: 12, Nice: 20, Tick: 1061
+*TID: 10, Nice: 20, Tick: 1061
+*TID: 12, Nice: 20, Tick: 1065
+*TID: 11, Nice: 20, Tick: 1065
+*TID: 12, Nice: 20, Tick: 1069
+*TID: 10, Nice: 20, Tick: 1069
+*TID: 12, Nice: 20, Tick: 1073
+*TID: 11, Nice: 20, Tick: 1073
+*TID: 12, Nice: 20, Tick: 1077
+*TID: 10, Nice: 20, Tick: 1077
+*TID: 12, Nice: 20, Tick: 1081
+*TID: 11, Nice: 20, Tick: 1081
+*TID: 12, Nice: 20, Tick: 1085
+*TID: 10, Nice: 20, Tick: 1085
+*TID: 12, Nice: 20, Tick: 1089
+*TID: 11, Nice: 20, Tick: 1089
+*TID: 12, Nice: 20, Tick: 1093
+*TID: 10, Nice: 20, Tick: 1093
+*TID: 12, Nice: 20, Tick: 1097
+*TID: 11, Nice: 20, Tick: 1097
+*TID: 12, Nice: 20, Tick: 1101
+*TID: 10, Nice: 20, Tick: 1101
+*TID: 12, Nice: 20, Tick: 1105
+*TID: 11, Nice: 20, Tick: 1105
+*TID: 12, Nice: 20, Tick: 1109
+*TID: 10, Nice: 20, Tick: 1109
+*TID: 12, Nice: 20, Tick: 1113
+*TID: 11, Nice: 20, Tick: 1113
+*TID: 12, Nice: 20, Tick: 1117
+*TID: 10, Nice: 20, Tick: 1117
+*TID: 12, Nice: 20, Tick: 1121
+*TID: 11, Nice: 20, Tick: 1121
+*TID: 12, Nice: 20, Tick: 1125
+*TID: 10, Nice: 20, Tick: 1125
+*TID: 12, Nice: 20, Tick: 1129
+*TID: 11, Nice: 20, Tick: 1129
+*TID: 12, Nice: 20, Tick: 1133
+*TID: 10, Nice: 20, Tick: 1133
+*TID: 12, Nice: 20, Tick: 1137
+*TID: 11, Nice: 20, Tick: 1137
+*TID: 12, Nice: 20, Tick: 1141
+*TID: 10, Nice: 20, Tick: 1141
+*TID: 12, Nice: 20, Tick: 1145
+*TID: 11, Nice: 20, Tick: 1145
+*TID: 12, Nice: 20, Tick: 1149
+*TID: 10, Nice: 20, Tick: 1149
+*TID: 12, Nice: 20, Tick: 1153
+*TID: 11, Nice: 20, Tick: 1153
+*TID: 12, Nice: 20, Tick: 1157
+*TID: 10, Nice: 20, Tick: 1157
+*TID: 12, Nice: 20, Tick: 1161
+*TID: 11, Nice: 20, Tick: 1161
+*TID: 12, Nice: 20, Tick: 1165
+*TID: 10, Nice: 20, Tick: 1165
+*TID: 12, Nice: 20, Tick: 1169
+*TID: 11, Nice: 20, Tick: 1169
+*TID: 12, Nice: 20, Tick: 1173
+*TID: 10, Nice: 20, Tick: 1173
+*TID: 12, Nice: 20, Tick: 1177
+*TID: 11, Nice: 20, Tick: 1177
+*TID: 12, Nice: 20, Tick: 1181
+*TID: 10, Nice: 20, Tick: 1181
+*TID: 12, Nice: 20, Tick: 1185
+*TID: 11, Nice: 20, Tick: 1185
+*TID: 12, Nice: 20, Tick: 1189
+*TID: 10, Nice: 20, Tick: 1189
+*TID: 12, Nice: 20, Tick: 1193
+*TID: 11, Nice: 20, Tick: 1193
+*TID: 12, Nice: 20, Tick: 1197
+*TID: 10, Nice: 20, Tick: 1197
+*TID: 12, Nice: 20, Tick: 1201
+*TID: 11, Nice: 20, Tick: 1201
+*TID: 12, Nice: 20, Tick: 1205
+*TID: 10, Nice: 20, Tick: 1205
+*TID: 12, Nice: 20, Tick: 1209
+*TID: 11, Nice: 20, Tick: 1209
+*TID: 12, Nice: 20, Tick: 1213
+*TID: 10, Nice: 20, Tick: 1213
+*TID: 12, Nice: 20, Tick: 1217
+*TID: 7, Nice: 20, Tick: 1217
+*TID: 5, Nice: 20, Tick: 1218
+*TID: 5, Nice: 20, Tick: 1219
+*TID: 5, Nice: 20, Tick: 1221
+*TID: 13, Nice: 20, Tick: 1222
+*TID: 11, Nice: 20, Tick: 1222
+*TID: 13, Nice: 20, Tick: 1226
+*TID: 10, Nice: 20, Tick: 1226
+*TID: 13, Nice: 20, Tick: 1230
+*TID: 11, Nice: 20, Tick: 1230
+*TID: 13, Nice: 20, Tick: 1234
+*TID: 10, Nice: 20, Tick: 1234
+*TID: 13, Nice: 20, Tick: 1238
+*TID: 11, Nice: 20, Tick: 1238
+*TID: 13, Nice: 20, Tick: 1242
+*TID: 10, Nice: 20, Tick: 1242
+*TID: 13, Nice: 20, Tick: 1246
+*TID: 11, Nice: 20, Tick: 1246
+*TID: 13, Nice: 20, Tick: 1250
+*TID: 10, Nice: 20, Tick: 1250
+*TID: 13, Nice: 20, Tick: 1254
+*TID: 11, Nice: 20, Tick: 1254
+*TID: 13, Nice: 20, Tick: 1258
+*TID: 10, Nice: 20, Tick: 1258
+*TID: 13, Nice: 20, Tick: 1262
+*TID: 11, Nice: 20, Tick: 1262
+*TID: 13, Nice: 20, Tick: 1266
+*TID: 10, Nice: 20, Tick: 1266
+*TID: 13, Nice: 20, Tick: 1270
+*TID: 11, Nice: 20, Tick: 1270
+*TID: 13, Nice: 20, Tick: 1274
+*TID: 10, Nice: 20, Tick: 1274
+*TID: 13, Nice: 20, Tick: 1278
+*TID: 11, Nice: 20, Tick: 1278
+*TID: 13, Nice: 20, Tick: 1282
+*TID: 10, Nice: 20, Tick: 1282
+*TID: 13, Nice: 20, Tick: 1286
+*TID: 11, Nice: 20, Tick: 1286
+*TID: 13, Nice: 20, Tick: 1290
+*TID: 10, Nice: 20, Tick: 1290
+*TID: 13, Nice: 20, Tick: 1294
+*TID: 11, Nice: 20, Tick: 1294
+*TID: 13, Nice: 20, Tick: 1298
+*TID: 10, Nice: 20, Tick: 1298
+*TID: 13, Nice: 20, Tick: 1302
+*TID: 11, Nice: 20, Tick: 1302
+*TID: 13, Nice: 20, Tick: 1306
+*TID: 10, Nice: 20, Tick: 1306
+*TID: 13, Nice: 20, Tick: 1310
+*TID: 11, Nice: 20, Tick: 1310
+*TID: 13, Nice: 20, Tick: 1314
+*TID: 10, Nice: 20, Tick: 1314
+*TID: 13, Nice: 20, Tick: 1318
+*TID: 11, Nice: 20, Tick: 1318
+*TID: 13, Nice: 20, Tick: 1322
+*TID: 10, Nice: 20, Tick: 1322
+*TID: 13, Nice: 20, Tick: 1326
+*TID: 11, Nice: 20, Tick: 1326
+*TID: 13, Nice: 20, Tick: 1330
+*TID: 10, Nice: 20, Tick: 1330
+*TID: 13, Nice: 20, Tick: 1334
+*TID: 11, Nice: 20, Tick: 1334
+*TID: 13, Nice: 20, Tick: 1338
+*TID: 10, Nice: 20, Tick: 1338
+*TID: 13, Nice: 20, Tick: 1342
+*TID: 11, Nice: 20, Tick: 1342
+*TID: 13, Nice: 20, Tick: 1346
+*TID: 10, Nice: 20, Tick: 1346
+*TID: 13, Nice: 20, Tick: 1350
+*TID: 11, Nice: 20, Tick: 1350
+*TID: 13, Nice: 20, Tick: 1354
+*TID: 10, Nice: 20, Tick: 1354
+*TID: 13, Nice: 20, Tick: 1358
+*TID: 11, Nice: 20, Tick: 1358
+*TID: 13, Nice: 20, Tick: 1362
+*TID: 10, Nice: 20, Tick: 1362
+*TID: 13, Nice: 20, Tick: 1366
+*TID: 11, Nice: 20, Tick: 1366
+*TID: 13, Nice: 20, Tick: 1370
+*TID: 10, Nice: 20, Tick: 1370
+*TID: 13, Nice: 20, Tick: 1374
+*TID: 11, Nice: 20, Tick: 1374
+*TID: 13, Nice: 20, Tick: 1378
+*TID: 10, Nice: 20, Tick: 1378
+*TID: 13, Nice: 20, Tick: 1382
+*TID: 11, Nice: 20, Tick: 1382
+*TID: 13, Nice: 20, Tick: 1386
+*TID: 10, Nice: 20, Tick: 1386
+*TID: 13, Nice: 20, Tick: 1390
+*TID: 11, Nice: 20, Tick: 1390
+*TID: 13, Nice: 20, Tick: 1394
+*TID: 10, Nice: 20, Tick: 1394
+*TID: 13, Nice: 20, Tick: 1398
+*TID: 11, Nice: 20, Tick: 1398
+*TID: 13, Nice: 20, Tick: 1402
+*TID: 10, Nice: 20, Tick: 1402
+*TID: 13, Nice: 20, Tick: 1406
+*TID: 11, Nice: 20, Tick: 1406
+*TID: 13, Nice: 20, Tick: 1410
+*TID: 10, Nice: 20, Tick: 1410
+*TID: 13, Nice: 20, Tick: 1414
+*TID: 11, Nice: 20, Tick: 1414
+*TID: 13, Nice: 20, Tick: 1418
+*TID: 5, Nice: 20, Tick: 1418
+*TID: 8, Nice: 20, Tick: 1419
+*TID: 8, Nice: 20, Tick: 1420
+*TID: 8, Nice: 20, Tick: 1421
+*TID: 14, Nice: 20, Tick: 1422
+*TID: 10, Nice: 20, Tick: 1423
+*TID: 14, Nice: 20, Tick: 1427
+*TID: 11, Nice: 20, Tick: 1427
+*TID: 14, Nice: 20, Tick: 1431
+*TID: 10, Nice: 20, Tick: 1431
+*TID: 14, Nice: 20, Tick: 1435
+*TID: 11, Nice: 20, Tick: 1435
+*TID: 14, Nice: 20, Tick: 1439
+*TID: 10, Nice: 20, Tick: 1439
+*TID: 14, Nice: 20, Tick: 1443
+*TID: 11, Nice: 20, Tick: 1443
+*TID: 14, Nice: 20, Tick: 1447
+*TID: 10, Nice: 20, Tick: 1447
+*TID: 14, Nice: 20, Tick: 1451
+*TID: 11, Nice: 20, Tick: 1451
+*TID: 14, Nice: 20, Tick: 1455
+*TID: 10, Nice: 20, Tick: 1455
+*TID: 14, Nice: 20, Tick: 1459
+*TID: 11, Nice: 20, Tick: 1459
+*TID: 14, Nice: 20, Tick: 1463
+*TID: 10, Nice: 20, Tick: 1463
+*TID: 14, Nice: 20, Tick: 1467
+*TID: 11, Nice: 20, Tick: 1467
+*TID: 14, Nice: 20, Tick: 1471
+*TID: 10, Nice: 20, Tick: 1471
+*TID: 14, Nice: 20, Tick: 1475
+*TID: 11, Nice: 20, Tick: 1475
+*TID: 14, Nice: 20, Tick: 1479
+*TID: 10, Nice: 20, Tick: 1479
+*TID: 14, Nice: 20, Tick: 1483
+*TID: 11, Nice: 20, Tick: 1483
+*TID: 14, Nice: 20, Tick: 1487
+*TID: 10, Nice: 20, Tick: 1487
+*TID: 14, Nice: 20, Tick: 1491
+*TID: 11, Nice: 20, Tick: 1491
+*TID: 14, Nice: 20, Tick: 1495
+*TID: 10, Nice: 20, Tick: 1495
+*TID: 14, Nice: 20, Tick: 1499
+*TID: 11, Nice: 20, Tick: 1499
+*TID: 14, Nice: 20, Tick: 1503
+*TID: 10, Nice: 20, Tick: 1503
+*TID: 14, Nice: 20, Tick: 1507
+*TID: 11, Nice: 20, Tick: 1507
+*TID: 14, Nice: 20, Tick: 1511
+*TID: 10, Nice: 20, Tick: 1511
+*TID: 14, Nice: 20, Tick: 1515
+*TID: 11, Nice: 20, Tick: 1515
+*TID: 14, Nice: 20, Tick: 1519
+*TID: 10, Nice: 20, Tick: 1519
+*TID: 14, Nice: 20, Tick: 1523
+*TID: 11, Nice: 20, Tick: 1523
+*TID: 14, Nice: 20, Tick: 1527
+*TID: 10, Nice: 20, Tick: 1527
+*TID: 14, Nice: 20, Tick: 1531
+*TID: 11, Nice: 20, Tick: 1531
+*TID: 14, Nice: 20, Tick: 1535
+*TID: 10, Nice: 20, Tick: 1535
+*TID: 14, Nice: 20, Tick: 1539
+*TID: 11, Nice: 20, Tick: 1539
+*TID: 14, Nice: 20, Tick: 1543
+*TID: 10, Nice: 20, Tick: 1543
+*TID: 14, Nice: 20, Tick: 1547
+*TID: 11, Nice: 20, Tick: 1547
+*TID: 14, Nice: 20, Tick: 1551
+*TID: 10, Nice: 20, Tick: 1551
+*TID: 14, Nice: 20, Tick: 1555
+*TID: 11, Nice: 20, Tick: 1555
+*TID: 14, Nice: 20, Tick: 1559
+*TID: 10, Nice: 20, Tick: 1559
+*TID: 14, Nice: 20, Tick: 1563
+*TID: 11, Nice: 20, Tick: 1563
+*TID: 14, Nice: 20, Tick: 1567
+*TID: 10, Nice: 20, Tick: 1567
+*TID: 14, Nice: 20, Tick: 1571
+*TID: 11, Nice: 20, Tick: 1571
+*TID: 14, Nice: 20, Tick: 1575
+*TID: 10, Nice: 20, Tick: 1575
+*TID: 14, Nice: 20, Tick: 1579
+*TID: 11, Nice: 20, Tick: 1579
+*TID: 14, Nice: 20, Tick: 1583
+*TID: 10, Nice: 20, Tick: 1583
+*TID: 14, Nice: 20, Tick: 1587
+*TID: 11, Nice: 20, Tick: 1587
+*TID: 14, Nice: 20, Tick: 1591
+*TID: 10, Nice: 20, Tick: 1591
+*TID: 14, Nice: 20, Tick: 1595
+*TID: 11, Nice: 20, Tick: 1595
+*TID: 14, Nice: 20, Tick: 1599
+*TID: 10, Nice: 20, Tick: 1599
+count-looper: done (count is 10000000000)
+*TID: 10, Nice: 20, Tick: 1602
+*TID: 10, Nice: 20, Tick: 1603
+count-looper: exit(0)
+*TID: 14, Nice: 20, Tick: 1604
+*TID: 14, Nice: 20, Tick: 1603
+*TID: 6, Nice: 20, Tick: 1607
+*TID: 6, Nice: 20, Tick: 1608
+nice: exit(0)
+*TID: 14, Nice: 20, Tick: 1609
+*TID: 11, Nice: 20, Tick: 1611
+*TID: 11, Nice: 20, Tick: 1603
+*TID: 14, Nice: 20, Tick: 1615
+*TID: 11, Nice: 20, Tick: 1615
+*TID: 14, Nice: 20, Tick: 1619
+*TID: 11, Nice: 20, Tick: 1619
+*TID: 14, Nice: 20, Tick: 1623
+*TID: 11, Nice: 20, Tick: 1623
+*TID: 14, Nice: 20, Tick: 1627
+*TID: 8, Nice: 20, Tick: 1631
+*TID: 9, Nice: 20, Tick: 1631
+*TID: 9, Nice: 20, Tick: 1632
+*TID: 9, Nice: 20, Tick: 1633
+*TID: 15, Nice: 20, Tick: 1634
+*TID: 14, Nice: 20, Tick: 1635
+*TID: 15, Nice: 20, Tick: 1639
+*TID: 14, Nice: 20, Tick: 1639
+*TID: 15, Nice: 20, Tick: 1643
+*TID: 14, Nice: 20, Tick: 1643
+*TID: 15, Nice: 20, Tick: 1647
+*TID: 14, Nice: 20, Tick: 1647
+*TID: 15, Nice: 20, Tick: 1651
+*TID: 14, Nice: 20, Tick: 1651
+*TID: 15, Nice: 20, Tick: 1655
+*TID: 14, Nice: 20, Tick: 1655
+*TID: 15, Nice: 20, Tick: 1659
+*TID: 14, Nice: 20, Tick: 1659
+*TID: 15, Nice: 20, Tick: 1663
+*TID: 14, Nice: 20, Tick: 1663
+*TID: 15, Nice: 20, Tick: 1667
+*TID: 14, Nice: 20, Tick: 1667
+*TID: 15, Nice: 20, Tick: 1671
+*TID: 14, Nice: 20, Tick: 1671
+*TID: 15, Nice: 20, Tick: 1675
+*TID: 14, Nice: 20, Tick: 1675
+*TID: 15, Nice: 20, Tick: 1679
+*TID: 11, Nice: 20, Tick: 1679
+*TID: 15, Nice: 20, Tick: 1683
+*TID: 14, Nice: 20, Tick: 1683
+*TID: 15, Nice: 20, Tick: 1687
+*TID: 11, Nice: 20, Tick: 1687
+*TID: 15, Nice: 20, Tick: 1691
+*TID: 14, Nice: 20, Tick: 1691
+*TID: 15, Nice: 20, Tick: 1695
+*TID: 11, Nice: 20, Tick: 1695
+*TID: 15, Nice: 20, Tick: 1699
+*TID: 14, Nice: 20, Tick: 1699
+*TID: 15, Nice: 20, Tick: 1703
+*TID: 11, Nice: 20, Tick: 1703
+*TID: 15, Nice: 20, Tick: 1707
+*TID: 14, Nice: 20, Tick: 1707
+*TID: 15, Nice: 20, Tick: 1711
+*TID: 11, Nice: 20, Tick: 1711
+*TID: 15, Nice: 20, Tick: 1715
+*TID: 14, Nice: 20, Tick: 1715
+*TID: 15, Nice: 20, Tick: 1719
+*TID: 11, Nice: 20, Tick: 1719
+*TID: 15, Nice: 20, Tick: 1723
+*TID: 14, Nice: 20, Tick: 1723
+*TID: 15, Nice: 20, Tick: 1727
+*TID: 11, Nice: 20, Tick: 1727
+*TID: 15, Nice: 20, Tick: 1731
+*TID: 14, Nice: 20, Tick: 1731
+*TID: 15, Nice: 20, Tick: 1735
+*TID: 11, Nice: 20, Tick: 1735
+*TID: 15, Nice: 20, Tick: 1739
+*TID: 14, Nice: 20, Tick: 1739
+*TID: 15, Nice: 20, Tick: 1743
+*TID: 11, Nice: 20, Tick: 1743
+*TID: 15, Nice: 20, Tick: 1747
+*TID: 14, Nice: 20, Tick: 1747
+*TID: 15, Nice: 20, Tick: 1751
+*TID: 11, Nice: 20, Tick: 1751
+*TID: 15, Nice: 20, Tick: 1755
+*TID: 14, Nice: 20, Tick: 1755
+*TID: 15, Nice: 20, Tick: 1759
+*TID: 11, Nice: 20, Tick: 1759
+*TID: 15, Nice: 20, Tick: 1763
+*TID: 14, Nice: 20, Tick: 1763
+*TID: 15, Nice: 20, Tick: 1767
+*TID: 11, Nice: 20, Tick: 1767
+*TID: 15, Nice: 20, Tick: 1771
+*TID: 14, Nice: 20, Tick: 1771
+*TID: 15, Nice: 20, Tick: 1775
+*TID: 11, Nice: 20, Tick: 1775
+*TID: 15, Nice: 20, Tick: 1779
+*TID: 14, Nice: 20, Tick: 1779
+*TID: 15, Nice: 20, Tick: 1783
+*TID: 11, Nice: 20, Tick: 1783
+*TID: 15, Nice: 20, Tick: 1787
+*TID: 14, Nice: 20, Tick: 1787
+*TID: 15, Nice: 20, Tick: 1791
+*TID: 11, Nice: 20, Tick: 1791
+*TID: 15, Nice: 20, Tick: 1795
+*TID: 14, Nice: 20, Tick: 1795
+*TID: 15, Nice: 20, Tick: 1799
+*TID: 11, Nice: 20, Tick: 1799
+*TID: 15, Nice: 20, Tick: 1803
+*TID: 14, Nice: 20, Tick: 1803
+*TID: 15, Nice: 20, Tick: 1807
+*TID: 11, Nice: 20, Tick: 1807
+*TID: 15, Nice: 20, Tick: 1811
+*TID: 14, Nice: 20, Tick: 1811
+*TID: 15, Nice: 20, Tick: 1815
+*TID: 11, Nice: 20, Tick: 1815
+*TID: 15, Nice: 20, Tick: 1819
+*TID: 14, Nice: 20, Tick: 1819
+*TID: 15, Nice: 20, Tick: 1823
+*TID: 11, Nice: 20, Tick: 1823
+*TID: 15, Nice: 20, Tick: 1827
+*TID: 14, Nice: 20, Tick: 1827
+*TID: 15, Nice: 20, Tick: 1831
+*TID: 9, Nice: 20, Tick: 1831
+*TID: 12, Nice: 20, Tick: 1832
+*TID: 11, Nice: 20, Tick: 1833
+*TID: 12, Nice: 20, Tick: 1837
+*TID: 14, Nice: 20, Tick: 1838
+*TID: 12, Nice: 20, Tick: 1842
+*TID: 11, Nice: 20, Tick: 1842
+*TID: 12, Nice: 20, Tick: 1846
+*TID: 14, Nice: 20, Tick: 1846
+*TID: 12, Nice: 20, Tick: 1850
+*TID: 11, Nice: 20, Tick: 1850
+*TID: 12, Nice: 20, Tick: 1854
+*TID: 14, Nice: 20, Tick: 1854
+*TID: 12, Nice: 20, Tick: 1858
+*TID: 11, Nice: 20, Tick: 1858
+*TID: 12, Nice: 20, Tick: 1862
+*TID: 14, Nice: 20, Tick: 1862
+*TID: 12, Nice: 20, Tick: 1866
+*TID: 11, Nice: 20, Tick: 1866
+*TID: 12, Nice: 20, Tick: 1870
+*TID: 14, Nice: 20, Tick: 1870
+*TID: 12, Nice: 20, Tick: 1874
+*TID: 11, Nice: 20, Tick: 1874
+*TID: 12, Nice: 20, Tick: 1878
+*TID: 14, Nice: 20, Tick: 1878
+*TID: 12, Nice: 20, Tick: 1882
+*TID: 11, Nice: 20, Tick: 1882
+*TID: 12, Nice: 20, Tick: 1886
+*TID: 14, Nice: 20, Tick: 1886
+*TID: 12, Nice: 20, Tick: 1890
+*TID: 11, Nice: 20, Tick: 1890
+*TID: 12, Nice: 20, Tick: 1894
+*TID: 14, Nice: 20, Tick: 1894
+*TID: 12, Nice: 20, Tick: 1898
+*TID: 11, Nice: 20, Tick: 1898
+*TID: 12, Nice: 20, Tick: 1902
+*TID: 14, Nice: 20, Tick: 1902
+*TID: 12, Nice: 20, Tick: 1906
+*TID: 11, Nice: 20, Tick: 1906
+*TID: 12, Nice: 20, Tick: 1910
+*TID: 14, Nice: 20, Tick: 1910
+*TID: 12, Nice: 20, Tick: 1914
+*TID: 11, Nice: 20, Tick: 1914
+*TID: 12, Nice: 20, Tick: 1918
+*TID: 14, Nice: 20, Tick: 1918
+*TID: 12, Nice: 20, Tick: 1922
+*TID: 11, Nice: 20, Tick: 1922
+*TID: 12, Nice: 20, Tick: 1926
+*TID: 14, Nice: 20, Tick: 1926
+*TID: 12, Nice: 20, Tick: 1930
+*TID: 11, Nice: 20, Tick: 1930
+*TID: 12, Nice: 20, Tick: 1934
+*TID: 14, Nice: 20, Tick: 1934
+*TID: 12, Nice: 20, Tick: 1938
+*TID: 13, Nice: 20, Tick: 1938
+*TID: 11, Nice: 20, Tick: 1938
+*TID: 12, Nice: 20, Tick: 1942
+Alabama
+Alaska
+Arizona
+Arkansas
+*TID: 12, Nice: 20, Tick: 1946
+California
+Colorado
+Connecticut
+Delaware
+Florida
+Georgia
+Hawaii
+Idaho
+Illinois
+Indiana
+Iowa
+Kansas
+Kentucky
+Louisiana
+Maine
+Maryland
+Massachusetts
+Michigan
+Minnesota
+Mississippi
+Missouri
+Montana
+Nebraska
+Nevada
+New Hampshire
+New Jersey
+New Mexico
+New York
+North Carolina
+North Dakota
+Ohio
+Oklahoma
+Oregon
+Pennsylvania
+Rhode Island
+South Carolina
+South Dakota
+Tennessee
+Texas
+Utah
+Vermont
+Virginia
+Washington
+West Virginia
+Wisconsin
+Wyoming
+*TID: 15, Nice: 20, Tick: 1992
+*TID: 15, Nice: 20, Tick: 1946
+*TID: 13, Nice: 20, Tick: 1992
+*TID: 14, Nice: 20, Tick: 1992
+*TID: 12, Nice: 20, Tick: 1996
+*TID: 11, Nice: 20, Tick: 1997
+*TID: 12, Nice: 20, Tick: 2001
+*TID: 14, Nice: 20, Tick: 2001
+*TID: 12, Nice: 20, Tick: 2005
+*TID: 11, Nice: 20, Tick: 2005
+*TID: 12, Nice: 20, Tick: 2009
+*TID: 14, Nice: 20, Tick: 2009
+*TID: 12, Nice: 20, Tick: 2013
+*TID: 11, Nice: 20, Tick: 2013
+*TID: 12, Nice: 20, Tick: 2017
+*TID: 14, Nice: 20, Tick: 2017
+*TID: 12, Nice: 20, Tick: 2021
+*TID: 11, Nice: 20, Tick: 2021
+*TID: 12, Nice: 20, Tick: 2025
+*TID: 14, Nice: 20, Tick: 2025
+*TID: 12, Nice: 20, Tick: 2029
+*TID: 11, Nice: 20, Tick: 2029
+*TID: 12, Nice: 20, Tick: 2033
+*TID: 14, Nice: 20, Tick: 2033
+*TID: 12, Nice: 20, Tick: 2037
+*TID: 11, Nice: 20, Tick: 2037
+count-looper: done (count is 10000000000)
+*TID: 11, Nice: 20, Tick: 2041
+*TID: 11, Nice: 20, Tick: 2042
+count-looper: exit(0)
+*TID: 4, Nice: 20, Tick: 2043
+*TID: 4, Nice: 20, Tick: 2045
+nice: exit(0)
+*TID: 12, Nice: 20, Tick: 2046
+*TID: 12, Nice: 20, Tick: 2041
+*TID: 14, Nice: 20, Tick: 2048
+*TID: 14, Nice: 20, Tick: 2041
+*TID: 12, Nice: 20, Tick: 2052
+*TID: 14, Nice: 20, Tick: 2052
+*TID: 12, Nice: 20, Tick: 2056
+*TID: 14, Nice: 20, Tick: 2056
+*TID: 12, Nice: 20, Tick: 2060
+*TID: 14, Nice: 20, Tick: 2060
+*TID: 12, Nice: 20, Tick: 2064
+*TID: 14, Nice: 20, Tick: 2064
+*TID: 12, Nice: 20, Tick: 2068
+*TID: 14, Nice: 20, Tick: 2068
+*TID: 12, Nice: 20, Tick: 2072
+*TID: 14, Nice: 20, Tick: 2072
+*TID: 12, Nice: 20, Tick: 2076
+*TID: 14, Nice: 20, Tick: 2076
+*TID: 12, Nice: 20, Tick: 2080
+*TID: 14, Nice: 20, Tick: 2080
+*TID: 12, Nice: 20, Tick: 2084
+*TID: 14, Nice: 20, Tick: 2084
+*TID: 12, Nice: 20, Tick: 2088
+*TID: 14, Nice: 20, Tick: 2088
+*TID: 12, Nice: 20, Tick: 2092
+*TID: 14, Nice: 20, Tick: 2092
+*TID: 12, Nice: 20, Tick: 2096
+*TID: 14, Nice: 20, Tick: 2096
+*TID: 12, Nice: 20, Tick: 2100
+*TID: 14, Nice: 20, Tick: 2101
+*TID: 12, Nice: 20, Tick: 2105
+*TID: 15, Nice: 20, Tick: 2105
+*TID: 14, Nice: 20, Tick: 2105
+*TID: 12, Nice: 20, Tick: 2109
+Alabama
+Alaska
+Arizona
+Arkansas
+*TID: 12, Nice: 20, Tick: 2113
+California
+Colorado
+Connecticut
+Delaware
+Florida
+Georgia
+Hawaii
+Idaho
+Illinois
+Indiana
+Iowa
+Kansas
+Kentucky
+Louisiana
+Maine
+Maryland
+Massachusetts
+Michigan
+Minnesota
+Mississippi
+Missouri
+Montana
+Nebraska
+Nevada
+New Hampshire
+New Jersey
+New Mexico
+New York
+North Carolina
+North Dakota
+Ohio
+*TID: 12, Nice: 20, Tick: 2145
+Oklahoma
+Oregon
+Pennsylvania
+Rhode Island
+South Carolina
+South Dakota
+Tennessee
+Texas
+Utah
+Vermont
+Virginia
+Washington
+West Virginia
+Wisconsin
+Wyoming
+*TID: 13, Nice: 20, Tick: 2161
+*TID: 13, Nice: 20, Tick: 2113
+*TID: 15, Nice: 20, Tick: 2161
+*TID: 14, Nice: 20, Tick: 2161
+*TID: 14, Nice: 20, Tick: 2145
+*TID: 12, Nice: 20, Tick: 2165
+*TID: 14, Nice: 20, Tick: 2167
+*TID: 12, Nice: 20, Tick: 2171
+*TID: 14, Nice: 20, Tick: 2171
+*TID: 12, Nice: 20, Tick: 2175
+*TID: 14, Nice: 20, Tick: 2175
+*TID: 12, Nice: 20, Tick: 2179
+*TID: 14, Nice: 20, Tick: 2179
+*TID: 12, Nice: 20, Tick: 2183
+*TID: 14, Nice: 20, Tick: 2183
+*TID: 12, Nice: 20, Tick: 2187
+*TID: 14, Nice: 20, Tick: 2187
+*TID: 12, Nice: 20, Tick: 2191
+*TID: 14, Nice: 20, Tick: 2191
+*TID: 12, Nice: 20, Tick: 2195
+*TID: 14, Nice: 20, Tick: 2195
+*TID: 12, Nice: 20, Tick: 2199
+*TID: 14, Nice: 20, Tick: 2199
+*TID: 12, Nice: 20, Tick: 2203
+*TID: 14, Nice: 20, Tick: 2203
+*TID: 12, Nice: 20, Tick: 2207
+*TID: 14, Nice: 20, Tick: 2207
+*TID: 12, Nice: 20, Tick: 2211
+*TID: 14, Nice: 20, Tick: 2211
+*TID: 12, Nice: 20, Tick: 2215
+*TID: 14, Nice: 20, Tick: 2215
+*TID: 12, Nice: 20, Tick: 2219
+*TID: 14, Nice: 20, Tick: 2219
+*TID: 12, Nice: 20, Tick: 2223
+*TID: 14, Nice: 20, Tick: 2223
+*TID: 12, Nice: 20, Tick: 2227
+*TID: 14, Nice: 20, Tick: 2227
+*TID: 12, Nice: 20, Tick: 2231
+*TID: 14, Nice: 20, Tick: 2231
+*TID: 12, Nice: 20, Tick: 2235
+*TID: 14, Nice: 20, Tick: 2235
+*TID: 12, Nice: 20, Tick: 2239
+*TID: 14, Nice: 20, Tick: 2239
+*TID: 12, Nice: 20, Tick: 2243
+*TID: 14, Nice: 20, Tick: 2243
+*TID: 12, Nice: 20, Tick: 2247
+*TID: 14, Nice: 20, Tick: 2247
+*TID: 12, Nice: 20, Tick: 2251
+*TID: 14, Nice: 20, Tick: 2251
+*TID: 12, Nice: 20, Tick: 2255
+*TID: 14, Nice: 20, Tick: 2255
+*TID: 12, Nice: 20, Tick: 2259
+*TID: 14, Nice: 20, Tick: 2259
+*TID: 12, Nice: 20, Tick: 2263
+*TID: 14, Nice: 20, Tick: 2263
+*TID: 12, Nice: 20, Tick: 2267
+*TID: 13, Nice: 20, Tick: 2267
+*TID: 14, Nice: 20, Tick: 2267
+*TID: 12, Nice: 20, Tick: 2271
+Alabama
+Alaska
+Arizona
+Arkansas
+*TID: 12, Nice: 20, Tick: 2275
+California
+Colorado
+Connecticut
+Delaware
+Florida
+Georgia
+Hawaii
+Idaho
+Illinois
+Indiana
+Iowa
+*TID: 12, Nice: 20, Tick: 2287
+Kansas
+Kentucky
+Louisiana
+Maine
+Maryland
+Massachusetts
+Michigan
+Minnesota
+Mississippi
+Missouri
+Montana
+Nebraska
+Nevada
+New Hampshire
+New Jersey
+New Mexico
+New York
+North Carolina
+North Dakota
+Ohio
+Oklahoma
+Oregon
+Pennsylvania
+Rhode Island
+South Carolina
+South Dakota
+Tennessee
+Texas
+Utah
+Vermont
+Virginia
+Washington
+West Virginia
+Wisconsin
+Wyoming
+*TID: 15, Nice: 20, Tick: 2322
+*TID: 15, Nice: 20, Tick: 2275
+*TID: 13, Nice: 20, Tick: 2322
+*TID: 14, Nice: 20, Tick: 2322
+*TID: 14, Nice: 20, Tick: 2287
+*TID: 12, Nice: 20, Tick: 2326
+*TID: 14, Nice: 20, Tick: 2328
+*TID: 12, Nice: 20, Tick: 2332
+*TID: 14, Nice: 20, Tick: 2332
+*TID: 12, Nice: 20, Tick: 2336
+*TID: 14, Nice: 20, Tick: 2336
+*TID: 12, Nice: 20, Tick: 2340
+*TID: 14, Nice: 20, Tick: 2340
+*TID: 12, Nice: 20, Tick: 2344
+*TID: 14, Nice: 20, Tick: 2344
+*TID: 12, Nice: 20, Tick: 2348
+*TID: 14, Nice: 20, Tick: 2348
+*TID: 12, Nice: 20, Tick: 2352
+*TID: 14, Nice: 20, Tick: 2352
+*TID: 12, Nice: 20, Tick: 2356
+*TID: 14, Nice: 20, Tick: 2356
+*TID: 12, Nice: 20, Tick: 2360
+*TID: 14, Nice: 20, Tick: 2360
+*TID: 12, Nice: 20, Tick: 2364
+*TID: 14, Nice: 20, Tick: 2364
+*TID: 12, Nice: 20, Tick: 2368
+*TID: 14, Nice: 20, Tick: 2368
+*TID: 12, Nice: 20, Tick: 2372
+*TID: 14, Nice: 20, Tick: 2372
+*TID: 12, Nice: 20, Tick: 2376
+*TID: 14, Nice: 20, Tick: 2376
+*TID: 12, Nice: 20, Tick: 2380
+*TID: 14, Nice: 20, Tick: 2380
+*TID: 12, Nice: 20, Tick: 2384
+*TID: 14, Nice: 20, Tick: 2384
+*TID: 12, Nice: 20, Tick: 2388
+*TID: 14, Nice: 20, Tick: 2388
+*TID: 12, Nice: 20, Tick: 2392
+*TID: 14, Nice: 20, Tick: 2392
+*TID: 12, Nice: 20, Tick: 2396
+*TID: 14, Nice: 20, Tick: 2396
+*TID: 12, Nice: 20, Tick: 2400
+*TID: 14, Nice: 20, Tick: 2400
+*TID: 12, Nice: 20, Tick: 2404
+*TID: 14, Nice: 20, Tick: 2404
+*TID: 12, Nice: 20, Tick: 2408
+*TID: 14, Nice: 20, Tick: 2408
+*TID: 12, Nice: 20, Tick: 2412
+*TID: 14, Nice: 20, Tick: 2412
+*TID: 12, Nice: 20, Tick: 2416
+*TID: 14, Nice: 20, Tick: 2416
+*TID: 12, Nice: 20, Tick: 2420
+*TID: 14, Nice: 20, Tick: 2420
+*TID: 12, Nice: 20, Tick: 2424
+*TID: 14, Nice: 20, Tick: 2424
+*TID: 12, Nice: 20, Tick: 2428
+*TID: 15, Nice: 20, Tick: 2428
+*TID: 14, Nice: 20, Tick: 2428
+*TID: 12, Nice: 20, Tick: 2432
+Alabama
+Alaska
+Arizona
+Arkansas
+*TID: 12, Nice: 20, Tick: 2436
+California
+Colorado
+Connecticut
+Delaware
+Florida
+Georgia
+Hawaii
+Idaho
+Illinois
+Indiana
+Iowa
+Kansas
+Kentucky
+Louisiana
+Maine
+*TID: 12, Nice: 20, Tick: 2452
+Maryland
+Massachusetts
+Michigan
+Minnesota
+Mississippi
+Missouri
+Montana
+Nebraska
+Nevada
+New Hampshire
+New Jersey
+New Mexico
+New York
+North Carolina
+North Dakota
+Ohio
+Oklahoma
+Oregon
+Pennsylvania
+Rhode Island
+South Carolina
+South Dakota
+Tennessee
+Texas
+Utah
+Vermont
+Virginia
+Washington
+West Virginia
+Wisconsin
+Wyoming
+*TID: 13, Nice: 20, Tick: 2483
+*TID: 13, Nice: 20, Tick: 2436
+*TID: 15, Nice: 20, Tick: 2483
+*TID: 14, Nice: 20, Tick: 2483
+*TID: 14, Nice: 20, Tick: 2452
+*TID: 12, Nice: 20, Tick: 2487
+*TID: 14, Nice: 20, Tick: 2489
+*TID: 12, Nice: 20, Tick: 2493
+*TID: 14, Nice: 20, Tick: 2493
+*TID: 12, Nice: 20, Tick: 2497
+*TID: 14, Nice: 20, Tick: 2497
+*TID: 12, Nice: 20, Tick: 2501
+*TID: 14, Nice: 20, Tick: 2501
+count-looper: done (count is 10000000000)
+*TID: 14, Nice: 20, Tick: 2504
+*TID: 14, Nice: 20, Tick: 2505
+count-looper: exit(0)
+*TID: 8, Nice: 20, Tick: 2506
+*TID: 8, Nice: 20, Tick: 2508
+nice: exit(0)
+*TID: 12, Nice: 20, Tick: 2509
+*TID: 12, Nice: 20, Tick: 2505
+*TID: 12, Nice: 20, Tick: 2512
+*TID: 12, Nice: 20, Tick: 2513
+*TID: 12, Nice: 20, Tick: 2514
+*TID: 12, Nice: 20, Tick: 2515
+*TID: 12, Nice: 20, Tick: 2516
+*TID: 12, Nice: 20, Tick: 2516
+*TID: 12, Nice: 20, Tick: 2517
+*TID: 12, Nice: 20, Tick: 2518
+*TID: 12, Nice: 20, Tick: 2519
+*TID: 12, Nice: 20, Tick: 2520
+*TID: 12, Nice: 20, Tick: 2521
+*TID: 12, Nice: 20, Tick: 2522
+*TID: 12, Nice: 20, Tick: 2523
+*TID: 12, Nice: 20, Tick: 2524
+*TID: 12, Nice: 20, Tick: 2525
+*TID: 12, Nice: 20, Tick: 2526
+*TID: 12, Nice: 20, Tick: 2527
+*TID: 12, Nice: 20, Tick: 2528
+*TID: 12, Nice: 20, Tick: 2529
+*TID: 12, Nice: 20, Tick: 2530
+*TID: 12, Nice: 20, Tick: 2531
+*TID: 13, Nice: 20, Tick: 2532
+*TID: 12, Nice: 20, Tick: 2533
+Alabama
+Alaska
+Arizona
+*TID: 12, Nice: 20, Tick: 2537
+Arkansas
+California
+Colorado
+Connecticut
+Delaware
+Florida
+Georgia
+Hawaii
+Idaho
+Illinois
+Indiana
+Iowa
+Kansas
+Kentucky
+Louisiana
+Maine
+Maryland
+Massachusetts
+Michigan
+Minnesota
+Mississippi
+Missouri
+Montana
+Nebraska
+Nevada
+New Hampshire
+New Jersey
+New Mexico
+New York
+North Carolina
+North Dakota
+Ohio
+Oklahoma
+Oregon
+Pennsylvania
+Rhode Island
+South Carolina
+South Dakota
+Tennessee
+Texas
+Utah
+Vermont
+Virginia
+Washington
+West Virginia
+Wisconsin
+Wyoming
+*TID: 15, Nice: 20, Tick: 2584
+*TID: 15, Nice: 20, Tick: 2537
+*TID: 13, Nice: 20, Tick: 2584
+*TID: 12, Nice: 20, Tick: 2586
+*TID: 12, Nice: 20, Tick: 2588
+*TID: 12, Nice: 20, Tick: 2589
+*TID: 12, Nice: 20, Tick: 2590
+*TID: 12, Nice: 20, Tick: 2591
+*TID: 12, Nice: 20, Tick: 2592
+*TID: 12, Nice: 20, Tick: 2593
+*TID: 12, Nice: 20, Tick: 2594
+*TID: 12, Nice: 20, Tick: 2595
+*TID: 12, Nice: 20, Tick: 2596
+*TID: 12, Nice: 20, Tick: 2597
+*TID: 12, Nice: 20, Tick: 2598
+*TID: 12, Nice: 20, Tick: 2599
+*TID: 12, Nice: 20, Tick: 2600
+*TID: 12, Nice: 20, Tick: 2601
+*TID: 12, Nice: 20, Tick: 2602
+*TID: 12, Nice: 20, Tick: 2603
+*TID: 12, Nice: 20, Tick: 2604
+*TID: 12, Nice: 20, Tick: 2605
+*TID: 12, Nice: 20, Tick: 2606
+*TID: 12, Nice: 20, Tick: 2607
+*TID: 12, Nice: 20, Tick: 2608
+*TID: 12, Nice: 20, Tick: 2609
+*TID: 12, Nice: 20, Tick: 2610
+*TID: 12, Nice: 20, Tick: 2611
+*TID: 12, Nice: 20, Tick: 2612
+*TID: 15, Nice: 20, Tick: 2613
+*TID: 12, Nice: 20, Tick: 2614
+Alabama
+Alaska
+Arizona
+*TID: 12, Nice: 20, Tick: 2618
+Arkansas
+California
+Colorado
+Connecticut
+Delaware
+Florida
+Georgia
+Hawaii
+Idaho
+Illinois
+Indiana
+Iowa
+Kansas
+Kentucky
+Louisiana
+Maine
+Maryland
+Massachusetts
+Michigan
+Minnesota
+Mississippi
+Missouri
+Montana
+Nebraska
+Nevada
+New Hampshire
+New Jersey
+New Mexico
+New York
+North Carolina
+North Dakota
+Ohio
+Oklahoma
+Oregon
+Pennsylvania
+Rhode Island
+South Carolina
+South Dakota
+Tennessee
+Texas
+Utah
+Vermont
+Virginia
+Washington
+West Virginia
+Wisconsin
+Wyoming
+*TID: 13, Nice: 20, Tick: 2665
+*TID: 13, Nice: 20, Tick: 2618
+*TID: 15, Nice: 20, Tick: 2665
+*TID: 12, Nice: 20, Tick: 2667
+*TID: 12, Nice: 20, Tick: 2669
+*TID: 12, Nice: 20, Tick: 2670
+*TID: 12, Nice: 20, Tick: 2671
+*TID: 12, Nice: 20, Tick: 2672
+*TID: 12, Nice: 20, Tick: 2673
+*TID: 12, Nice: 20, Tick: 2674
+*TID: 12, Nice: 20, Tick: 2675
+*TID: 12, Nice: 20, Tick: 2676
+*TID: 12, Nice: 20, Tick: 2677
+*TID: 12, Nice: 20, Tick: 2678
+*TID: 12, Nice: 20, Tick: 2679
+*TID: 12, Nice: 20, Tick: 2680
+*TID: 12, Nice: 20, Tick: 2681
+*TID: 12, Nice: 20, Tick: 2682
+*TID: 12, Nice: 20, Tick: 2683
+*TID: 12, Nice: 20, Tick: 2684
+*TID: 12, Nice: 20, Tick: 2685
+*TID: 12, Nice: 20, Tick: 2686
+*TID: 12, Nice: 20, Tick: 2687
+*TID: 12, Nice: 20, Tick: 2688
+*TID: 12, Nice: 20, Tick: 2689
+*TID: 12, Nice: 20, Tick: 2690
+*TID: 12, Nice: 20, Tick: 2691
+*TID: 12, Nice: 20, Tick: 2692
+*TID: 12, Nice: 20, Tick: 2693
+*TID: 13, Nice: 20, Tick: 2694
+*TID: 12, Nice: 20, Tick: 2695
+Alabama
+Alaska
+Arizona
+Arkansas
+*TID: 12, Nice: 20, Tick: 2699
+California
+Colorado
+Connecticut
+Delaware
+Florida
+Georgia
+Hawaii
+Idaho
+Illinois
+Indiana
+Iowa
+Kansas
+Kentucky
+Louisiana
+Maine
+Maryland
+Massachusetts
+Michigan
+Minnesota
+Mississippi
+Missouri
+Montana
+Nebraska
+Nevada
+New Hampshire
+New Jersey
+New Mexico
+New York
+North Carolina
+North Dakota
+Ohio
+Oklahoma
+Oregon
+Pennsylvania
+Rhode Island
+South Carolina
+South Dakota
+Tennessee
+Texas
+Utah
+Vermont
+Virginia
+Washington
+West Virginia
+Wisconsin
+Wyoming
+*TID: 15, Nice: 20, Tick: 2745
+*TID: 15, Nice: 20, Tick: 2699
+*TID: 13, Nice: 20, Tick: 2745
+*TID: 12, Nice: 20, Tick: 2747
+*TID: 12, Nice: 20, Tick: 2749
+*TID: 12, Nice: 20, Tick: 2750
+*TID: 12, Nice: 20, Tick: 2751
+*TID: 12, Nice: 20, Tick: 2752
+*TID: 12, Nice: 20, Tick: 2753
+*TID: 12, Nice: 20, Tick: 2754
+*TID: 12, Nice: 20, Tick: 2755
+*TID: 12, Nice: 20, Tick: 2756
+*TID: 12, Nice: 20, Tick: 2757
+*TID: 12, Nice: 20, Tick: 2758
+*TID: 12, Nice: 20, Tick: 2759
+*TID: 12, Nice: 20, Tick: 2760
+*TID: 12, Nice: 20, Tick: 2761
+*TID: 12, Nice: 20, Tick: 2762
+*TID: 12, Nice: 20, Tick: 2763
+*TID: 12, Nice: 20, Tick: 2764
+*TID: 12, Nice: 20, Tick: 2765
+*TID: 12, Nice: 20, Tick: 2766
+*TID: 12, Nice: 20, Tick: 2767
+*TID: 12, Nice: 20, Tick: 2768
+*TID: 12, Nice: 20, Tick: 2769
+*TID: 12, Nice: 20, Tick: 2770
+*TID: 12, Nice: 20, Tick: 2771
+*TID: 12, Nice: 20, Tick: 2772
+*TID: 12, Nice: 20, Tick: 2773
+*TID: 15, Nice: 20, Tick: 2774
+*TID: 12, Nice: 20, Tick: 2775
+Alabama
+Alaska
+Arizona
+*TID: 12, Nice: 20, Tick: 2779
+Arkansas
+California
+Colorado
+Connecticut
+Delaware
+Florida
+Georgia
+Hawaii
+Idaho
+Illinois
+Indiana
+Iowa
+Kansas
+Kentucky
+Louisiana
+Maine
+Maryland
+Massachusetts
+Michigan
+Minnesota
+Mississippi
+Missouri
+Montana
+Nebraska
+Nevada
+New Hampshire
+New Jersey
+New Mexico
+New York
+North Carolina
+North Dakota
+Ohio
+Oklahoma
+Oregon
+Pennsylvania
+Rhode Island
+South Carolina
+South Dakota
+Tennessee
+Texas
+Utah
+Vermont
+Virginia
+Washington
+West Virginia
+Wisconsin
+Wyoming
+*TID: 13, Nice: 20, Tick: 2826
+*TID: 13, Nice: 20, Tick: 2779
+*TID: 15, Nice: 20, Tick: 2826
+*TID: 12, Nice: 20, Tick: 2829
+*TID: 12, Nice: 20, Tick: 2830
+*TID: 12, Nice: 20, Tick: 2831
+*TID: 12, Nice: 20, Tick: 2832
+*TID: 12, Nice: 20, Tick: 2833
+*TID: 12, Nice: 20, Tick: 2834
+*TID: 12, Nice: 20, Tick: 2835
+*TID: 12, Nice: 20, Tick: 2836
+*TID: 12, Nice: 20, Tick: 2837
+*TID: 12, Nice: 20, Tick: 2838
+*TID: 12, Nice: 20, Tick: 2839
+*TID: 12, Nice: 20, Tick: 2840
+*TID: 12, Nice: 20, Tick: 2841
+*TID: 12, Nice: 20, Tick: 2842
+*TID: 12, Nice: 20, Tick: 2843
+*TID: 12, Nice: 20, Tick: 2844
+*TID: 12, Nice: 20, Tick: 2845
+*TID: 12, Nice: 20, Tick: 2846
+*TID: 12, Nice: 20, Tick: 2847
+*TID: 12, Nice: 20, Tick: 2848
+*TID: 12, Nice: 20, Tick: 2849
+*TID: 12, Nice: 20, Tick: 2850
+*TID: 12, Nice: 20, Tick: 2851
+*TID: 12, Nice: 20, Tick: 2852
+*TID: 12, Nice: 20, Tick: 2853
+*TID: 12, Nice: 20, Tick: 2854
+*TID: 13, Nice: 20, Tick: 2855
+*TID: 12, Nice: 20, Tick: 2856
+Alabama
+Alaska
+Arizona
+*TID: 12, Nice: 20, Tick: 2860
+Arkansas
+California
+Colorado
+Connecticut
+Delaware
+Florida
+Georgia
+Hawaii
+Idaho
+Illinois
+Indiana
+Iowa
+Kansas
+Kentucky
+Louisiana
+Maine
+Maryland
+Massachusetts
+Michigan
+Minnesota
+Mississippi
+Missouri
+Montana
+Nebraska
+Nevada
+New Hampshire
+New Jersey
+New Mexico
+New York
+North Carolina
+North Dakota
+Ohio
+Oklahoma
+Oregon
+Pennsylvania
+Rhode Island
+South Carolina
+South Dakota
+Tennessee
+Texas
+Utah
+Vermont
+Virginia
+Washington
+West Virginia
+Wisconsin
+Wyoming
+*TID: 15, Nice: 20, Tick: 2907
+*TID: 15, Nice: 20, Tick: 2860
+*TID: 13, Nice: 20, Tick: 2907
+*TID: 12, Nice: 20, Tick: 2909
+*TID: 12, Nice: 20, Tick: 2911
+*TID: 12, Nice: 20, Tick: 2912
+*TID: 12, Nice: 20, Tick: 2913
+*TID: 12, Nice: 20, Tick: 2914
+*TID: 12, Nice: 20, Tick: 2915
+*TID: 12, Nice: 20, Tick: 2916
+*TID: 12, Nice: 20, Tick: 2917
+*TID: 12, Nice: 20, Tick: 2918
+*TID: 12, Nice: 20, Tick: 2919
+*TID: 12, Nice: 20, Tick: 2920
+*TID: 12, Nice: 20, Tick: 2921
+*TID: 12, Nice: 20, Tick: 2922
+*TID: 12, Nice: 20, Tick: 2923
+*TID: 12, Nice: 20, Tick: 2924
+*TID: 12, Nice: 20, Tick: 2925
+*TID: 12, Nice: 20, Tick: 2926
+*TID: 12, Nice: 20, Tick: 2927
+*TID: 12, Nice: 20, Tick: 2928
+*TID: 12, Nice: 20, Tick: 2929
+*TID: 12, Nice: 20, Tick: 2930
+*TID: 12, Nice: 20, Tick: 2931
+*TID: 12, Nice: 20, Tick: 2932
+*TID: 12, Nice: 20, Tick: 2933
+*TID: 12, Nice: 20, Tick: 2934
+*TID: 12, Nice: 20, Tick: 2935
+*TID: 15, Nice: 20, Tick: 2936
+*TID: 12, Nice: 20, Tick: 2937
+Alabama
+Alaska
+Arizona
+*TID: 12, Nice: 20, Tick: 2941
+Arkansas
+California
+Colorado
+Connecticut
+Delaware
+Florida
+Georgia
+Hawaii
+Idaho
+Illinois
+Indiana
+Iowa
+Kansas
+Kentucky
+Louisiana
+Maine
+Maryland
+Massachusetts
+Michigan
+Minnesota
+Mississippi
+Missouri
+Montana
+Nebraska
+Nevada
+New Hampshire
+New Jersey
+New Mexico
+New York
+North Carolina
+North Dakota
+Ohio
+Oklahoma
+Oregon
+Pennsylvania
+Rhode Island
+South Carolina
+South Dakota
+Tennessee
+Texas
+Utah
+Vermont
+Virginia
+Washington
+West Virginia
+Wisconsin
+Wyoming
+*TID: 12, Nice: 20, Tick: 2988
+*TID: 12, Nice: 20, Tick: 2989
+cat-looper: exit(0)
+*TID: 13, Nice: 20, Tick: 2990
+*TID: 13, Nice: 20, Tick: 2989
+*TID: 13, Nice: 20, Tick: 2941
+*TID: 15, Nice: 20, Tick: 2993
+*TID: 15, Nice: 20, Tick: 2989
+*TID: 7, Nice: 20, Tick: 2993
+*TI*TID: 7, Nice: 20, Tick: 2997
+D: 7, Nice: 20, Tick: 2995
+nice: exit(0)
+*TID: 13, Nice: 20, Tick: 2999
+*TID: 13, Nice: 20, Tick: 2997
+*TID: 13, Nice: 20, Tick: 3002
+*TID: 13, Nice: 20, Tick: 3003
+*TID: 13, Nice: 20, Tick: 3004
+*TID: 13, Nice: 20, Tick: 3005
+*TID: 13, Nice: 20, Tick: 3006
+*TID: 13, Nice: 20, Tick: 3007
+*TID: 13, Nice: 20, Tick: 3008
+*TID: 13, Nice: 20, Tick: 3009
+*TID: 13, Nice: 20, Tick: 3010
+*TID: 13, Nice: 20, Tick: 3011
+*TID: 13, Nice: 20, Tick: 3012
+*TID: 13, Nice: 20, Tick: 3013
+*TID: 13, Nice: 20, Tick: 3014
+*TID: 13, Nice: 20, Tick: 3015
+*TID: 13, Nice: 20, Tick: 3016
+*TID: 13, Nice: 20, Tick: 3017
+*TID: 13, Nice: 20, Tick: 3018
+*TID: 13, Nice: 20, Tick: 3019
+*TID: 13, Nice: 20, Tick: 3020
+*TID: 13, Nice: 20, Tick: 3021
+*TID: 13, Nice: 20, Tick: 3022
+*TID: 13, Nice: 20, Tick: 3023
+*TID: 13, Nice: 20, Tick: 3024
+*TID: 13, Nice: 20, Tick: 3025
+*TID: 13, Nice: 20, Tick: 3026
+*TID: 15, Nice: 20, Tick: 3027
+*TID: 13, Nice: 20, Tick: 3028
+Alabama
+Alaska
+Arizona
+Arkan*TID: 13, Nice: 20, Tick: 3032
+sas
+California
+Colorado
+Connecticut
+Delaware
+Florida
+Georgia
+Hawaii
+Idaho
+Illinois
+Indiana
+Iowa
+Kansas
+Kentucky
+Louisiana
+Maine
+Maryland
+Massachusetts
+Michigan
+Minnesota
+Mississippi
+Missouri
+Montana
+Nebraska
+Nevada
+New Hampshire
+New Jersey
+New Mexico
+New York
+North Carolina
+North Dakota
+Ohio
+Oklahoma
+Oregon
+Pennsylvania
+Rhode Island
+South Carolina
+South Dakota
+Tennessee
+Texas
+Utah
+Vermont
+Virginia
+Washington
+West Virginia
+Wisconsin
+Wyoming
+*TID: 15, Nice: 20, Tick: 3078
+*TID: 15, Nice: 20, Tick: 3032
+*TID: 13, Nice: 20, Tick: 3080
+*TID: 13, Nice: 20, Tick: 3081
+*TID: 13, Nice: 20, Tick: 3082
+*TID: 13, Nice: 20, Tick: 3083
+*TID: 13, Nice: 20, Tick: 3084
+*TID: 13, Nice: 20, Tick: 3085
+*TID: 13, Nice: 20, Tick: 3086
+*TID: 13, Nice: 20, Tick: 3087
+*TID: 13, Nice: 20, Tick: 3088
+*TID: 13, Nice: 20, Tick: 3089
+*TID: 13, Nice: 20, Tick: 3090
+*TID: 13, Nice: 20, Tick: 3091
+*TID: 13, Nice: 20, Tick: 3092
+*TID: 13, Nice: 20, Tick: 3093
+*TID: 13, Nice: 20, Tick: 3094
+*TID: 13, Nice: 20, Tick: 3095
+*TID: 13, Nice: 20, Tick: 3096
+*TID: 13, Nice: 20, Tick: 3097
+*TID: 13, Nice: 20, Tick: 3098
+*TID: 13, Nice: 20, Tick: 3099
+*TID: 13, Nice: 20, Tick: 3100
+*TID: 13, Nice: 20, Tick: 3101
+*TID: 13, Nice: 20, Tick: 3102
+*TID: 13, Nice: 20, Tick: 3103
+*TID: 13, Nice: 20, Tick: 3104
+*TID: 13, Nice: 20, Tick: 3105
+*TID: 15, Nice: 20, Tick: 3106
+*TID: 13, Nice: 20, Tick: 3107
+Alabama
+Alaska
+Arizona
+*TID: 13, Nice: 20, Tick: 3111
+Arkansas
+California
+Colorado
+Connecticut
+Delaware
+Florida
+Georgia
+Hawaii
+Idaho
+Illinois
+Indiana
+Iowa
+Kansas
+Kentucky
+Louisiana
+Maine
+Maryland
+Massachusetts
+Michigan
+Minnesota
+Mississippi
+Missouri
+Montana
+Nebraska
+Nevada
+New Hampshire
+New Jersey
+New Mexico
+New York
+North Carolina
+North Dakota
+Ohio
+Oklahoma
+Oregon
+Pennsylvania
+Rhode Island
+South Carolina
+South Dakota
+Tennessee
+Texas
+Utah
+Vermont
+Virginia
+Washington
+West Virginia
+Wisconsin
+Wyoming
+*TID: 15, Nice: 20, Tick: 3158
+*TID: 15, Nice: 20, Tick: 3111
+*TID: 13, Nice: 20, Tick: 3160
+*TID: 13, Nice: 20, Tick: 3161
+*TID: 13, Nice: 20, Tick: 3162
+*TID: 13, Nice: 20, Tick: 3163
+*TID: 13, Nice: 20, Tick: 3164
+*TID: 13, Nice: 20, Tick: 3165
+*TID: 13, Nice: 20, Tick: 3166
+*TID: 13, Nice: 20, Tick: 3167
+*TID: 13, Nice: 20, Tick: 3168
+*TID: 13, Nice: 20, Tick: 3169
+*TID: 13, Nice: 20, Tick: 3170
+*TID: 13, Nice: 20, Tick: 3171
+*TID: 13, Nice: 20, Tick: 3172
+*TID: 13, Nice: 20, Tick: 3173
+*TID: 13, Nice: 20, Tick: 3174
+*TID: 13, Nice: 20, Tick: 3175
+*TID: 13, Nice: 20, Tick: 3176
+*TID: 13, Nice: 20, Tick: 3177
+*TID: 13, Nice: 20, Tick: 3178
+*TID: 13, Nice: 20, Tick: 3179
+*TID: 13, Nice: 20, Tick: 3180
+*TID: 13, Nice: 20, Tick: 3181
+*TID: 13, Nice: 20, Tick: 3182
+*TID: 13, Nice: 20, Tick: 3183
+*TID: 13, Nice: 20, Tick: 3184
+*TID: 13, Nice: 20, Tick: 3185
+*TID: 15, Nice: 20, Tick: 3186
+*TID: 13, Nice: 20, Tick: 3187
+Alabama
+Alaska
+Arizona
+*TID: 13, Nice: 20, Tick: 3191
+Arkansas
+California
+Colorado
+Connecticut
+Delaware
+Florida
+Georgia
+Hawaii
+Idaho
+Illinois
+Indiana
+Iowa
+Kansas
+Kentucky
+Louisiana
+Maine
+Maryland
+Massachusetts
+Michigan
+Minnesota
+Mississippi
+Missouri
+Montana
+Nebraska
+Nevada
+New Hampshire
+New Jersey
+New Mexico
+New York
+North Carolina
+North Dakota
+Ohio
+Oklahoma
+Oregon
+Pennsylvania
+Rhode Island
+South Carolina
+South Dakota
+Tennessee
+Texas
+Utah
+Vermont
+Virginia
+Washington
+West Virginia
+Wisconsin
+Wyoming
+*TID: 15, Nice: 20, Tick: 3238
+*TID: 15, Nice: 20, Tick: 3191
+*TID: 13, Nice: 20, Tick: 3240
+*TID: 13, Nice: 20, Tick: 3241
+*TID: 13, Nice: 20, Tick: 3242
+*TID: 13, Nice: 20, Tick: 3243
+*TID: 13, Nice: 20, Tick: 3244
+*TID: 13, Nice: 20, Tick: 3245
+*TID: 13, Nice: 20, Tick: 3246
+*TID: 13, Nice: 20, Tick: 3247
+*TID: 13, Nice: 20, Tick: 3248
+*TID: 13, Nice: 20, Tick: 3249
+*TID: 13, Nice: 20, Tick: 3250
+*TID: 13, Nice: 20, Tick: 3251
+*TID: 13, Nice: 20, Tick: 3252
+*TID: 13, Nice: 20, Tick: 3253
+*TID: 13, Nice: 20, Tick: 3254
+*TID: 13, Nice: 20, Tick: 3255
+*TID: 13, Nice: 20, Tick: 3256
+*TID: 13, Nice: 20, Tick: 3257
+*TID: 13, Nice: 20, Tick: 3258
+*TID: 13, Nice: 20, Tick: 3259
+*TID: 13, Nice: 20, Tick: 3260
+*TID: 13, Nice: 20, Tick: 3261
+*TID: 13, Nice: 20, Tick: 3262
+*TID: 13, Nice: 20, Tick: 3263
+*TID: 13, Nice: 20, Tick: 3264
+*TID: 13, Nice: 20, Tick: 3265
+*TID: 15, Nice: 20, Tick: 3266
+*TID: 13, Nice: 20, Tick: 3267
+Alabama
+Alaska
+Arizona
+*TID: 13, Nice: 20, Tick: 3271
+Arkansas
+California
+Colorado
+Connecticut
+Delaware
+Florida
+Georgia
+Hawaii
+Idaho
+Illinois
+Indiana
+Iowa
+Kansas
+Kentucky
+Louisiana
+Maine
+Maryland
+Massachusetts
+Michigan
+Minnesota
+Mississippi
+Missouri
+Montana
+Nebraska
+Nevada
+New Hampshire
+New Jersey
+New Mexico
+New York
+North Carolina
+North Dakota
+Ohio
+Oklahoma
+Oregon
+Pennsylvania
+Rhode Island
+South Carolina
+South Dakota
+Tennessee
+Texas
+Utah
+Vermont
+Virginia
+Washington
+West Virginia
+Wisconsin
+Wyoming
+*TID: 15, Nice: 20, Tick: 3318
+*TID: 15, Nice: 20, Tick: 3271
+*TID: 13, Nice: 20, Tick: 3319
+*TID: 13, Nice: 20, Tick: 3320
+*TID: 13, Nice: 20, Tick: 3321
+*TID: 13, Nice: 20, Tick: 3322
+*TID: 13, Nice: 20, Tick: 3323
+*TID: 13, Nice: 20, Tick: 3324
+*TID: 13, Nice: 20, Tick: 3325
+*TID: 13, Nice: 20, Tick: 3326
+*TID: 13, Nice: 20, Tick: 3327
+*TID: 13, Nice: 20, Tick: 3328
+*TID: 13, Nice: 20, Tick: 3329
+*TID: 13, Nice: 20, Tick: 3330
+*TID: 13, Nice: 20, Tick: 3331
+*TID: 13, Nice: 20, Tick: 3332
+*TID: 13, Nice: 20, Tick: 3333
+*TID: 13, Nice: 20, Tick: 3334
+*TID: 13, Nice: 20, Tick: 3335
+*TID: 13, Nice: 20, Tick: 3336
+*TID: 13, Nice: 20, Tick: 3337
+*TID: 13, Nice: 20, Tick: 3338
+*TID: 13, Nice: 20, Tick: 3339
+*TID: 13, Nice: 20, Tick: 3340
+*TID: 13, Nice: 20, Tick: 3341
+*TID: 13, Nice: 20, Tick: 3342
+*TID: 13, Nice: 20, Tick: 3343
+*TID: 13, Nice: 20, Tick: 3344
+*TID: 15, Nice: 20, Tick: 3345
+*TID: 13, Nice: 20, Tick: 3346
+Alabama
+Alaska
+Arizona
+*TID: 13, Nice: 20, Tick: 3350
+Arkansas
+California
+Colorado
+Connecticut
+Delaware
+Florida
+Georgia
+Hawaii
+Idaho
+Illinois
+Indiana
+Iowa
+Kansas
+Kentucky
+Louisiana
+Maine
+Maryland
+Massachusetts
+Michigan
+Minnesota
+Mississippi
+Missouri
+Montana
+Nebraska
+Nevada
+New Hampshire
+New Jersey
+New Mexico
+New York
+North Carolina
+North Dakota
+Ohio
+Oklahoma
+Oregon
+Pennsylvania
+Rhode Island
+South Carolina
+South Dakota
+Tennessee
+Texas
+Utah
+Vermont
+Virginia
+Washington
+West Virginia
+Wisconsin
+Wyoming
+*TID: 15, Nice: 20, Tick: 3397
+*TID: 15, Nice: 20, Tick: 3350
+*TID: 13, Nice: 20, Tick: 3399
+*TID: 13, Nice: 20, Tick: 3400
+*TID: 13, Nice: 20, Tick: 3401
+*TID: 13, Nice: 20, Tick: 3402
+*TID: 13, Nice: 20, Tick: 3403
+*TID: 13, Nice: 20, Tick: 3404
+*TID: 13, Nice: 20, Tick: 3405
+*TID: 13, Nice: 20, Tick: 3406
+*TID: 13, Nice: 20, Tick: 3407
+*TID: 13, Nice: 20, Tick: 3408
+*TID: 13, Nice: 20, Tick: 3409
+*TID: 13, Nice: 20, Tick: 3410
+*TID: 13, Nice: 20, Tick: 3411
+*TID: 13, Nice: 20, Tick: 3412
+*TID: 13, Nice: 20, Tick: 3413
+*TID: 13, Nice: 20, Tick: 3414
+*TID: 13, Nice: 20, Tick: 3415
+*TID: 13, Nice: 20, Tick: 3416
+*TID: 13, Nice: 20, Tick: 3417
+*TID: 13, Nice: 20, Tick: 3418
+*TID: 13, Nice: 20, Tick: 3419
+*TID: 13, Nice: 20, Tick: 3420
+*TID: 13, Nice: 20, Tick: 3421
+*TID: 13, Nice: 20, Tick: 3422
+*TID: 13, Nice: 20, Tick: 3423
+*TID: 13, Nice: 20, Tick: 3424
+*TID: 15, Nice: 20, Tick: 3425
+*TID: 13, Nice: 20, Tick: 3426
+Alabama
+Alaska
+Arizona
+*TID: 13, Nice: 20, Tick: 3430
+Arkansas
+California
+Colorado
+Connecticut
+Delaware
+Florida
+Georgia
+Hawaii
+Idaho
+Illinois
+Indiana
+Iowa
+Kansas
+Kentucky
+Louisiana
+Maine
+Maryland
+Massachusetts
+Michigan
+Minnesota
+Mississippi
+Missouri
+Montana
+Nebraska
+Nevada
+New Hampshire
+New Jersey
+New Mexico
+New York
+North Carolina
+North Dakota
+Ohio
+Oklahoma
+Oregon
+Pennsylvania
+Rhode Island
+South Carolina
+South Dakota
+Tennessee
+Texas
+Utah
+Vermont
+Virginia
+Washington
+West Virginia
+Wisconsin
+Wyoming
+*TID: 15, Nice: 20, Tick: 3477
+*TID: 15, Nice: 20, Tick: 3430
+*TID: 13, Nice: 20, Tick: 3479
+*TID: 13, Nice: 20, Tick: 3480
+*TID: 13, Nice: 20, Tick: 3481
+*TID: 13, Nice: 20, Tick: 3482
+*TID: 13, Nice: 20, Tick: 3483
+*TID: 13, Nice: 20, Tick: 3484
+*TID: 13, Nice: 20, Tick: 3485
+*TID: 13, Nice: 20, Tick: 3486
+*TID: 13, Nice: 20, Tick: 3487
+*TID: 13, Nice: 20, Tick: 3488
+*TID: 13, Nice: 20, Tick: 3489
+*TID: 13, Nice: 20, Tick: 3490
+*TID: 13, Nice: 20, Tick: 3491
+*TID: 13, Nice: 20, Tick: 3492
+*TID: 13, Nice: 20, Tick: 3493
+*TID: 13, Nice: 20, Tick: 3494
+*TID: 13, Nice: 20, Tick: 3495
+*TID: 13, Nice: 20, Tick: 3496
+*TID: 13, Nice: 20, Tick: 3497
+*TID: 13, Nice: 20, Tick: 3498
+*TID: 13, Nice: 20, Tick: 3499
+*TID: 13, Nice: 20, Tick: 3500
+*TID: 13, Nice: 20, Tick: 3501
+*TID: 13, Nice: 20, Tick: 3502
+*TID: 13, Nice: 20, Tick: 3503
+*TID: 13, Nice: 20, Tick: 3504
+*TID: 15, Nice: 20, Tick: 3505
+*TID: 13, Nice: 20, Tick: 3506
+Alabama
+Alaska
+Arizona
+*TID: 13, Nice: 20, Tick: 3510
+Arkansas
+California
+Colorado
+Connecticut
+Delaware
+Florida
+Georgia
+Hawaii
+Idaho
+Illinois
+Indiana
+Iowa
+Kansas
+Kentucky
+Louisiana
+Maine
+Maryland
+Massachusetts
+Michigan
+Minnesota
+Mississippi
+Missouri
+Montana
+Nebraska
+Nevada
+New Hampshire
+New Jersey
+New Mexico
+New York
+North Carolina
+North Dakota
+Ohio
+Oklahoma
+Oregon
+Pennsylvania
+Rhode Island
+South Carolina
+South Dakota
+Tennessee
+Texas
+Utah
+Vermont
+Virginia
+Washington
+West Virginia
+Wisconsin
+Wyoming
+*TID: 15, Nice: 20, Tick: 3557
+*TID: 15, Nice: 20, Tick: 3510
+*TID: 13, Nice: 20, Tick: 3559
+*TID: 13, Nice: 20, Tick: 3560
+*TID: 13, Nice: 20, Tick: 3561
+*TID: 13, Nice: 20, Tick: 3562
+*TID: 13, Nice: 20, Tick: 3563
+*TID: 13, Nice: 20, Tick: 3564
+*TID: 13, Nice: 20, Tick: 3565
+*TID: 13, Nice: 20, Tick: 3566
+*TID: 13, Nice: 20, Tick: 3567
+*TID: 13, Nice: 20, Tick: 3568
+*TID: 13, Nice: 20, Tick: 3569
+*TID: 13, Nice: 20, Tick: 3570
+*TID: 13, Nice: 20, Tick: 3571
+*TID: 13, Nice: 20, Tick: 3572
+*TID: 13, Nice: 20, Tick: 3573
+*TID: 13, Nice: 20, Tick: 3574
+*TID: 13, Nice: 20, Tick: 3575
+*TID: 13, Nice: 20, Tick: 3576
+*TID: 13, Nice: 20, Tick: 3577
+*TID: 13, Nice: 20, Tick: 3578
+*TID: 13, Nice: 20, Tick: 3579
+*TID: 13, Nice: 20, Tick: 3580
+*TID: 13, Nice: 20, Tick: 3581
+*TID: 13, Nice: 20, Tick: 3582
+*TID: 13, Nice: 20, Tick: 3583
+*TID: 13, Nice: 20, Tick: 3584
+*TID: 15, Nice: 20, Tick: 3585
+*TID: 13, Nice: 20, Tick: 3586
+Alabama
+Alaska
+Arizona
+Arkansas
+*TID: 13, Nice: 20, Tick: 3590
+California
+Colorado
+Connecticut
+Delaware
+Florida
+Georgia
+Hawaii
+Idaho
+Illinois
+Indiana
+Iowa
+Kansas
+Kentucky
+Louisiana
+Maine
+Maryland
+Massachusetts
+Michigan
+Minnesota
+Mississippi
+Missouri
+Montana
+Nebraska
+Nevada
+New Hampshire
+New Jersey
+New Mexico
+New York
+North Carolina
+North Dakota
+Ohio
+Oklahoma
+Oregon
+Pennsylvania
+Rhode Island
+South Carolina
+South Dakota
+Tennessee
+Texas
+Utah
+Vermont
+Virginia
+Washington
+West Virginia
+Wisconsin
+Wyoming
+*TID: 15, Nice: 20, Tick: 3636
+*TID: 15, Nice: 20, Tick: 3590
+*TID: 13, Nice: 20, Tick: 3638
+*TID: 13, Nice: 20, Tick: 3639
+*TID: 13, Nice: 20, Tick: 3640
+*TID: 13, Nice: 20, Tick: 3641
+*TID: 13, Nice: 20, Tick: 3642
+*TID: 13, Nice: 20, Tick: 3643
+*TID: 13, Nice: 20, Tick: 3644
+*TID: 13, Nice: 20, Tick: 3645
+*TID: 13, Nice: 20, Tick: 3646
+*TID: 13, Nice: 20, Tick: 3647
+*TID: 13, Nice: 20, Tick: 3648
+*TID: 13, Nice: 20, Tick: 3649
+*TID: 13, Nice: 20, Tick: 3650
+*TID: 13, Nice: 20, Tick: 3651
+*TID: 13, Nice: 20, Tick: 3652
+*TID: 13, Nice: 20, Tick: 3653
+*TID: 13, Nice: 20, Tick: 3654
+*TID: 13, Nice: 20, Tick: 3655
+*TID: 13, Nice: 20, Tick: 3656
+*TID: 13, Nice: 20, Tick: 3657
+*TID: 13, Nice: 20, Tick: 3658
+*TID: 13, Nice: 20, Tick: 3659
+*TID: 13, Nice: 20, Tick: 3660
+*TID: 13, Nice: 20, Tick: 3661
+*TID: 13, Nice: 20, Tick: 3662
+*TID: 13, Nice: 20, Tick: 3663
+*TID: 15, Nice: 20, Tick: 3664
+*TID: 13, Nice: 20, Tick: 3665
+Alabama
+Alaska
+Arizona
+*TID: 13, Nice: 20, Tick: 3669
+Arkansas
+California
+Colorado
+Connecticut
+Delaware
+Florida
+Georgia
+Hawaii
+Idaho
+Illinois
+Indiana
+Iowa
+Kansas
+Kentucky
+Louisiana
+Maine
+Maryland
+Massachusetts
+Michigan
+Minnesota
+Mississippi
+Missouri
+Montana
+Nebraska
+Nevada
+New Hampshire
+New Jersey
+New Mexico
+New York
+North Carolina
+North Dakota
+Ohio
+Oklahoma
+Oregon
+Pennsylvania
+Rhode Island
+South Carolina
+South Dakota
+Tennessee
+Texas
+Utah
+Vermont
+Virginia
+Washington
+West Virginia
+Wisconsin
+Wyoming
+*TID: 15, Nice: 20, Tick: 3716
+*TID: 15, Nice: 20, Tick: 3669
+*TID: 13, Nice: 20, Tick: 3718
+*TID: 13, Nice: 20, Tick: 3719
+*TID: 13, Nice: 20, Tick: 3720
+*TID: 13, Nice: 20, Tick: 3721
+*TID: 13, Nice: 20, Tick: 3722
+*TID: 13, Nice: 20, Tick: 3723
+*TID: 13, Nice: 20, Tick: 3724
+*TID: 13, Nice: 20, Tick: 3725
+*TID: 13, Nice: 20, Tick: 3726
+*TID: 13, Nice: 20, Tick: 3727
+*TID: 13, Nice: 20, Tick: 3728
+*TID: 13, Nice: 20, Tick: 3729
+*TID: 13, Nice: 20, Tick: 3730
+*TID: 13, Nice: 20, Tick: 3731
+*TID: 13, Nice: 20, Tick: 3732
+*TID: 13, Nice: 20, Tick: 3733
+*TID: 13, Nice: 20, Tick: 3734
+*TID: 13, Nice: 20, Tick: 3735
+*TID: 13, Nice: 20, Tick: 3736
+*TID: 13, Nice: 20, Tick: 3737
+*TID: 13, Nice: 20, Tick: 3738
+*TID: 13, Nice: 20, Tick: 3739
+*TID: 13, Nice: 20, Tick: 3740
+*TID: 13, Nice: 20, Tick: 3741
+*TID: 13, Nice: 20, Tick: 3742
+*TID: 13, Nice: 20, Tick: 3743
+*TID: 15, Nice: 20, Tick: 3744
+*TID: 13, Nice: 20, Tick: 3745
+Alabama
+Alaska
+Arizona
+*TID: 13, Nice: 20, Tick: 3749
+Arkansas
+California
+Colorado
+Connecticut
+Delaware
+Florida
+Georgia
+Hawaii
+Idaho
+Illinois
+Indiana
+Iowa
+Kansas
+Kentucky
+Louisiana
+Maine
+Maryland
+Massachusetts
+Michigan
+Minnesota
+Mississippi
+Missouri
+Montana
+Nebraska
+Nevada
+New Hampshire
+New Jersey
+New Mexico
+New York
+North Carolina
+North Dakota
+Ohio
+Oklahoma
+Oregon
+Pennsylvania
+Rhode Island
+South Carolina
+South Dakota
+Tennessee
+Texas
+Utah
+Vermont
+Virginia
+Washington
+West Virginia
+Wisconsin
+Wyoming
+*TID: 13, Nice: 20, Tick: 3795
+*TID: 13, Nice: 20, Tick: 3797
+cat-looper: exit(0)
+*TID: 15, Nice: 20, Tick: 3798
+*TID: 15, Nice: 20, Tick: 3797
+*TID: 15, Nice: 20, Tick: 3749
+*TID: 5, Nice: 20, Tick: 3801
+*TID: 5, Nice: 20, Tick: 3802
+nice: exit(0)
+*TID: 15, Nice: 20, Tick: 3803
+*TID: 15, Nice: 20, Tick: 3805
+*TID: 15, Nice: 20, Tick: 3806
+*TID: 15, Nice: 20, Tick: 3807
+*TID: 15, Nice: 20, Tick: 3808
+*TID: 15, Nice: 20, Tick: 3809
+*TID: 15, Nice: 20, Tick: 3810
+*TID: 15, Nice: 20, Tick: 3811
+*TID: 15, Nice: 20, Tick: 3812
+*TID: 15, Nice: 20, Tick: 3813
+*TID: 15, Nice: 20, Tick: 3814
+*TID: 15, Nice: 20, Tick: 3815
+*TID: 15, Nice: 20, Tick: 3816
+*TID: 15, Nice: 20, Tick: 3817
+*TID: 15, Nice: 20, Tick: 3818
+*TID: 15, Nice: 20, Tick: 3819
+*TID: 15, Nice: 20, Tick: 3820
+*TID: 15, Nice: 20, Tick: 3821
+*TID: 15, Nice: 20, Tick: 3822
+*TID: 15, Nice: 20, Tick: 3823
+*TID: 15, Nice: 20, Tick: 3824
+*TID: 15, Nice: 20, Tick: 3825
+*TID: 15, Nice: 20, Tick: 3826
+*TID: 15, Nice: 20, Tick: 3827
+*TID: 15, Nice: 20, Tick: 3828
+*TID: 15, Nice: 20, Tick: 3829
+*TID: 15, Nice: 20, Tick: 3830
+Alabama
+Alaska
+Arizona
+Arkansas
+California
+Colorado
+Connecticut
+Delaware
+Florida
+Georgia
+Hawaii
+Idaho
+Illinois
+Indiana
+Iowa
+Kansas
+Kentucky
+Louisiana
+Maine
+Maryland
+Massachusetts
+Michigan
+Minnesota
+Mississippi
+Missouri
+Montana
+Nebraska
+Nevada
+New Hampshire
+New Jersey
+New Mexico
+New York
+North Carolina
+North Dakota
+Ohio
+Oklahoma
+Oregon
+Pennsylvania
+Rhode Island
+South Carolina
+South Dakota
+Tennessee
+Texas
+Utah
+Vermont
+Virginia
+Washington
+West Virginia
+Wisconsin
+Wyoming
+*TID: 15, Nice: 20, Tick: 3880
+*TID: 15, Nice: 20, Tick: 3881
+*TID: 15, Nice: 20, Tick: 3882
+*TID: 15, Nice: 20, Tick: 3883
+*TID: 15, Nice: 20, Tick: 3884
+*TID: 15, Nice: 20, Tick: 3885
+*TID: 15, Nice: 20, Tick: 3886
+*TID: 15, Nice: 20, Tick: 3887
+*TID: 15, Nice: 20, Tick: 3888
+*TID: 15, Nice: 20, Tick: 3889
+*TID: 15, Nice: 20, Tick: 3890
+*TID: 15, Nice: 20, Tick: 3891
+*TID: 15, Nice: 20, Tick: 3892
+*TID: 15, Nice: 20, Tick: 3893
+*TID: 15, Nice: 20, Tick: 3894
+*TID: 15, Nice: 20, Tick: 3895
+*TID: 15, Nice: 20, Tick: 3896
+*TID: 15, Nice: 20, Tick: 3897
+*TID: 15, Nice: 20, Tick: 3898
+*TID: 15, Nice: 20, Tick: 3899
+*TID: 15, Nice: 20, Tick: 3900
+*TID: 15, Nice: 20, Tick: 3901
+*TID: 15, Nice: 20, Tick: 3902
+*TID: 15, Nice: 20, Tick: 3903
+*TID: 15, Nice: 20, Tick: 3904
+*TID: 15, Nice: 20, Tick: 3905
+*TID: 15, Nice: 20, Tick: 3906
+Alabama
+Alaska
+Arizona
+Arkansas
+California
+Colorado
+Connecticut
+Delaware
+Florida
+Georgia
+Hawaii
+Idaho
+Illinois
+Indiana
+Iowa
+Kansas
+Kentucky
+Louisiana
+Maine
+Maryland
+Massachusetts
+Michigan
+Minnesota
+Mississippi
+Missouri
+Montana
+Nebraska
+Nevada
+New Hampshire
+New Jersey
+New Mexico
+New York
+North Carolina
+North Dakota
+Ohio
+Oklahoma
+Oregon
+Pennsylvania
+Rhode Island
+South Carolina
+South Dakota
+Tennessee
+Texas
+Utah
+Vermont
+Virginia
+Washington
+West Virginia
+Wisconsin
+Wyoming
+*TID: 15, Nice: 20, Tick: 3956
+*TID: 15, Nice: 20, Tick: 3957
+*TID: 15, Nice: 20, Tick: 3958
+*TID: 15, Nice: 20, Tick: 3959
+*TID: 15, Nice: 20, Tick: 3960
+*TID: 15, Nice: 20, Tick: 3961
+*TID: 15, Nice: 20, Tick: 3962
+*TID: 15, Nice: 20, Tick: 3963
+*TID: 15, Nice: 20, Tick: 3964
+*TID: 15, Nice: 20, Tick: 3965
+*TID: 15, Nice: 20, Tick: 3966
+*TID: 15, Nice: 20, Tick: 3967
+*TID: 15, Nice: 20, Tick: 3968
+*TID: 15, Nice: 20, Tick: 3969
+*TID: 15, Nice: 20, Tick: 3970
+*TID: 15, Nice: 20, Tick: 3971
+*TID: 15, Nice: 20, Tick: 3972
+*TID: 15, Nice: 20, Tick: 3973
+*TID: 15, Nice: 20, Tick: 3974
+*TID: 15, Nice: 20, Tick: 3975
+*TID: 15, Nice: 20, Tick: 3976
+*TID: 15, Nice: 20, Tick: 3977
+*TID: 15, Nice: 20, Tick: 3978
+*TID: 15, Nice: 20, Tick: 3979
+*TID: 15, Nice: 20, Tick: 3980
+*TID: 15, Nice: 20, Tick: 3981
+*TID: 15, Nice: 20, Tick: 3982
+Alabama
+Alaska
+Arizona
+Arkansas
+California
+Colorado
+Connecticut
+Delaware
+Florida
+Georgia
+Hawaii
+Idaho
+Illinois
+Indiana
+Iowa
+Kansas
+Kentucky
+Louisiana
+Maine
+Maryland
+Massachusetts
+Michigan
+Minnesota
+Mississippi
+Missouri
+Montana
+Nebraska
+Nevada
+New Hampshire
+New Jersey
+New Mexico
+New York
+North Carolina
+North Dakota
+Ohio
+Oklahoma
+Oregon
+Pennsylvania
+Rhode Island
+South Carolina
+South Dakota
+Tennessee
+Texas
+Utah
+Vermont
+Virginia
+Washington
+West Virginia
+Wisconsin
+Wyoming
+*TID: 15, Nice: 20, Tick: 4032
+*TID: 15, Nice: 20, Tick: 4033
+*TID: 15, Nice: 20, Tick: 4034
+*TID: 15, Nice: 20, Tick: 4035
+*TID: 15, Nice: 20, Tick: 4036
+*TID: 15, Nice: 20, Tick: 4037
+*TID: 15, Nice: 20, Tick: 4038
+*TID: 15, Nice: 20, Tick: 4039
+*TID: 15, Nice: 20, Tick: 4040
+*TID: 15, Nice: 20, Tick: 4041
+*TID: 15, Nice: 20, Tick: 4042
+*TID: 15, Nice: 20, Tick: 4043
+*TID: 15, Nice: 20, Tick: 4044
+*TID: 15, Nice: 20, Tick: 4045
+*TID: 15, Nice: 20, Tick: 4046
+*TID: 15, Nice: 20, Tick: 4047
+*TID: 15, Nice: 20, Tick: 4048
+*TID: 15, Nice: 20, Tick: 4049
+*TID: 15, Nice: 20, Tick: 4050
+*TID: 15, Nice: 20, Tick: 4051
+*TID: 15, Nice: 20, Tick: 4052
+*TID: 15, Nice: 20, Tick: 4053
+*TID: 15, Nice: 20, Tick: 4054
+*TID: 15, Nice: 20, Tick: 4055
+*TID: 15, Nice: 20, Tick: 4056
+*TID: 15, Nice: 20, Tick: 4057
+*TID: 15, Nice: 20, Tick: 4058
+Alabama
+Alaska
+Arizona
+Arkansas
+California
+Colorado
+Connecticut
+Delaware
+Florida
+Georgia
+Hawaii
+Idaho
+Illinois
+Indiana
+Iowa
+Kansas
+Kentucky
+Louisiana
+Maine
+Maryland
+Massachusetts
+Michigan
+Minnesota
+Mississippi
+Missouri
+Montana
+Nebraska
+Nevada
+New Hampshire
+New Jersey
+New Mexico
+New York
+North Carolina
+North Dakota
+Ohio
+Oklahoma
+Oregon
+Pennsylvania
+Rhode Island
+South Carolina
+South Dakota
+Tennessee
+Texas
+Utah
+Vermont
+Virginia
+Washington
+West Virginia
+Wisconsin
+Wyoming
+*TID: 15, Nice: 20, Tick: 4108
+*TID: 15, Nice: 20, Tick: 4109
+*TID: 15, Nice: 20, Tick: 4110
+*TID: 15, Nice: 20, Tick: 4111
+*TID: 15, Nice: 20, Tick: 4112
+*TID: 15, Nice: 20, Tick: 4113
+*TID: 15, Nice: 20, Tick: 4114
+*TID: 15, Nice: 20, Tick: 4115
+*TID: 15, Nice: 20, Tick: 4116
+*TID: 15, Nice: 20, Tick: 4117
+*TID: 15, Nice: 20, Tick: 4118
+*TID: 15, Nice: 20, Tick: 4119
+*TID: 15, Nice: 20, Tick: 4120
+*TID: 15, Nice: 20, Tick: 4121
+*TID: 15, Nice: 20, Tick: 4122
+*TID: 15, Nice: 20, Tick: 4123
+*TID: 15, Nice: 20, Tick: 4124
+*TID: 15, Nice: 20, Tick: 4125
+*TID: 15, Nice: 20, Tick: 4126
+*TID: 15, Nice: 20, Tick: 4127
+*TID: 15, Nice: 20, Tick: 4128
+*TID: 15, Nice: 20, Tick: 4129
+*TID: 15, Nice: 20, Tick: 4130
+*TID: 15, Nice: 20, Tick: 4131
+*TID: 15, Nice: 20, Tick: 4132
+*TID: 15, Nice: 20, Tick: 4133
+*TID: 15, Nice: 20, Tick: 4134
+Alabama
+Alaska
+Arizona
+Arkansas
+California
+Colorado
+Connecticut
+Delaware
+Florida
+Georgia
+Hawaii
+Idaho
+Illinois
+Indiana
+Iowa
+Kansas
+Kentucky
+Louisiana
+Maine
+Maryland
+Massachusetts
+Michigan
+Minnesota
+Mississippi
+Missouri
+Montana
+Nebraska
+Nevada
+New Hampshire
+New Jersey
+New Mexico
+New York
+North Carolina
+North Dakota
+Ohio
+Oklahoma
+Oregon
+Pennsylvania
+Rhode Island
+South Carolina
+South Dakota
+Tennessee
+Texas
+Utah
+Vermont
+Virginia
+Washington
+West Virginia
+Wisconsin
+Wyoming
+*TID: 15, Nice: 20, Tick: 4184
+*TID: 15, Nice: 20, Tick: 4185
+*TID: 15, Nice: 20, Tick: 4186
+*TID: 15, Nice: 20, Tick: 4187
+*TID: 15, Nice: 20, Tick: 4188
+*TID: 15, Nice: 20, Tick: 4189
+*TID: 15, Nice: 20, Tick: 4190
+*TID: 15, Nice: 20, Tick: 4191
+*TID: 15, Nice: 20, Tick: 4192
+*TID: 15, Nice: 20, Tick: 4193
+*TID: 15, Nice: 20, Tick: 4194
+*TID: 15, Nice: 20, Tick: 4195
+*TID: 15, Nice: 20, Tick: 4196
+*TID: 15, Nice: 20, Tick: 4197
+*TID: 15, Nice: 20, Tick: 4198
+*TID: 15, Nice: 20, Tick: 4199
+*TID: 15, Nice: 20, Tick: 4200
+*TID: 15, Nice: 20, Tick: 4201
+*TID: 15, Nice: 20, Tick: 4202
+*TID: 15, Nice: 20, Tick: 4203
+*TID: 15, Nice: 20, Tick: 4204
+*TID: 15, Nice: 20, Tick: 4205
+*TID: 15, Nice: 20, Tick: 4206
+*TID: 15, Nice: 20, Tick: 4207
+*TID: 15, Nice: 20, Tick: 4208
+*TID: 15, Nice: 20, Tick: 4209
+*TID: 15, Nice: 20, Tick: 4210
+Alabama
+Alaska
+Arizona
+Arkansas
+California
+Colorado
+Connecticut
+Delaware
+Florida
+Georgia
+Hawaii
+Idaho
+Illinois
+Indiana
+Iowa
+Kansas
+Kentucky
+Louisiana
+Maine
+Maryland
+Massachusetts
+Michigan
+Minnesota
+Mississippi
+Missouri
+Montana
+Nebraska
+Nevada
+New Hampshire
+New Jersey
+New Mexico
+New York
+North Carolina
+North Dakota
+Ohio
+Oklahoma
+Oregon
+Pennsylvania
+Rhode Island
+South Carolina
+South Dakota
+Tennessee
+Texas
+Utah
+Vermont
+Virginia
+Washington
+West Virginia
+Wisconsin
+Wyoming
+*TID: 15, Nice: 20, Tick: 4260
+*TID: 15, Nice: 20, Tick: 4261
+*TID: 15, Nice: 20, Tick: 4262
+*TID: 15, Nice: 20, Tick: 4263
+*TID: 15, Nice: 20, Tick: 4264
+*TID: 15, Nice: 20, Tick: 4265
+*TID: 15, Nice: 20, Tick: 4266
+*TID: 15, Nice: 20, Tick: 4267
+*TID: 15, Nice: 20, Tick: 4268
+*TID: 15, Nice: 20, Tick: 4269
+*TID: 15, Nice: 20, Tick: 4270
+*TID: 15, Nice: 20, Tick: 4271
+*TID: 15, Nice: 20, Tick: 4272
+*TID: 15, Nice: 20, Tick: 4273
+*TID: 15, Nice: 20, Tick: 4274
+*TID: 15, Nice: 20, Tick: 4275
+*TID: 15, Nice: 20, Tick: 4276
+*TID: 15, Nice: 20, Tick: 4277
+*TID: 15, Nice: 20, Tick: 4278
+*TID: 15, Nice: 20, Tick: 4279
+*TID: 15, Nice: 20, Tick: 4280
+*TID: 15, Nice: 20, Tick: 4281
+*TID: 15, Nice: 20, Tick: 4282
+*TID: 15, Nice: 20, Tick: 4283
+*TID: 15, Nice: 20, Tick: 4284
+*TID: 15, Nice: 20, Tick: 4285
+*TID: 15, Nice: 20, Tick: 4286
+Alabama
+Alaska
+Arizona
+Arkansas
+California
+Colorado
+Connecticut
+Delaware
+Florida
+Georgia
+Hawaii
+Idaho
+Illinois
+Indiana
+Iowa
+Kansas
+Kentucky
+Louisiana
+Maine
+Maryland
+Massachusetts
+Michigan
+Minnesota
+Mississippi
+Missouri
+Montana
+Nebraska
+Nevada
+New Hampshire
+New Jersey
+New Mexico
+New York
+North Carolina
+North Dakota
+Ohio
+Oklahoma
+Oregon
+Pennsylvania
+Rhode Island
+South Carolina
+South Dakota
+Tennessee
+Texas
+Utah
+Vermont
+Virginia
+Washington
+West Virginia
+Wisconsin
+Wyoming
+*TID: 15, Nice: 20, Tick: 4335
+*TID: 15, Nice: 20, Tick: 4336
+*TID: 15, Nice: 20, Tick: 4337
+*TID: 15, Nice: 20, Tick: 4338
+*TID: 15, Nice: 20, Tick: 4339
+*TID: 15, Nice: 20, Tick: 4340
+*TID: 15, Nice: 20, Tick: 4341
+*TID: 15, Nice: 20, Tick: 4342
+*TID: 15, Nice: 20, Tick: 4343
+*TID: 15, Nice: 20, Tick: 4344
+*TID: 15, Nice: 20, Tick: 4345
+*TID: 15, Nice: 20, Tick: 4346
+*TID: 15, Nice: 20, Tick: 4347
+*TID: 15, Nice: 20, Tick: 4348
+*TID: 15, Nice: 20, Tick: 4349
+*TID: 15, Nice: 20, Tick: 4350
+*TID: 15, Nice: 20, Tick: 4351
+*TID: 15, Nice: 20, Tick: 4352
+*TID: 15, Nice: 20, Tick: 4353
+*TID: 15, Nice: 20, Tick: 4354
+*TID: 15, Nice: 20, Tick: 4355
+*TID: 15, Nice: 20, Tick: 4356
+*TID: 15, Nice: 20, Tick: 4357
+*TID: 15, Nice: 20, Tick: 4358
+*TID: 15, Nice: 20, Tick: 4359
+*TID: 15, Nice: 20, Tick: 4360
+*TID: 15, Nice: 20, Tick: 4361
+Alabama
+Alaska
+Arizona
+Arkansas
+California
+Colorado
+Connecticut
+Delaware
+Florida
+Georgia
+Hawaii
+Idaho
+Illinois
+Indiana
+Iowa
+Kansas
+Kentucky
+Louisiana
+Maine
+Maryland
+Massachusetts
+Michigan
+Minnesota
+Mississippi
+Missouri
+Montana
+Nebraska
+Nevada
+New Hampshire
+New Jersey
+New Mexico
+New York
+North Carolina
+North Dakota
+Ohio
+Oklahoma
+Oregon
+Pennsylvania
+Rhode Island
+South Carolina
+South Dakota
+Tennessee
+Texas
+Utah
+Vermont
+Virginia
+Washington
+West Virginia
+Wisconsin
+Wyoming
+*TID: 15, Nice: 20, Tick: 4411
+*TID: 15, Nice: 20, Tick: 4412
+*TID: 15, Nice: 20, Tick: 4413
+*TID: 15, Nice: 20, Tick: 4414
+*TID: 15, Nice: 20, Tick: 4415
+*TID: 15, Nice: 20, Tick: 4416
+*TID: 15, Nice: 20, Tick: 4417
+*TID: 15, Nice: 20, Tick: 4418
+*TID: 15, Nice: 20, Tick: 4419
+*TID: 15, Nice: 20, Tick: 4420
+*TID: 15, Nice: 20, Tick: 4421
+*TID: 15, Nice: 20, Tick: 4422
+*TID: 15, Nice: 20, Tick: 4423
+*TID: 15, Nice: 20, Tick: 4424
+*TID: 15, Nice: 20, Tick: 4425
+*TID: 15, Nice: 20, Tick: 4426
+*TID: 15, Nice: 20, Tick: 4427
+*TID: 15, Nice: 20, Tick: 4428
+*TID: 15, Nice: 20, Tick: 4429
+*TID: 15, Nice: 20, Tick: 4430
+*TID: 15, Nice: 20, Tick: 4431
+*TID: 15, Nice: 20, Tick: 4432
+*TID: 15, Nice: 20, Tick: 4433
+*TID: 15, Nice: 20, Tick: 4434
+*TID: 15, Nice: 20, Tick: 4435
+*TID: 15, Nice: 20, Tick: 4436
+*TID: 15, Nice: 20, Tick: 4437
+Alabama
+Alaska
+Arizona
+Arkansas
+California
+Colorado
+Connecticut
+Delaware
+Florida
+Georgia
+Hawaii
+Idaho
+Illinois
+Indiana
+Iowa
+Kansas
+Kentucky
+Louisiana
+Maine
+Maryland
+Massachusetts
+Michigan
+Minnesota
+Mississippi
+Missouri
+Montana
+Nebraska
+Nevada
+New Hampshire
+New Jersey
+New Mexico
+New York
+North Carolina
+North Dakota
+Ohio
+Oklahoma
+Oregon
+Pennsylvania
+Rhode Island
+South Carolina
+South Dakota
+Tennessee
+Texas
+Utah
+Vermont
+Virginia
+Washington
+West Virginia
+Wisconsin
+Wyoming
+*TID: 15, Nice: 20, Tick: 4487
+*TID: 15, Nice: 20, Tick: 4488
+*TID: 15, Nice: 20, Tick: 4489
+*TID: 15, Nice: 20, Tick: 4490
+*TID: 15, Nice: 20, Tick: 4491
+*TID: 15, Nice: 20, Tick: 4492
+*TID: 15, Nice: 20, Tick: 4493
+*TID: 15, Nice: 20, Tick: 4494
+*TID: 15, Nice: 20, Tick: 4495
+*TID: 15, Nice: 20, Tick: 4496
+*TID: 15, Nice: 20, Tick: 4497
+*TID: 15, Nice: 20, Tick: 4498
+*TID: 15, Nice: 20, Tick: 4499
+*TID: 15, Nice: 20, Tick: 4500
+*TID: 15, Nice: 20, Tick: 4501
+*TID: 15, Nice: 20, Tick: 4502
+*TID: 15, Nice: 20, Tick: 4503
+*TID: 15, Nice: 20, Tick: 4504
+*TID: 15, Nice: 20, Tick: 4505
+*TID: 15, Nice: 20, Tick: 4506
+*TID: 15, Nice: 20, Tick: 4507
+*TID: 15, Nice: 20, Tick: 4508
+*TID: 15, Nice: 20, Tick: 4509
+*TID: 15, Nice: 20, Tick: 4510
+*TID: 15, Nice: 20, Tick: 4511
+*TID: 15, Nice: 20, Tick: 4512
+*TID: 15, Nice: 20, Tick: 4513
+Alabama
+Alaska
+Arizona
+Arkansas
+California
+Colorado
+Connecticut
+Delaware
+Florida
+Georgia
+Hawaii
+Idaho
+Illinois
+Indiana
+Iowa
+Kansas
+Kentucky
+Louisiana
+Maine
+Maryland
+Massachusetts
+Michigan
+Minnesota
+Mississippi
+Missouri
+Montana
+Nebraska
+Nevada
+New Hampshire
+New Jersey
+New Mexico
+New York
+North Carolina
+North Dakota
+Ohio
+Oklahoma
+Oregon
+Pennsylvania
+Rhode Island
+South Carolina
+South Dakota
+Tennessee
+Texas
+Utah
+Vermont
+Virginia
+Washington
+West Virginia
+Wisconsin
+Wyoming
+*TID: 15, Nice: 20, Tick: 4563
+cat-looper: exit(0)
+*TID: 9, Nice: 20, Tick: 4564
+*TID: 9, Nice: 20, Tick: 4566
+nice: exit(0)
+
+shell: exit(-1)
+Execution of 'shell' complete.
+Timer: 4821 ticks
+Thread: 665 idle ticks, 0 kernel ticks, 4157 user ticks
+hdb1 (filesys): 1471 reads, 0 writes
+Console: 74910 characters output
+Keyboard: 0 keys pressed
+Exception: 0 page faults
+Powering off...

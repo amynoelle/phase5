@@ -1,6 +1,6 @@
 import csv
 
-names = ["CPUNiceSet","CPUNoNice","CPUvIO","IONiceSet","IONoNice"]
+names = ["CPUNiceSet","CPUNoNice","CPUvIO","CPUvIO1","CPUvIO2","IONiceSet","IONoNice"]
 
 def parse(name):
 	file = open(name+".txt","r")

@@ -43,11 +43,11 @@ cd ..
 -----------------------------------------
 
 CPU vs IO
-bash -c '../utils/pintos --no-vga -- -sched-instrument -q run shell' | tee CPUvIO.txt
-nice 20 count-looper 1000 &
+bash -c '../utils/pintos --no-vga -- -sched-instrument -q run shell' | tee CPUvIO2.txt
+nice 20 count-looper 100000 &
 nice 20 cat-looper 10 states.txt &
-nice 20 count-looper 1000 &
+nice 20 count-looper 100000 &
 nice 20 cat-looper 10 states.txt &
-nice 20 count-looper 1000 &
+nice 20 count-looper 100000 &
 nice 20 cat-looper 10 states.txt &
 cd ..
