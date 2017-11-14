@@ -816,12 +816,6 @@ done:
 static int
 sys_nice (const int level)
 {
-  lock_acquire (&sem_lock);  
-  
   thread_set_nice (level);
-  int final = thread_get_nice ();
-  
-  lock_release (&sem_lock);
-
-  return final;
+  return thread_get_nice ();
 }
