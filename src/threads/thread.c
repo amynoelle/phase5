@@ -265,7 +265,10 @@ thread_create (const char *name, int priority,
 
   if (true == thread_instrument)
     {
-      /* TODO (Phase 5): Instrument?. */
+      int64_t tick = timer_ticks ();
+      if (3 < cur->tid) {
+        printf ("*TID: %d, Nice: %d, Tick: %lld\n", cur->tid, cur->nice, tick);
+      }
     }
 
   /* Add to run queue. */
@@ -367,12 +370,15 @@ thread_exit (void)
 {
   ASSERT (!intr_context ());
 
+  struct thread *t = thread_current();
+
   if (true == thread_instrument)
     {
-      /* TODO (Phase 5): Instrument?. */
+      int64_t tick = timer_ticks ();
+      if (3 < t->tid) {
+        printf ("*TID: %d, Nice: %d, Tick: %lld\n", t->tid, t->nice, tick);
+      }
     }
-
-  struct thread *t = thread_current();
 
 #ifdef USERPROG
   process_exit ();
@@ -764,7 +770,10 @@ schedule (void)
    */
   if (true == thread_instrument && prev != cur && NULL != prev)
     {
-      /* TODO (Phase 5): Instrument?. */
+      int64_t tick = timer_ticks ();
+      if (3 < cur->tid) {
+        printf ("*TID: %d, Nice: %d, Tick: %lld\n", cur->tid, cur->nice, tick);
+      }
     }
 }
 
